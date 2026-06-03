@@ -369,3 +369,191 @@ code {
 .dx-app[dir='rtl'] .dx-install {
   flex-direction: row-reverse;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Motion & polish — animated aurora, shimmering hero, scroll reveals.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Animated aurora behind everything (gold / blue / violet drifting blobs). */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 38% at 22% 24%, rgba(232, 184, 75, 0.20), transparent 60%),
+    radial-gradient(34% 34% at 80% 28%, rgba(122, 162, 247, 0.16), transparent 60%),
+    radial-gradient(42% 42% at 60% 82%, rgba(199, 146, 234, 0.16), transparent 62%),
+    radial-gradient(30% 30% at 12% 78%, rgba(110, 231, 183, 0.12), transparent 60%);
+  filter: blur(30px) saturate(120%);
+  animation: dx-aurora 22s ease-in-out infinite alternate;
+}
+@keyframes dx-aurora {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate3d(2%, -3%, 0) scale(1.12) rotate(8deg); }
+  100% { transform: translate3d(-3%, 2%, 0) scale(1.06) rotate(-6deg); }
+}
+/* Subtle grain/twinkle layer on top of the aurora. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(60% 60% at 50% 30%, #000, transparent 75%);
+  animation: dx-twinkle 8s ease-in-out infinite alternate;
+}
+@keyframes dx-twinkle {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+/* Shimmering gradient hero title. */
+.dx-hero h1 {
+  background: linear-gradient(100deg, #ffffff 18%, var(--accent-2) 42%, #fff7e0 52%, var(--accent) 64%, #ffffff 82%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: dx-shine 6s linear infinite, dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes dx-shine {
+  to { background-position: 220% center; }
+}
+
+/* Staggered hero entrance. */
+@keyframes dx-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+.dx-hero p { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both; }
+.dx-hero .dx-badges { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+.dx-hero .dx-install { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+.dx-hero .dx-player { animation: dx-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both; }
+
+/* Glowing, gradient-bordered hero player. */
+.dx-hero .dx-player {
+  position: relative;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 70px rgba(232, 184, 75, 0.12);
+}
+.dx-hero .dx-player::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from var(--dx-angle, 0deg), var(--accent), #7aa2f7, #c792ea, var(--accent));
+  filter: blur(7px);
+  opacity: 0.6;
+  animation: dx-spin 7s linear infinite;
+}
+@property --dx-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes dx-spin {
+  to { --dx-angle: 360deg; }
+}
+
+/* Pills float up + a soft glow on the accent ones. */
+.dx-pill {
+  transition: transform 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.dx-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* Scroll-reveal: sections rise + fade as they enter the viewport. */
+.dx-section {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+.dx-section.dx-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Feature cards: stagger in + lift/glow on hover. */
+.dx-feature {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.dx-section.dx-in .dx-feature {
+  animation: dx-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.dx-features .dx-feature:nth-child(2) { animation-delay: 0.05s; }
+.dx-features .dx-feature:nth-child(3) { animation-delay: 0.1s; }
+.dx-features .dx-feature:nth-child(4) { animation-delay: 0.15s; }
+.dx-features .dx-feature:nth-child(5) { animation-delay: 0.2s; }
+.dx-features .dx-feature:nth-child(6) { animation-delay: 0.25s; }
+.dx-features .dx-feature:nth-child(n + 7) { animation-delay: 0.3s; }
+.dx-feature:hover {
+  transform: translateY(-4px);
+  border-color: rgba(232, 184, 75, 0.5);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(232, 184, 75, 0.15);
+}
+.dx-feature h3 {
+  background: linear-gradient(90deg, var(--text), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Section headings get a little gold underline that grows on reveal. */
+.dx-section > h2 {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+}
+.dx-section > h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transition: width 0.6s ease 0.15s;
+}
+.dx-app[dir='rtl'] .dx-section > h2::after { left: auto; right: 0; }
+.dx-section.dx-in > h2::after { width: 100%; }
+
+/* Header lifts on scroll (shadow appears). */
+.dx-header {
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+.dx-header.dx-stuck {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Animated install command — caret blink + hover glow. */
+.dx-install {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.dx-install:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(232, 184, 75, 0.25), 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Respect reduced-motion: drop the showy stuff, keep content visible. */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .dx-hero h1,
+  .dx-hero .dx-player::before {
+    animation: none !important;
+  }
+  .dx-section { opacity: 1; transform: none; transition: none; }
+  .dx-section.dx-in .dx-feature { animation: none; }
+  .dx-hero h1, .dx-hero p, .dx-badges, .dx-install, .dx-hero .dx-player { animation: none !important; }
+}

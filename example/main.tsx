@@ -1,4 +1,4 @@
-import { StrictMode, useMemo, useState, type ReactNode } from 'react';
+import { StrictMode, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
 import './docs.css';
@@ -453,6 +453,23 @@ function Docs() {
       /* ignore persistence failures */
     }
   };
+
+  // Scroll-reveal sections + a shadow on the header once scrolled.
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('dx-in')),
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+    );
+    document.querySelectorAll('.dx-section').forEach((el) => io.observe(el));
+    const header = document.querySelector('.dx-header');
+    const onScroll = () => header?.classList.toggle('dx-stuck', window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   return (
     <div className="dx-app" dir={dir} lang={lang}>
