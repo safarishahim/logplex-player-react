@@ -14,6 +14,14 @@ const EPISODES: Episode[] = [
   { id: 'e3', src: STREAM, poster: 'https://picsum.photos/seed/lp3/1280/720', title: 'Sample Series', subtitle: 'Episode 3' },
 ];
 
+const FA_SUBTITLES = ['قسمت اول', 'قسمت دوم', 'قسمت سوم'];
+
+/** Localized copy of the demo episodes so the playlist matches the chosen language. */
+function episodesFor(lang: Lang): Episode[] {
+  if (lang === 'en') return EPISODES;
+  return EPISODES.map((e, i) => ({ ...e, title: 'سریال نمونه', subtitle: FA_SUBTITLES[i] }));
+}
+
 // ── Translations ──────────────────────────────────────────────────────────
 const T: Record<Lang, {
   nav: { start: string; playground: string; features: string; props: string; events: string };
@@ -345,15 +353,17 @@ function Docs() {
           </div>
           <div className="dx-install">npm i @logplex/player-react</div>
           <div className="dx-player" style={{ maxWidth: 860, margin: '32px auto 0' }}>
+            {/* key={lang} remounts so the locale switch + badge animation apply cleanly. */}
             <LogplexPlayer
-              episodes={EPISODES}
+              key={lang}
+              episodes={episodesFor(lang)}
               currentEpisodeId="e1"
               onEpisodeChange={() => undefined}
-              locale="en"
-              title="Sample Movie"
-              episodeLabel="Episode 1"
+              locale={lang}
+              title={lang === 'fa' ? 'فیلم نمونه' : 'Sample Movie'}
+              episodeLabel={lang === 'fa' ? 'قسمت اول' : 'Episode 1'}
               poster={POSTER}
-              badge="Your traffic is billed at premium rate."
+              badge={lang === 'fa' ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.'}
               onLike={() => undefined}
             />
           </div>
