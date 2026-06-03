@@ -469,6 +469,10 @@
 .lpx-rtl .lpx-badge {
   left: auto;
   right: 16px;
+  flex-direction: row-reverse;
+}
+.lpx-rtl .lpx-badge-text {
+  direction: rtl;
 }
 .lpx-badge-icon {
   display: inline-flex;
@@ -882,6 +886,12 @@
 .lpx-notice-text {
   font-size: 13px;
   line-height: 1.4;
+}
+/* RTL: text leads from the right, CTA/close follow to the left; mirror the
+   asymmetric padding so the close button keeps the tighter edge. */
+.lpx-rtl .lpx-notice-card {
+  flex-direction: row-reverse;
+  padding: 6px 16px 6px 8px;
 }
 .lpx-notice-cta {
   flex: none;
