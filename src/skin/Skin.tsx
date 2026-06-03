@@ -4,6 +4,7 @@ import type { Direction, Episode } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
+import { BadgeOverlay } from './overlays/BadgeOverlay';
 import {
   BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LikeIcon, LockIcon,
   NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon, VolumeHighIcon, VolumeMutedIcon,
@@ -23,6 +24,7 @@ export interface SkinProps {
   onPrev?: () => void;
   onNext?: () => void;
   onBack?: () => void;
+  badge?: string;
   episodes?: Episode[];
   currentEpisodeId?: string;
   onSelectEpisode?: (id: string) => void;
@@ -120,6 +122,9 @@ export function Skin(props: SkinProps): JSX.Element {
           <VolumeMutedIcon />
         </div>
       )}
+
+      {/* Intro badge (premium / content type) — animates in then out. */}
+      {props.badge && <BadgeOverlay key={props.badge} text={props.badge} />}
 
       <div
         className="lpx-controls"
@@ -227,8 +232,13 @@ export function Skin(props: SkinProps): JSX.Element {
 
             {/* Center: transport */}
             <div className="lpx-group lpx-group--center">
-              {props.hasPrev && (
-                <button className="lpx-btn" aria-label={props.strings.prevEpisode} onClick={props.onPrev}>
+              {hasPlaylist && (
+                <button
+                  className="lpx-btn"
+                  aria-label={props.strings.prevEpisode}
+                  disabled={!props.hasPrev}
+                  onClick={props.onPrev}
+                >
                   <PrevIcon />
                 </button>
               )}
@@ -253,8 +263,13 @@ export function Skin(props: SkinProps): JSX.Element {
               >
                 <Forward10Icon />
               </button>
-              {props.hasNext && (
-                <button className="lpx-btn" aria-label={props.strings.nextEpisode} onClick={props.onNext}>
+              {hasPlaylist && (
+                <button
+                  className="lpx-btn"
+                  aria-label={props.strings.nextEpisode}
+                  disabled={!props.hasNext}
+                  onClick={props.onNext}
+                >
                   <NextIcon />
                 </button>
               )}

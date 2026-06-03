@@ -31,6 +31,7 @@ function App() {
         onEpisodeChange={setCurrent}
         locale="fa"
         dir="rtl"
+        badge="تمام‌بها"
         onLike={(liked) => console.log('like', liked)}
         notice={{ message: 'این فیلم فقط با اینترنت اپراتور همراه اول رایگان است.', ctaLabel: 'فعال‌سازی' }}
         analytics={{

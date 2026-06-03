@@ -151,6 +151,10 @@ export interface LogplexPlayerProps {
   /** Operator/network (or any) notice shown over the player. */
   notice?: PlayerNotice;
 
+  /** Short badge (e.g. "تمام‌بها" / premium) that animates in at the start and
+   * out after a few seconds. */
+  badge?: string;
+
   /** Built-in Logplex analytics + resume. Omit to disable. */
   analytics?: LogplexAnalyticsConfig;
   /** Show the "continue watching" resume banner (needs analytics). Default true. */

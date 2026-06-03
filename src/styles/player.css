@@ -45,6 +45,11 @@
   direction: rtl;
   text-align: right;
 }
+/* Playlist panel stays on the right (like LTR); only its text right-aligns. */
+.lpx-rtl .lpx-panel-head,
+.lpx-rtl .lpx-ep-meta {
+  text-align: right;
+}
 
 .lpx-player {
   --lpx-accent: #e8b84b; /* gold */
@@ -296,6 +301,13 @@
 .lpx-btn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
+.lpx-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.lpx-btn:disabled:hover {
+  background: transparent;
+}
 .lpx-btn svg {
   width: 24px;
   height: 24px;
@@ -432,6 +444,42 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--lpx-text);
+}
+
+/* Intro badge (premium / content type): animates in, holds, animates out. */
+.lpx-badge {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  translate: -50% 0;
+  background: var(--lpx-accent);
+  color: var(--lpx-accent-contrast);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 7;
+}
+.lpx-badge--in {
+  animation: lpx-badge-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lpx-badge--out {
+  animation: lpx-badge-out 0.45s ease forwards;
+}
+@keyframes lpx-badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.9);
+  }
+}
+@keyframes lpx-badge-out {
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.9);
+  }
 }
 
 /* Mute badge shown bottom-right while controls are hidden + muted. */

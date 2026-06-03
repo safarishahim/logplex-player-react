@@ -45,6 +45,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     theme,
     ad,
     notice,
+    badge,
     fullscreenMode = 'auto',
     children,
   } = props;
@@ -171,6 +172,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           episodes={episodes}
           currentEpisodeId={episode?.id}
           onSelectEpisode={onEpisodeChange}
+          badge={badge}
           onLike={onLike}
           simulatedFullscreen={simulated}
           simIsFullscreen={fs.active}
