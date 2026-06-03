@@ -52,21 +52,21 @@ const T: Record<Lang, {
   en: {
     nav: { start: 'Quick start', playground: 'Playground', features: 'Features', props: 'Props', events: 'Events' },
     heroTagline:
-      'A production React video player — HLS/MP4, a fully custom RTL/LTR skin, and built-in Logplex analytics + resume. External links in; analytics out.',
+      'A production React video player — HLS/MP4, a fully custom RTL/LTR skin, quality / subtitle / audio menus, ads, gestures, and optional built-in analytics + resume.',
     pills: ['React 18+', 'Vidstack + hls.js', 'TypeScript', 'RTL / LTR'],
     s: {
       start: { title: 'Quick start', intro: 'Import the component and its stylesheet, then point it at an HLS or MP4 source.' },
       standalone: {
-        title: 'Use without Logplex',
+        title: 'Use without analytics',
         intro:
-          'Analytics is optional. Omit the analytics prop and the player is a self-contained video player — full skin, quality, speed, playlist, ads, gestures and fullscreen — with no network calls and nothing Logplex-specific.',
+          'Analytics is optional. Omit the analytics prop and the player is a self-contained video player — full skin, quality, speed, playlist, ads, gestures and fullscreen — with no network calls and nothing backend-specific.',
       },
       playground: { title: 'Playground', intro: 'Toggle features live and watch the props update. The player on the left is real.' },
       features: { title: 'Features' },
       analytics: {
         title: 'Analytics & resume',
         intro:
-          'Analytics is entirely optional — the player works fully without it. When you do pass an analytics config, it emits the canonical Logplex events (batched, retried, flushed on page-hide) and offers a resume banner from the saved position. No extra wiring.',
+          'Analytics is entirely optional — the player works fully without it. When you do pass an analytics config, it emits canonical playback events to your ingest endpoint (batched, retried, flushed on page-hide) and offers a resume banner from the saved position. No extra wiring.',
       },
       playlist: {
         title: 'Episodes / playlist',
@@ -95,14 +95,14 @@ const T: Record<Lang, {
       props: { title: 'Props' },
       events: {
         title: 'Analytics events',
-        intro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
+        intro: 'With analytics set, the player emits these event_type values to your ingest endpoint:',
       },
     },
     pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Ads (pre/mid/post)', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
-      ['Built-in analytics', 'Emits play/pause/seek/buffer/heartbeat/complete to the Logplex ingest API.'],
+      ['Built-in analytics', 'Emits play/pause/seek/buffer/heartbeat/complete to your ingest endpoint.'],
       ['Resume', '“Continue watching” banner from the saved position.'],
       ['Quality & speed', 'Quality menu from the real HLS renditions; separate speed menu.'],
       ['Playlist', 'Episode list panel + prev/next, disabled at the ends.'],
@@ -112,7 +112,7 @@ const T: Record<Lang, {
       ['Like + badge + notice', 'Like button, premium info badge, operator notice banner.'],
       ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
       ['Subtitles & audio', 'Auto CC + multi-language audio menus from HLS; add external subtitle files too.'],
-      ['No-Logplex mode', 'Analytics is optional — works as a standalone player with zero backend.'],
+      ['Standalone mode', 'Analytics is optional — works as a standalone player with zero backend.'],
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
     propsRows: [
@@ -140,27 +140,27 @@ const T: Record<Lang, {
       ['fullscreenOnPlay', 'boolean', 'Enter fullscreen when playback starts from the cover.'],
       ['onBack', '() => void', 'Show a back button in the top bar.'],
     ],
-    eventsIntro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
+    eventsIntro: 'With analytics set, the player emits these event_type values to your ingest endpoint:',
     footer: 'logplex-player-react · built on Vidstack + hls.js · Developed by Morteza Safarishahi',
   },
   fa: {
     nav: { start: 'شروع سریع', playground: 'محیط آزمایش', features: 'امکانات', props: 'پراپ‌ها', events: 'رویدادها' },
     heroTagline:
-      'یک پخش‌کنندهٔ ویدئوی React آمادهٔ تولید — HLS/MP4، پوستهٔ کاملاً اختصاصی راست‌به‌چپ/چپ‌به‌راست و آنالیتیکس و ادامهٔ تماشای داخلی Logplex. لینک‌ها به داخل، آنالیتیکس به بیرون.',
+      'یک پخش‌کنندهٔ ویدئوی React آمادهٔ تولید — HLS/MP4، پوستهٔ کاملاً اختصاصی راست‌به‌چپ/چپ‌به‌راست، منوی کیفیت/زیرنویس/صدا، تبلیغ، حرکات لمسی و آنالیتیکس و ادامهٔ تماشای داخلی (اختیاری).',
     pills: ['React ۱۸+', 'Vidstack + hls.js', 'TypeScript', 'RTL / LTR'],
     s: {
       start: { title: 'شروع سریع', intro: 'کامپوننت و فایل استایل آن را وارد کنید، سپس آن را به یک منبع HLS یا MP4 وصل کنید.' },
       standalone: {
-        title: 'استفاده بدون Logplex',
+        title: 'استفاده بدون آنالیتیکس',
         intro:
-          'آنالیتیکس اختیاری است. اگر پراپ analytics را ندهید، پخش‌کننده یک پلیر ویدئوی مستقل است — با تمام پوسته، کیفیت، سرعت، لیست پخش، تبلیغ، حرکات لمسی و تمام‌صفحه — بدون هیچ درخواست شبکه‌ای و بدون وابستگی به Logplex.',
+          'آنالیتیکس اختیاری است. اگر پراپ analytics را ندهید، پخش‌کننده یک پلیر ویدئوی مستقل است — با تمام پوسته، کیفیت، سرعت، لیست پخش، تبلیغ، حرکات لمسی و تمام‌صفحه — بدون هیچ درخواست شبکه‌ای و بدون وابستگی به بک‌اند.',
       },
       playground: { title: 'محیط آزمایش', intro: 'امکانات را به‌صورت زنده تغییر دهید و به‌روزرسانی props را ببینید. پخش‌کنندهٔ کنار، واقعی است.' },
       features: { title: 'امکانات' },
       analytics: {
         title: 'آنالیتیکس و ادامهٔ تماشا',
         intro:
-          'آنالیتیکس کاملاً اختیاری است — پخش‌کننده بدون آن هم کامل کار می‌کند. اگر تنظیمات analytics را بدهید، رویدادهای استاندارد Logplex را ارسال می‌کند (دسته‌ای، با تلاش مجدد و تخلیه هنگام پنهان‌شدن صفحه) و بنر ادامهٔ تماشا را نشان می‌دهد. بدون سیم‌کشی اضافه.',
+          'آنالیتیکس کاملاً اختیاری است — پخش‌کننده بدون آن هم کامل کار می‌کند. اگر تنظیمات analytics را بدهید، رویدادهای استاندارد پخش را به نقطهٔ ورودی شما ارسال می‌کند (دسته‌ای، با تلاش مجدد و تخلیه هنگام پنهان‌شدن صفحه) و بنر ادامهٔ تماشا را نشان می‌دهد. بدون سیم‌کشی اضافه.',
       },
       playlist: {
         title: 'قسمت‌ها / لیست پخش',
@@ -189,14 +189,14 @@ const T: Record<Lang, {
       props: { title: 'پراپ‌ها' },
       events: {
         title: 'رویدادهای آنالیتیکس',
-        intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
+        intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به نقطهٔ ورودی شما ارسال می‌کند:',
       },
     },
     pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغات (ابتدا/میان/پایان)', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
-      ['آنالیتیکس داخلی', 'ارسال رویدادهای play/pause/seek/buffer/heartbeat/complete به API ورودی Logplex.'],
+      ['آنالیتیکس داخلی', 'ارسال رویدادهای play/pause/seek/buffer/heartbeat/complete به نقطهٔ ورودی شما.'],
       ['ادامهٔ تماشا', 'بنر «ادامهٔ تماشا» از موقعیت ذخیره‌شده.'],
       ['کیفیت و سرعت', 'منوی کیفیت از رندیشن‌های واقعی HLS؛ منوی سرعت جداگانه.'],
       ['لیست پخش', 'پنل لیست قسمت‌ها به‌همراه قبلی/بعدی که در ابتدا و انتها غیرفعال می‌شوند.'],
@@ -206,7 +206,7 @@ const T: Record<Lang, {
       ['لایک + نشان + اعلان', 'دکمهٔ لایک، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
       ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
       ['زیرنویس و صدا', 'منوی زیرنویس و صدای چندزبانه از HLS؛ افزودن فایل زیرنویس خارجی هم ممکن است.'],
-      ['بدون Logplex', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
+      ['حالت مستقل', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
     propsRows: [
@@ -233,7 +233,7 @@ const T: Record<Lang, {
       ['fullscreenOnPlay', 'boolean', 'ورود به تمام‌صفحه هنگام شروع پخش از کاور.'],
       ['onBack', '() => void', 'نمایش دکمهٔ بازگشت در نوار بالا.'],
     ],
-    eventsIntro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
+    eventsIntro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به نقطهٔ ورودی شما ارسال می‌کند:',
     footer: 'logplex-player-react · ساخته‌شده با Vidstack و hls.js · توسعه‌یافته توسط مرتضی صفری شاهی',
   },
 };
@@ -524,8 +524,8 @@ export default function Watch() {
       poster="https://cdn.example.com/poster.jpg"
       locale="fa"
       analytics={{
-        baseUrl: 'https://ingest.your-logplex.com',
-        apiKey: 'mk_live_xxx',
+        baseUrl: 'https://analytics.example.com',
+        apiKey: 'your-api-key',
         userId: 'viewer-42',
         contentId: 'movie-123',
         contentType: 'movie',
@@ -540,7 +540,7 @@ export default function Watch() {
 import { LogplexPlayer } from 'logplex-player-react';
 import 'logplex-player-react/styles.css';
 
-// No analytics, no Logplex account — just a player.
+// No analytics, no backend — just a player.
 <LogplexPlayer
   src="https://cdn.example.com/movie/master.m3u8"
   poster="poster.jpg"
@@ -569,8 +569,8 @@ import 'logplex-player-react/styles.css';
 <LogplexPlayer
   src={src}
   analytics={{
-    baseUrl: 'https://ingest.your-logplex.com',
-    apiKey: 'mk_live_xxx',     // your merchant key
+    baseUrl: 'https://analytics.example.com',
+    apiKey: 'your-api-key',
     userId: 'viewer-42',       // stable per-viewer id
     contentId: 'movie-123',
     contentType: 'movie',

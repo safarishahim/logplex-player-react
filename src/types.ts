@@ -71,9 +71,9 @@ export interface Episode {
 export interface LogplexAnalyticsConfig {
   /** Ingest API base URL, e.g. "https://ingest.example.com". */
   baseUrl: string;
-  /** Merchant API key (mk_live_*). */
+  /** API key sent to your ingest endpoint. */
   apiKey: string;
-  /** Opaque, stable per-viewer identity (the rollup's viewer_key). */
+  /** Opaque, stable per-viewer identity. */
   userId: string;
   userType?: 'authenticated' | 'guest';
   /** Opaque content id this session plays. */
