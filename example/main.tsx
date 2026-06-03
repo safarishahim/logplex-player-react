@@ -9,10 +9,21 @@ import './docs.css';
 const STREAM = 'https://files.vidstack.io/sprite-fight/hls/stream.m3u8';
 const POSTER = 'https://files.vidstack.io/sprite-fight/poster.webp';
 const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
-// External subtitle tracks that actually match the video.
+
+// Demo subtitle tracks as data URLs with cues from 0s, so enabling a track
+// shows text immediately (the real sprite-fight VTTs have no cues until 0:17).
+const vtt = (lines: string) => `data:text/vtt,${encodeURIComponent('WEBVTT\n\n' + lines)}`;
 const SUBTITLES = [
-  { src: 'https://files.vidstack.io/sprite-fight/subs/english.vtt', label: 'English', language: 'en' },
-  { src: 'https://files.vidstack.io/sprite-fight/subs/spanish.vtt', label: 'Español', language: 'es' },
+  {
+    label: 'English',
+    language: 'en',
+    src: vtt('00:00:00.000 --> 00:00:10.000\nSubtitles are working ✓\n\n00:00:10.000 --> 00:02:00.000\nPick a language from the subtitles menu.'),
+  },
+  {
+    label: 'فارسی',
+    language: 'fa',
+    src: vtt('00:00:00.000 --> 00:00:10.000\nزیرنویس فعال است ✓\n\n00:00:10.000 --> 00:02:00.000\nاز منوی زیرنویس می‌توانید زبان را عوض کنید.'),
+  },
 ];
 
 type Lang = 'en' | 'fa';
