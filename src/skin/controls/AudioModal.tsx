@@ -25,8 +25,8 @@ export function AudioModal({ strings, onClose }: AudioModalProps): JSX.Element {
   );
 
   return (
-    <div className="lpx-modal-scrim" onPointerDown={onClose}>
-      <div className="lpx-modal" role="dialog" aria-label={strings.audioTitle} onPointerDown={(e) => e.stopPropagation()}>
+    <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="lpx-modal" role="dialog" aria-label={strings.audioTitle}>
         <div className="lpx-modal-head">
           <span className="lpx-modal-icon">
             <AudioIcon />

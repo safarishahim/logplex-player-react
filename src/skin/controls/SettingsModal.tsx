@@ -40,13 +40,8 @@ export function SettingsModal({
   );
 
   return (
-    <div className="lpx-modal-scrim" onPointerDown={onClose}>
-      <div
-        className="lpx-modal"
-        role="dialog"
-        aria-label={strings.qualityTitle}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
+    <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="lpx-modal" role="dialog" aria-label={strings.qualityTitle}>
         <div className="lpx-modal-head">
           <span className="lpx-modal-icon">
             <SettingsIcon />

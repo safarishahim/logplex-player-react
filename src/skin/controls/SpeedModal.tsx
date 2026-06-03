@@ -15,8 +15,8 @@ export function SpeedModal({ strings, onClose }: SpeedModalProps): JSX.Element {
   const playbackRate = useMediaState('playbackRate');
 
   return (
-    <div className="lpx-modal-scrim" onPointerDown={onClose}>
-      <div className="lpx-modal" role="dialog" aria-label={strings.speed} onPointerDown={(e) => e.stopPropagation()}>
+    <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="lpx-modal" role="dialog" aria-label={strings.speed}>
         <div className="lpx-modal-head">
           <span className="lpx-modal-icon">
             <SpeedIcon />
