@@ -114,6 +114,13 @@ export function Skin(props: SkinProps): JSX.Element {
         </div>
       )}
 
+      {/* Persistent mute badge while controls are hidden. */}
+      {!visible && isMuted && (
+        <div className="lpx-mute-badge" aria-hidden="true">
+          <VolumeMutedIcon />
+        </div>
+      )}
+
       <div
         className="lpx-controls"
         data-visible={visible ? 'true' : 'false'}

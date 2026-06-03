@@ -243,9 +243,13 @@
   cursor: pointer;
   transition: width 0.2s ease;
 }
-.lpx-volume:hover .lpx-vol-slider,
-.lpx-vol-slider[data-active] {
-  width: 72px;
+/* Only real mouse devices expand the slider on hover. On touch there's no
+   hover, so the button just toggles mute and the swipe gesture sets volume. */
+@media (hover: hover) and (pointer: fine) {
+  .lpx-volume:hover .lpx-vol-slider,
+  .lpx-vol-slider[data-active] {
+    width: 72px;
+  }
 }
 .lpx-vol-track {
   position: relative;
@@ -428,6 +432,26 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--lpx-text);
+}
+
+/* Mute badge shown bottom-right while controls are hidden + muted. */
+.lpx-mute-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 4;
+}
+.lpx-mute-badge svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
 }
 
 /* ── Quality label button ── */
