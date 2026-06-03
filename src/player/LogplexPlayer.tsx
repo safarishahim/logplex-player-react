@@ -14,8 +14,6 @@ import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
 import { NoticeBanner } from '../skin/overlays/NoticeBanner';
 
-const DEFAULT_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
-
 function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
   if (!theme) return {};
   const v: Record<string, string> = {};
@@ -111,14 +109,13 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     setAdDone(true);
   }, [tracker]);
 
-  const reactions = props.reactions ?? DEFAULT_REACTIONS;
-  const onReact = useCallback(
-    (emoji: string) => {
-      tracker?.track('like');
-      props.onReaction?.(emoji);
+  const onLike = useCallback(
+    (liked: boolean) => {
+      if (liked) tracker?.track('like');
+      props.onLike?.(liked);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tracker, props.onReaction],
+    [tracker, props.onLike],
   );
 
   const resolvedDir = dirFor(locale, dir);
@@ -174,8 +171,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           episodes={episodes}
           currentEpisodeId={episode?.id}
           onSelectEpisode={onEpisodeChange}
-          reactions={reactions}
-          onReact={onReact}
+          onLike={onLike}
           simulatedFullscreen={simulated}
           simIsFullscreen={fs.active}
           onToggleSimFullscreen={fs.toggle}

@@ -16,6 +16,7 @@ export interface Strings {
   qualityTitle: string;
   qualityAuto: string;
   speed: string;
+  speedNormal: string;
   lock: string;
   unlock: string;
   playlist: string;
@@ -43,6 +44,7 @@ const fa: Strings = {
   qualityTitle: 'تنظیمات کیفیت پخش',
   qualityAuto: 'اتوماتیک',
   speed: 'سرعت پخش',
+  speedNormal: 'عادی',
   lock: 'قفل کنترل‌ها',
   unlock: 'باز کردن قفل',
   playlist: 'لیست پخش',
@@ -70,6 +72,7 @@ const en: Strings = {
   qualityTitle: 'Playback quality',
   qualityAuto: 'Auto',
   speed: 'Speed',
+  speedNormal: 'Normal',
   lock: 'Lock controls',
   unlock: 'Unlock',
   playlist: 'Playlist',

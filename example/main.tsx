@@ -7,7 +7,10 @@ function App() {
     <div style={{ maxWidth: 960, margin: '40px auto', padding: '0 16px' }}>
       <h1 style={{ color: '#fff', font: '600 18px system-ui' }}>@logplex/player-react</h1>
       <LogplexPlayer
+        // Tears of Steel — colorful multi-bitrate HLS; the quality menu lists
+        // its renditions (1080/720/480/…).
         src="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+        poster="https://picsum.photos/seed/logplex-player/1280/720"
         title="عنوان فیلم"
         episodeLabel="قسمت سوم"
         locale="fa"

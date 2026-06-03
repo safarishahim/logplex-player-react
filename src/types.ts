@@ -158,10 +158,8 @@ export interface LogplexPlayerProps {
 
   onBack?: () => void;
 
-  /** Emoji shown in the reactions bar. Defaults to a standard set; pass [] to hide. */
-  reactions?: string[];
-  /** Called when the viewer taps a reaction emoji (also emits a `like` event). */
-  onReaction?: (emoji: string) => void;
+  /** Show a Like button. Called when toggled; emits a `like` event when liked. */
+  onLike?: (liked: boolean) => void;
 
   /** Extra overlays rendered inside the player surface. */
   children?: ReactNode;

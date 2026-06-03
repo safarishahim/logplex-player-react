@@ -17,5 +17,7 @@ export {
   SettingsIcon,
   PlaylistIcon,
   XMarkIcon as CloseIcon,
-  HeartIcon as ReactionIcon,
+  HeartIcon as LikeIcon,
+  SunIcon as BrightnessIcon,
+  OdometerIcon as SpeedIcon,
 } from '@vidstack/react/icons';

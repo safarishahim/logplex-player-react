@@ -2,24 +2,21 @@ import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { CloseIcon, SettingsIcon } from './icons';
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
 export interface SettingsModalProps {
   strings: Strings;
   onClose: () => void;
 }
 
 /**
- * Centered quality + speed settings modal (frosted panel, radio list with a
- * gold selection). Layout is physical — it does not flip with text direction;
- * only the labels right-align in RTL.
+ * Centered quality settings modal (frosted panel, radio list with a gold
+ * selection). Quality only — playback speed has its own menu. Layout is
+ * physical; only the labels right-align in RTL.
  */
 export function SettingsModal({ strings, onClose }: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
   const qualities = useMediaState('qualities');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
-  const playbackRate = useMediaState('playbackRate');
   const list = Array.from(qualities ?? []);
 
   const Radio = ({ label, on, onSelect }: { label: string; on: boolean; onSelect: () => void }) => (
@@ -69,19 +66,6 @@ export function SettingsModal({ strings, onClose }: SettingsModalProps): JSX.Ele
               onClose();
             }}
           />
-        </ul>
-
-        <div className="lpx-modal-sep" />
-        <div className="lpx-modal-subtitle">{strings.speed}</div>
-        <ul className="lpx-radios">
-          {SPEEDS.map((s) => (
-            <Radio
-              key={s}
-              label={s === 1 ? '1×' : `${s}×`}
-              on={playbackRate === s}
-              onSelect={() => remote.changePlaybackRate(s)}
-            />
-          ))}
         </ul>
       </div>
     </div>

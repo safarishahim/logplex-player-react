@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../i18n';
-import { Forward10Icon, Replay10Icon } from './controls/icons';
+import { BrightnessIcon, Forward10Icon, Replay10Icon, VolumeHighIcon } from './controls/icons';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const MOVE_THRESHOLD = 8;
@@ -191,11 +191,17 @@ export function GestureLayer({ strings, onTapToggle, onActivity }: GestureLayerP
       {rate2x && <div className="lpx-rate-badge" aria-hidden="true">2×&nbsp;»</div>}
 
       {indicator && (
-        <div className="lpx-gauge" role="status" aria-label={indicator.kind === 'volume' ? strings.mute : 'brightness'}>
-          <div className="lpx-gauge-bar">
-            <span style={{ height: `${Math.round(indicator.value * 100)}%` }} />
+        <div
+          className={`lpx-vslider lpx-vslider--${indicator.kind === 'brightness' ? 'left' : 'right'}`}
+          role="status"
+          aria-label={indicator.kind === 'volume' ? strings.mute : 'brightness'}
+        >
+          <div className="lpx-vslider-track">
+            <span className="lpx-vslider-fill" style={{ height: `${Math.round(indicator.value * 100)}%` }} />
           </div>
-          <span className="lpx-gauge-val">{Math.round(indicator.value * 100)}</span>
+          <span className="lpx-vslider-icon">
+            {indicator.kind === 'brightness' ? <BrightnessIcon /> : <VolumeHighIcon />}
+          </span>
         </div>
       )}
     </div>
