@@ -1,6 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { CloseIcon, SpeedIcon } from './icons';
+import { RadioOption } from './RadioOption';
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -29,20 +30,15 @@ export function SpeedModal({ strings, onClose }: SpeedModalProps): JSX.Element {
 
         <ul className="lpx-radios">
           {SPEEDS.map((s) => (
-            <li key={s}>
-              <button
-                className="lpx-radio-opt"
-                role="radio"
-                aria-checked={(playbackRate || 1) === s}
-                onClick={() => {
-                  remote.changePlaybackRate(s);
-                  onClose();
-                }}
-              >
-                <span className="lpx-radio-label">{s === 1 ? `${strings.speedNormal} (1×)` : `${s}×`}</span>
-                <span className="lpx-radio-dot" data-on={(playbackRate || 1) === s || undefined} />
-              </button>
-            </li>
+            <RadioOption
+              key={s}
+              label={s === 1 ? `${strings.speedNormal} (1×)` : `${s}×`}
+              on={(playbackRate || 1) === s}
+              onSelect={() => {
+                remote.changePlaybackRate(s);
+                onClose();
+              }}
+            />
           ))}
         </ul>
       </div>

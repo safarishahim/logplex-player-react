@@ -1,6 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { CloseIcon, SettingsIcon } from './icons';
+import { RadioOption } from './RadioOption';
 
 export interface SettingsModalProps {
   strings: Strings;
@@ -30,15 +31,6 @@ export function SettingsModal({
   const list = Array.from(qualities ?? []);
   const manual = manualQualities && manualQualities.length > 0;
 
-  const Radio = ({ label, on, onSelect }: { label: string; on: boolean; onSelect: () => void }) => (
-    <li>
-      <button className="lpx-radio-opt" role="radio" aria-checked={on} onClick={onSelect}>
-        <span className="lpx-radio-label">{label}</span>
-        <span className="lpx-radio-dot" data-on={on || undefined} />
-      </button>
-    </li>
-  );
-
   return (
     <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="lpx-modal" role="dialog" aria-label={strings.qualityTitle}>
@@ -55,7 +47,7 @@ export function SettingsModal({
         <ul className="lpx-radios">
           {manual
             ? manualQualities!.map((q) => (
-                <Radio
+                <RadioOption
                   key={q.index}
                   label={q.label}
                   on={q.index === currentQualityIndex}
@@ -66,7 +58,7 @@ export function SettingsModal({
                 />
               ))
             : list.map((q, i) => (
-                <Radio
+                <RadioOption
                   key={`${q.height}-${i}`}
                   label={`${q.height}p`}
                   on={!autoQuality && quality === q}
@@ -78,7 +70,7 @@ export function SettingsModal({
               ))}
           {/* Auto only applies to adaptive (HLS) sources. */}
           {!manual && (
-            <Radio
+            <RadioOption
               label={`${strings.qualityAuto} (AUTO)`}
               on={autoQuality}
               onSelect={() => {

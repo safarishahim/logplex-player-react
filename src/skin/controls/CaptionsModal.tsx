@@ -1,6 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { CaptionsIcon, CloseIcon } from './icons';
+import { RadioOption } from './RadioOption';
 
 export interface CaptionsModalProps {
   strings: Strings;
@@ -25,15 +26,6 @@ export function CaptionsModal({ strings, onClose }: CaptionsModalProps): JSX.Ele
     onClose();
   };
 
-  const Radio = ({ label, on, onSelect }: { label: string; on: boolean; onSelect: () => void }) => (
-    <li>
-      <button className="lpx-radio-opt" role="radio" aria-checked={on} onClick={onSelect}>
-        <span className="lpx-radio-label">{label}</span>
-        <span className="lpx-radio-dot" data-on={on || undefined} />
-      </button>
-    </li>
-  );
-
   return (
     <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="lpx-modal" role="dialog" aria-label={strings.captionsTitle}>
@@ -48,9 +40,9 @@ export function CaptionsModal({ strings, onClose }: CaptionsModalProps): JSX.Ele
         </div>
 
         <ul className="lpx-radios">
-          <Radio label={strings.off} on={!current} onSelect={turnOff} />
+          <RadioOption label={strings.off} on={!current} onSelect={turnOff} />
           {subs.map(({ t, i }) => (
-            <Radio
+            <RadioOption
               key={`${t.label}-${i}`}
               label={t.label || t.language || `${i + 1}`}
               on={current === t}

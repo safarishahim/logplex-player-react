@@ -1,6 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { AudioIcon, CloseIcon } from './icons';
+import { RadioOption } from './RadioOption';
 
 export interface AudioModalProps {
   strings: Strings;
@@ -14,15 +15,6 @@ export function AudioModal({ strings, onClose }: AudioModalProps): JSX.Element {
   const audioTracks = useMediaState('audioTracks');
   const current = useMediaState('audioTrack');
   const list = audioTracks ?? [];
-
-  const Radio = ({ label, on, onSelect }: { label: string; on: boolean; onSelect: () => void }) => (
-    <li>
-      <button className="lpx-radio-opt" role="radio" aria-checked={on} onClick={onSelect}>
-        <span className="lpx-radio-label">{label}</span>
-        <span className="lpx-radio-dot" data-on={on || undefined} />
-      </button>
-    </li>
-  );
 
   return (
     <div className="lpx-modal-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -39,7 +31,7 @@ export function AudioModal({ strings, onClose }: AudioModalProps): JSX.Element {
 
         <ul className="lpx-radios">
           {list.map((t, i) => (
-            <Radio
+            <RadioOption
               key={`${t.label}-${i}`}
               label={t.label || t.language || `${i + 1}`}
               on={current === t}
