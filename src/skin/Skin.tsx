@@ -4,7 +4,6 @@ import type { Direction, Episode } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
-import { BadgeOverlay } from './overlays/BadgeOverlay';
 import {
   BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LikeIcon, LockIcon,
   NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon, VolumeHighIcon, VolumeMutedIcon,
@@ -24,7 +23,7 @@ export interface SkinProps {
   onPrev?: () => void;
   onNext?: () => void;
   onBack?: () => void;
-  badge?: string;
+  fullscreenOnPlay?: boolean;
   episodes?: Episode[];
   currentEpisodeId?: string;
   onSelectEpisode?: (id: string) => void;
@@ -52,6 +51,7 @@ export function Skin(props: SkinProps): JSX.Element {
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   const playbackRate = useMediaState('playbackRate');
+  const started = useMediaState('started');
 
   const [locked, setLocked] = useState(false);
   const [active, setActive] = useState(true);
@@ -104,6 +104,25 @@ export function Skin(props: SkinProps): JSX.Element {
     );
   }
 
+  // Cover (pre-play): just the poster + a single play button. Tapping play
+  // starts playback and enters fullscreen.
+  if (!started) {
+    return (
+      <button
+        className="lpx-cover"
+        aria-label={props.strings.play}
+        onClick={() => {
+          remote.play();
+          if (props.fullscreenOnPlay && !fsActive) toggleFullscreen();
+        }}
+      >
+        <span className="lpx-cover-play">
+          <PlayIcon />
+        </span>
+      </button>
+    );
+  }
+
   return (
     <>
       <GestureLayer strings={props.strings} onTapToggle={toggleControls} onActivity={ping} />
@@ -123,9 +142,6 @@ export function Skin(props: SkinProps): JSX.Element {
         </div>
       )}
 
-      {/* Intro badge (premium / content type) — animates in then out. */}
-      {props.badge && <BadgeOverlay key={props.badge} text={props.badge} />}
-
       <div
         className="lpx-controls"
         data-visible={visible ? 'true' : 'false'}
@@ -139,10 +155,7 @@ export function Skin(props: SkinProps): JSX.Element {
               <BackIcon />
             </button>
           )}
-          <div className="lpx-title">
-            {props.title && <b>{props.title}</b>}
-            {props.episodeLabel && <span>{props.episodeLabel}</span>}
-          </div>
+          <span className="lpx-grow" />
           <button
             className="lpx-btn lpx-quality-btn"
             aria-label={props.strings.quality}
@@ -192,10 +205,17 @@ export function Skin(props: SkinProps): JSX.Element {
 
         {/* Bottom bar */}
         <div className="lpx-bottom">
-          <div className="lpx-meta">
-            <span>
+          {/* Above the scrubber: time (left) + title/episode (right). */}
+          <div className="lpx-aboverow">
+            <span className="lpx-time">
               <Time type="current" /> / <Time type="duration" />
             </span>
+            {(props.title || props.episodeLabel) && (
+              <div className="lpx-title">
+                {props.title && <b>{props.title}</b>}
+                {props.episodeLabel && <span>{props.episodeLabel}</span>}
+              </div>
+            )}
           </div>
 
           <TimeSlider.Root className="lpx-slider">

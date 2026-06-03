@@ -13,6 +13,7 @@ import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulate
 import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
 import { NoticeBanner } from '../skin/overlays/NoticeBanner';
+import { BadgeOverlay } from '../skin/overlays/BadgeOverlay';
 
 function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
   if (!theme) return {};
@@ -46,6 +47,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     ad,
     notice,
     badge,
+    fullscreenOnPlay,
     fullscreenMode = 'auto',
     children,
   } = props;
@@ -172,7 +174,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           episodes={episodes}
           currentEpisodeId={episode?.id}
           onSelectEpisode={onEpisodeChange}
-          badge={badge}
+          fullscreenOnPlay={fullscreenOnPlay}
           onLike={onLike}
           simulatedFullscreen={simulated}
           simIsFullscreen={fs.active}
@@ -185,6 +187,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         )}
 
         {notice && !showingAd && <NoticeBanner notice={notice} strings={strings} />}
+        {badge && !showingAd && <BadgeOverlay key={badge} text={badge} />}
       </MediaPlayer>
     </div>
   );

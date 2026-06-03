@@ -20,4 +20,5 @@ export {
   HeartIcon as LikeIcon,
   SunIcon as BrightnessIcon,
   OdometerIcon as SpeedIcon,
+  InfoIcon,
 } from '@vidstack/react/icons';

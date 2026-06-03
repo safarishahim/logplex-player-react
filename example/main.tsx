@@ -28,12 +28,11 @@ function App() {
       <LogplexPlayer
         episodes={EPISODES}
         currentEpisodeId={current}
-        onEpisodeChange={setCurrent}
+        onEpisodeChanكge={setCurrent}
         locale="fa"
         dir="rtl"
-        badge="تمام‌بها"
+        badge="ترافیک شما به صورت تمام‌بها حساب می‌شود."
         onLike={(liked) => console.log('like', liked)}
-        notice={{ message: 'این فیلم فقط با اینترنت اپراتور همراه اول رایگان است.', ctaLabel: 'فعال‌سازی' }}
         analytics={{
           baseUrl: 'http://localhost:8080',
           apiKey: 'mk_live_demo',

@@ -155,6 +155,10 @@ export interface LogplexPlayerProps {
    * out after a few seconds. */
   badge?: string;
 
+  /** Enter fullscreen (per `fullscreenMode`) when playback starts from the
+   * cover. Default false. */
+  fullscreenOnPlay?: boolean;
+
   /** Built-in Logplex analytics + resume. Omit to disable. */
   analytics?: LogplexAnalyticsConfig;
   /** Show the "continue watching" resume banner (needs analytics). Default true. */

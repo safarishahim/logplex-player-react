@@ -40,14 +40,8 @@
 .lpx-rtl .lpx-radio-label,
 .lpx-rtl .lpx-resume-text,
 .lpx-rtl .lpx-notice-text,
-.lpx-rtl .lpx-ep-meta,
 .lpx-rtl .lpx-modal-subtitle {
   direction: rtl;
-  text-align: right;
-}
-/* Playlist panel stays on the right (like LTR); only its text right-aligns. */
-.lpx-rtl .lpx-panel-head,
-.lpx-rtl .lpx-ep-meta {
   text-align: right;
 }
 
@@ -155,20 +149,24 @@
   gap: 12px;
   padding: 12px 14px;
 }
-.lpx-topbar .lpx-title {
+.lpx-grow {
   flex: 1;
-  min-width: 0;
-  text-align: start;
 }
-.lpx-topbar .lpx-title b {
+
+/* Title + episode — now above the scrubber, right-aligned. */
+.lpx-title {
+  min-width: 0;
+  text-align: right;
+}
+.lpx-title b {
   display: block;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.lpx-topbar .lpx-title span {
+.lpx-title span {
   font-size: 12px;
   color: var(--lpx-text-muted);
 }
@@ -180,20 +178,21 @@
   gap: 6px;
   padding: 10px 14px 14px;
 }
-.lpx-meta {
+.lpx-aboverow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+  gap: 12px;
   font-size: 12px;
   color: var(--lpx-text-muted);
 }
-.lpx-meta > span {
+.lpx-time {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
 }
-.lpx-meta time {
+.lpx-time time {
   font-variant-numeric: tabular-nums;
 }
 .lpx-buttons {
@@ -446,40 +445,93 @@
   color: var(--lpx-text);
 }
 
-/* Intro badge (premium / content type): animates in, holds, animates out. */
+/* Transient info pill: LTR sits top-left and slides in/out to the left; RTL
+   sits top-right and slides in/out to the right. */
 .lpx-badge {
   position: absolute;
-  top: 18px;
-  left: 50%;
-  translate: -50% 0;
-  background: var(--lpx-accent);
-  color: var(--lpx-accent-contrast);
-  padding: 8px 18px;
+  top: 16px;
+  left: 16px;
+  right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 80%;
+  background: rgba(20, 20, 22, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--lpx-text);
+  padding: 8px 14px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   pointer-events: none;
   z-index: 7;
 }
+.lpx-rtl .lpx-badge {
+  left: auto;
+  right: 16px;
+}
+.lpx-badge-icon {
+  display: inline-flex;
+  color: var(--lpx-accent);
+}
+.lpx-badge-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.lpx-badge-text {
+  white-space: nowrap;
+}
 .lpx-badge--in {
-  animation: lpx-badge-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: lpx-badge-in-l 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .lpx-badge--out {
-  animation: lpx-badge-out 0.45s ease forwards;
+  animation: lpx-badge-out-l 0.4s ease forwards;
 }
-@keyframes lpx-badge-in {
-  from {
-    opacity: 0;
-    transform: translateY(-16px) scale(0.9);
-  }
+.lpx-rtl .lpx-badge--in {
+  animation: lpx-badge-in-r 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-@keyframes lpx-badge-out {
-  to {
-    opacity: 0;
-    transform: translateY(-16px) scale(0.9);
-  }
+.lpx-rtl .lpx-badge--out {
+  animation: lpx-badge-out-r 0.4s ease forwards;
+}
+@keyframes lpx-badge-in-l {
+  from { opacity: 0; transform: translateX(-32px); }
+}
+@keyframes lpx-badge-out-l {
+  to { opacity: 0; transform: translateX(-32px); }
+}
+@keyframes lpx-badge-in-r {
+  from { opacity: 0; transform: translateX(32px); }
+}
+@keyframes lpx-badge-out-r {
+  to { opacity: 0; transform: translateX(32px); }
+}
+
+/* Cover (pre-play): the whole area is clickable to play; only the play
+   button shows. */
+.lpx-cover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--lpx-text);
+  cursor: pointer;
+  z-index: 3;
+}
+.lpx-cover-play {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+}
+.lpx-cover-play svg {
+  width: 36px;
+  height: 36px;
+  fill: currentColor;
 }
 
 /* Mute badge shown bottom-right while controls are hidden + muted. */
@@ -627,14 +679,15 @@
   object-fit: cover;
 }
 
-/* ── Playlist / episodes panel ── */
+/* ── Playlist / episodes panel ──
+   Always opens from the LEFT; in RTL only the content flows right-to-left. */
 .lpx-panel {
   position: absolute;
   inset-block: 0;
-  inset-inline-end: 0;
+  left: 0;
   width: min(340px, 80%);
   background: rgba(18, 18, 20, 0.96);
-  border-inline-start: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   z-index: 25;
@@ -642,12 +695,12 @@
 }
 @keyframes lpx-slide-in {
   from {
-    transform: translateX(var(--lpx-slide, 100%));
+    transform: translateX(-100%);
     opacity: 0;
   }
 }
-.lpx-player[dir='rtl'] .lpx-panel {
-  --lpx-slide: -100%;
+.lpx-rtl .lpx-panel {
+  direction: rtl;
 }
 .lpx-panel-head {
   display: flex;

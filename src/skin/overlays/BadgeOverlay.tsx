@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { InfoIcon } from '../controls/icons';
 
 export interface BadgeOverlayProps {
   text: string;
@@ -7,8 +8,9 @@ export interface BadgeOverlayProps {
 }
 
 /**
- * A content badge (e.g. "تمام‌بها" / premium) that animates in at the start,
- * holds for a few seconds, then animates out. Re-mount with a `key` to replay.
+ * A transient info pill (top-right) — e.g. "ترافیک شما به صورت تمام‌بها حساب
+ * می‌شود". Animates in at the start, holds a few seconds, then animates out.
+ * Re-mount with a `key` to replay.
  */
 export function BadgeOverlay({ text, holdMs = 4000 }: BadgeOverlayProps): JSX.Element | null {
   const [phase, setPhase] = useState<'in' | 'out' | 'gone'>('in');
@@ -25,7 +27,10 @@ export function BadgeOverlay({ text, holdMs = 4000 }: BadgeOverlayProps): JSX.El
   if (phase === 'gone') return null;
   return (
     <div className={`lpx-badge lpx-badge--${phase}`} role="status">
-      {text}
+      <span className="lpx-badge-icon">
+        <InfoIcon />
+      </span>
+      <span className="lpx-badge-text">{text}</span>
     </div>
   );
 }
