@@ -105,6 +105,15 @@ export function Skin(props: SkinProps): JSX.Element {
   return (
     <>
       <GestureLayer strings={props.strings} onTapToggle={toggleControls} onActivity={ping} />
+
+      {/* Buffering / loading — outside the fading controls so it always shows. */}
+      {(waiting || !canPlay) && (
+        <div className="lpx-spinner" role="status" aria-live="polite">
+          <span className="lpx-spinner-ring" />
+          <span className="lpx-spinner-text">{props.strings.loading}</span>
+        </div>
+      )}
+
       <div
         className="lpx-controls"
         data-visible={visible ? 'true' : 'false'}
@@ -146,13 +155,6 @@ export function Skin(props: SkinProps): JSX.Element {
             </button>
           )}
         </div>
-
-        {/* Buffering spinner */}
-        {waiting && (
-          <div className="lpx-spinner" aria-hidden="true">
-            <span className="lpx-spinner-ring" />
-          </div>
-        )}
 
         {/* Resume banner */}
         {props.resume && (

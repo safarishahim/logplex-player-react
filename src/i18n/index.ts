@@ -26,6 +26,7 @@ export interface Strings {
   skipAd: string;
   adLabel: string;
   back: string;
+  loading: string;
 }
 
 const fa: Strings = {
@@ -54,6 +55,7 @@ const fa: Strings = {
   skipAd: 'رد کردن آگهی',
   adLabel: 'آگهی',
   back: 'بازگشت',
+  loading: 'لطفاً صبر کنید …',
 };
 
 const en: Strings = {
@@ -82,6 +84,7 @@ const en: Strings = {
   skipAd: 'Skip ad',
   adLabel: 'Ad',
   back: 'Back',
+  loading: 'Please wait …',
 };
 
 const TABLE: Record<Locale, Strings> = { fa, en };
