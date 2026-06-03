@@ -1,9 +1,36 @@
 {
   "name": "@logplex/player-react",
   "version": "0.1.0",
-  "description": "Logplex video player for React — Vidstack-based, HLS/MP4, fully skinned (RTL), with built-in Logplex analytics + resume.",
+  "description": "Logplex video player for React — Vidstack-based, HLS/MP4, fully skinned (RTL/LTR), with built-in Logplex analytics, resume, ads, gestures and WebView-safe fullscreen.",
   "type": "module",
   "license": "UNLICENSED",
+  "author": "Logplex",
+  "homepage": "https://gitlab.noyanet.ir/shad-core/logplex/player-react#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.noyanet.ir/shad-core/logplex/player-react.git"
+  },
+  "bugs": {
+    "url": "https://gitlab.noyanet.ir/shad-core/logplex/player-react/-/issues"
+  },
+  "keywords": [
+    "react",
+    "video",
+    "player",
+    "hls",
+    "vidstack",
+    "rtl",
+    "analytics",
+    "resume",
+    "continue-watching",
+    "logplex"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
   "files": [
     "dist"
   ],
@@ -25,7 +52,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs:build": "vite build --config vite.docs.config.ts",
+    "docs:preview": "vite preview --config vite.docs.config.ts",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=18",
