@@ -34,6 +34,18 @@
   border-radius: 0;
 }
 
+/* RTL: text-only. Layout, controls order, seek direction, and gestures stay
+   physical (the player root is always dir=ltr); we just right-align text. */
+.lpx-rtl .lpx-title,
+.lpx-rtl .lpx-radio-label,
+.lpx-rtl .lpx-resume-text,
+.lpx-rtl .lpx-notice-text,
+.lpx-rtl .lpx-ep-meta,
+.lpx-rtl .lpx-modal-subtitle {
+  direction: rtl;
+  text-align: right;
+}
+
 .lpx-player {
   --lpx-accent: #e8b84b; /* gold */
   --lpx-accent-contrast: #1a1a1a;
@@ -249,7 +261,7 @@
 .lpx-slider .lpx-track-fill {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: 0;
+  left: 0; /* physical: playback progress always fills left→right, never flips */
   width: var(--slider-fill, 0%);
   background: var(--lpx-accent);
   border-radius: 999px;
@@ -257,7 +269,7 @@
 .lpx-slider .lpx-track-progress {
   position: absolute;
   inset-block: 0;
-  inset-inline-start: 0;
+  left: 0;
   width: var(--slider-progress, 0%);
   background: rgba(255, 255, 255, 0.4);
   border-radius: 999px;
@@ -265,7 +277,7 @@
 .lpx-slider .lpx-thumb {
   position: absolute;
   top: 50%;
-  inset-inline-start: var(--slider-fill, 0%);
+  left: var(--slider-fill, 0%);
   width: 13px;
   height: 13px;
   translate: -50% -50%;
@@ -338,10 +350,7 @@
   pointer-events: none;
 }
 
-/* ── Settings menu (quality + speed) ── */
-.lpx-menu-root {
-  display: inline-flex;
-}
+/* ── Quality label button ── */
 .lpx-quality-btn {
   width: auto;
   gap: 6px;
@@ -353,51 +362,101 @@
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.lpx-menu {
-  background: rgba(24, 24, 26, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 8px;
-  min-width: 200px;
-  max-height: 320px;
-  overflow-y: auto;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-  z-index: 30;
-}
-.lpx-menu-section + .lpx-menu-section {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-.lpx-menu-title {
-  font-size: 11px;
-  color: var(--lpx-text-muted);
-  padding: 4px 8px;
-}
-.lpx-radio-group {
-  display: flex;
-  flex-direction: column;
-}
-.lpx-radio {
+
+/* ── Settings modal (quality + speed) ── */
+.lpx-modal-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+.lpx-modal {
+  width: min(360px, 86%);
+  max-height: 84%;
+  overflow-y: auto;
+  padding: 18px 22px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(28, 28, 30, 0.7);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.lpx-modal-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 13px;
+  margin-bottom: 12px;
+}
+.lpx-modal-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+.lpx-modal-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.lpx-modal-close {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+.lpx-radios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lpx-radio-opt {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* physical: dot pinned right, label to its left */
+  gap: 14px;
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--lpx-text-muted);
+  font-size: 15px;
   cursor: pointer;
 }
-.lpx-radio:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-.lpx-radio[aria-checked='true'],
-.lpx-radio[data-checked] {
+.lpx-radio-opt[aria-checked='true'] {
   color: var(--lpx-accent);
   font-weight: 700;
 }
-.lpx-radio[aria-checked='true']::before,
-.lpx-radio[data-checked]::before {
-  content: '✓';
+.lpx-radio-dot {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+.lpx-radio-dot[data-on] {
+  border-color: var(--lpx-accent);
+  background: var(--lpx-accent);
+  box-shadow: inset 0 0 0 3px rgba(28, 28, 30, 0.85);
+}
+.lpx-modal-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
+}
+.lpx-modal-subtitle {
+  font-size: 12px;
+  color: var(--lpx-text-muted);
+  text-align: center;
+  margin-bottom: 4px;
 }
 
 /* ── Scrub thumbnail preview ── */

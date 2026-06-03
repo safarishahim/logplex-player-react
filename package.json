@@ -4,7 +4,9 @@
   "description": "Logplex video player for React — Vidstack-based, HLS/MP4, fully skinned (RTL), with built-in Logplex analytics + resume.",
   "type": "module",
   "license": "UNLICENSED",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,7 +18,9 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -29,7 +33,8 @@
   },
   "dependencies": {
     "@vidstack/react": "^1.12.13",
-    "hls.js": "^1.5.18"
+    "hls.js": "^1.5.18",
+    "media-icons": "^1.1.5"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

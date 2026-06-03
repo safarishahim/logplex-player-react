@@ -126,6 +126,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
 
   const containerClass = [
     'lpx-container',
+    // RTL only right-aligns text; layout/operations stay physical (LTR).
+    resolvedDir === 'rtl' ? 'lpx-rtl' : '',
     fs.active && !fs.rotate ? 'lpx-fs-sim' : '',
     fs.active && fs.rotate ? 'lpx-fs-sim lpx-fs-rotate' : '',
   ]
@@ -143,7 +145,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         crossOrigin
         muted={props.muted}
         autoPlay={props.autoPlay || !!ad}
-        dir={resolvedDir}
+        dir="ltr"
         viewType="video"
       >
         <MediaProvider>

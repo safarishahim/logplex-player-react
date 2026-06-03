@@ -13,6 +13,7 @@ export interface Strings {
   fullscreenExit: string;
   settings: string;
   quality: string;
+  qualityTitle: string;
   qualityAuto: string;
   speed: string;
   lock: string;
@@ -39,8 +40,9 @@ const fa: Strings = {
   fullscreenExit: 'خروج از تمام‌صفحه',
   settings: 'تنظیمات',
   quality: 'کیفیت پخش',
-  qualityAuto: 'خودکار',
-  speed: 'سرعت',
+  qualityTitle: 'تنظیمات کیفیت پخش',
+  qualityAuto: 'اتوماتیک',
+  speed: 'سرعت پخش',
   lock: 'قفل کنترل‌ها',
   unlock: 'باز کردن قفل',
   playlist: 'لیست پخش',
@@ -65,6 +67,7 @@ const en: Strings = {
   fullscreenExit: 'Exit fullscreen',
   settings: 'Settings',
   quality: 'Quality',
+  qualityTitle: 'Playback quality',
   qualityAuto: 'Auto',
   speed: 'Speed',
   lock: 'Lock controls',

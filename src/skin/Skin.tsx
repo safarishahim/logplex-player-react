@@ -6,10 +6,10 @@ import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
 import {
   BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LockIcon, NextIcon,
-  PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, ReactionIcon, Replay10Icon, UnlockIcon,
+  PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, ReactionIcon, Replay10Icon, SettingsIcon, UnlockIcon,
   VolumeHighIcon, VolumeMutedIcon,
 } from './controls/icons';
-import { SettingsMenu } from './controls/SettingsMenu';
+import { SettingsModal } from './controls/SettingsModal';
 import { GestureLayer } from './GestureLayer';
 import { ReactionsBar } from './overlays/ReactionsBar';
 
@@ -49,11 +49,15 @@ export function Skin(props: SkinProps): JSX.Element {
   const waiting = useMediaState('waiting');
   const canPlay = useMediaState('canPlay');
   const currentTime = useMediaState('currentTime');
+  const quality = useMediaState('quality');
+  const autoQuality = useMediaState('autoQuality');
 
   const [locked, setLocked] = useState(false);
   const [active, setActive] = useState(true);
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [reactionsOpen, setReactionsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const qualityLabel = autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
   const hasReactions = (props.reactions?.length ?? 0) > 0 && !!props.onReact;
@@ -114,7 +118,15 @@ export function Skin(props: SkinProps): JSX.Element {
           {props.title && <b>{props.title}</b>}
           {props.episodeLabel && <span>{props.episodeLabel}</span>}
         </div>
-        <SettingsMenu strings={props.strings} />
+        <button
+          className="lpx-btn lpx-quality-btn"
+          aria-label={props.strings.settings}
+          aria-expanded={settingsOpen}
+          onClick={() => setSettingsOpen(true)}
+        >
+          <span className="lpx-quality-label">{qualityLabel}</span>
+          <SettingsIcon />
+        </button>
       </div>
 
       {/* Center cluster */}
@@ -305,6 +317,8 @@ export function Skin(props: SkinProps): JSX.Element {
 
       {props.children}
       </div>
+
+      {settingsOpen && <SettingsModal strings={props.strings} onClose={() => setSettingsOpen(false)} />}
     </>
   );
 }
