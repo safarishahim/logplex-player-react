@@ -29,6 +29,11 @@ export interface Strings {
   loading: string;
   retry: string;
   exit: string;
+  captions: string;
+  captionsTitle: string;
+  audioTrack: string;
+  audioTitle: string;
+  off: string;
 }
 
 const fa: Strings = {
@@ -60,6 +65,11 @@ const fa: Strings = {
   loading: 'لطفاً صبر کنید …',
   retry: 'تلاش مجدد',
   exit: 'خروج',
+  captions: 'زیرنویس',
+  captionsTitle: 'انتخاب زیرنویس',
+  audioTrack: 'صدا',
+  audioTitle: 'انتخاب زبان صدا',
+  off: 'خاموش',
 };
 
 const en: Strings = {
@@ -91,6 +101,11 @@ const en: Strings = {
   loading: 'Please wait …',
   retry: 'Retry',
   exit: 'Exit',
+  captions: 'Subtitles',
+  captionsTitle: 'Subtitles',
+  audioTrack: 'Audio',
+  audioTitle: 'Audio language',
+  off: 'Off',
 };
 
 const TABLE: Record<Locale, Strings> = { fa, en };

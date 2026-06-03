@@ -3,6 +3,8 @@ import {
   MediaPlayer,
   MediaProvider,
   Poster,
+  Track,
+  Captions,
   type MediaPlayerInstance,
 } from '@vidstack/react';
 import type { LogplexAnalyticsConfig, LogplexPlayerProps } from '../types';
@@ -170,7 +172,21 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       >
         <MediaProvider>
           {poster && !showingAd && <Poster className="lpx-poster" src={poster} alt={title ?? ''} />}
+          {!showingAd &&
+            props.subtitles?.map((s) => (
+              <Track
+                key={s.src}
+                src={s.src}
+                kind={s.kind ?? 'subtitles'}
+                label={s.label}
+                lang={s.language}
+                default={s.default}
+              />
+            ))}
         </MediaProvider>
+
+        {/* Renders the active subtitle/caption cues above the video. */}
+        {!showingAd && <Captions className="lpx-captions" />}
 
         {showingAd ? (
           <AdOverlay

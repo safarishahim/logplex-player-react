@@ -22,6 +22,9 @@ export {
   HeartIcon as LikeIcon,
   SunIcon as BrightnessIcon,
   OdometerIcon as SpeedIcon,
+  ClosedCaptionsIcon as CaptionsIcon,
+  ClosedCaptionsOnIcon as CaptionsOnIcon,
+  LanguageIcon as AudioIcon,
   InfoIcon,
 } from '@vidstack/react/icons';
 

@@ -94,6 +94,20 @@ export interface PlayerNotice {
   dismissible?: boolean;
 }
 
+/** An external subtitle/caption track (WebVTT/SRT). HLS-embedded subtitle and
+ * audio tracks are picked up automatically; use this to add your own files. */
+export interface SubtitleTrack {
+  src: string;
+  /** Display label, e.g. "فارسی" / "English". */
+  label: string;
+  /** BCP-47 language code, e.g. "fa", "en". */
+  language: string;
+  /** 'subtitles' (translated) or 'captions' (same-language + SDH). Default 'subtitles'. */
+  kind?: 'subtitles' | 'captions';
+  /** Show this track by default. */
+  default?: boolean;
+}
+
 /** A pre-roll ad. The host resolves the creative (e.g. from VAST) and passes
  * its media URL; the player handles playback + the ad UI + analytics. */
 export interface AdConfig {
@@ -143,6 +157,9 @@ export interface LogplexPlayerProps {
   poster?: string;
   /** WebVTT thumbnails track URL for scrub previews. */
   thumbnails?: string;
+  /** External subtitle/caption tracks. HLS-embedded subtitles + audio tracks
+   * are detected automatically; these are added on top. */
+  subtitles?: SubtitleTrack[];
   autoPlay?: boolean;
   muted?: boolean;
 

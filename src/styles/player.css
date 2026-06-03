@@ -999,6 +999,27 @@
   height: 32px;
 }
 
+/* ── Subtitle / caption cues ── */
+.lpx-captions {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.lpx-captions [data-part='cue'] {
+  background-color: rgba(0, 0, 0, 0.72);
+  border-radius: 4px;
+  padding: 0.15em 0.5em;
+  color: #fff;
+  font-size: clamp(13px, 3.4cqw, 22px);
+  line-height: 1.4;
+}
+/* Lift cues above the bar while the controls are visible. */
+.lpx-controls[data-visible='true'] ~ .lpx-captions,
+.lpx-captions[data-controls] {
+  bottom: 80px;
+}
+
 /* ── Restriction overlay (blocking — e.g. IP/network not allowed) ── */
 .lpx-restrict {
   position: absolute;

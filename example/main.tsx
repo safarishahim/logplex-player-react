@@ -3,12 +3,17 @@ import { createRoot } from 'react-dom/client';
 import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
 import './docs.css';
 
-// Sintel — Blender's free, openly-licensed animated short (multi-rendition HLS,
-// so the quality menu shows real options).
-const STREAM = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
-const POSTER = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Sintel_poster.jpg/800px-Sintel_poster.jpg';
+// Reliable multi-rendition demo stream (CORS-enabled), so the quality menu has
+// real options. Pick any HLS/MP4 of your own in real use.
+const STREAM = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+const POSTER = 'https://picsum.photos/seed/logplex-hero/1280/720';
 // Demo WebVTT thumbnails (frames won't match this stream — shows the feature).
 const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
+// Demo external subtitle tracks (also won't match the stream — shows the CC menu).
+const SUBTITLES = [
+  { src: 'https://files.vidstack.io/sprite-fight/subs/english.vtt', label: 'English', language: 'en' },
+  { src: 'https://files.vidstack.io/sprite-fight/subs/spanish.vtt', label: 'Español', language: 'es' },
+];
 
 type Lang = 'en' | 'fa';
 
@@ -56,11 +61,16 @@ const T: Record<Lang, {
       analytics: {
         title: 'Analytics & resume',
         intro:
-          'Pass an analytics config and the player emits the canonical Logplex events (batched, retried, flushed on page-hide) and offers a resume banner from the saved position. No extra wiring.',
+          'Analytics is entirely optional — the player works fully without it. When you do pass an analytics config, it emits the canonical Logplex events (batched, retried, flushed on page-hide) and offers a resume banner from the saved position. No extra wiring.',
       },
       playlist: {
         title: 'Episodes / playlist',
         intro: 'Provide a list of episodes; the playlist panel and prev/next nav appear automatically.',
+      },
+      subtitles: {
+        title: 'Subtitles & audio tracks',
+        intro:
+          'HLS-embedded subtitle and multi-language audio tracks are detected automatically and exposed as a CC menu and an audio-language menu. You can also add your own external subtitle files via the subtitles prop.',
       },
       ads: {
         title: 'Pre-roll ads',
@@ -96,6 +106,7 @@ const T: Record<Lang, {
       ['WebView fullscreen', 'Native when available, else a CSS simulated fullscreen.'],
       ['Like + badge + notice', 'Like button, premium info badge, operator notice banner.'],
       ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
+      ['Subtitles & audio', 'Auto CC + multi-language audio menus from HLS; add external subtitle files too.'],
       ['No-Logplex mode', 'Analytics is optional — works as a standalone player with zero backend.'],
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
@@ -104,6 +115,7 @@ const T: Record<Lang, {
       ['poster', 'string', 'Poster image shown on the cover (before play).'],
       ['title / episodeLabel', 'string', 'Shown above the scrubber, right-aligned.'],
       ['thumbnails', 'string', 'WebVTT thumbnails track for scrub previews.'],
+      ['subtitles', 'SubtitleTrack[]', 'External subtitle files (HLS subtitles + audio tracks auto-detected).'],
       ['locale', "'fa' | 'en'", 'UI language (fa → RTL). Default fa.'],
       ['theme', 'ThemeOverrides', 'accent / surface / text / radius … CSS variables.'],
       ['appearance', "'dark' | 'light'", 'Color scheme (video stays black). Default dark.'],
@@ -142,11 +154,16 @@ const T: Record<Lang, {
       analytics: {
         title: 'آنالیتیکس و ادامهٔ تماشا',
         intro:
-          'یک تنظیمات analytics بدهید تا پخش‌کننده رویدادهای استاندارد Logplex را ارسال کند (دسته‌ای، با تلاش مجدد و تخلیه هنگام پنهان‌شدن صفحه) و بنر ادامهٔ تماشا از موقعیت ذخیره‌شده را نشان دهد. بدون سیم‌کشی اضافه.',
+          'آنالیتیکس کاملاً اختیاری است — پخش‌کننده بدون آن هم کامل کار می‌کند. اگر تنظیمات analytics را بدهید، رویدادهای استاندارد Logplex را ارسال می‌کند (دسته‌ای، با تلاش مجدد و تخلیه هنگام پنهان‌شدن صفحه) و بنر ادامهٔ تماشا را نشان می‌دهد. بدون سیم‌کشی اضافه.',
       },
       playlist: {
         title: 'قسمت‌ها / لیست پخش',
         intro: 'یک لیست از قسمت‌ها بدهید؛ پنل لیست پخش و دکمه‌های قبلی/بعدی به‌طور خودکار ظاهر می‌شوند.',
+      },
+      subtitles: {
+        title: 'زیرنویس و صداهای چندزبانه',
+        intro:
+          'زیرنویس‌ها و صداهای چندزبانهٔ داخل HLS به‌طور خودکار شناسایی و در منوی زیرنویس و منوی زبان صدا نمایش داده می‌شوند. فایل‌های زیرنویس خودتان را هم می‌توانید با پراپ subtitles اضافه کنید.',
       },
       ads: {
         title: 'تبلیغ پیش از پخش',
@@ -182,6 +199,7 @@ const T: Record<Lang, {
       ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت تمام‌صفحهٔ شبیه‌سازی‌شده با CSS.'],
       ['لایک + نشان + اعلان', 'دکمهٔ لایک، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
       ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
+      ['زیرنویس و صدا', 'منوی زیرنویس و صدای چندزبانه از HLS؛ افزودن فایل زیرنویس خارجی هم ممکن است.'],
       ['بدون Logplex', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
@@ -190,6 +208,7 @@ const T: Record<Lang, {
       ['poster', 'string', 'تصویر پوستر که روی کاور (پیش از پخش) نمایش داده می‌شود.'],
       ['title / episodeLabel', 'string', 'بالای نوار پیشروی و راست‌چین نمایش داده می‌شود.'],
       ['thumbnails', 'string', 'ترک تصاویر بندانگشتی WebVTT برای پیش‌نمایش هنگام جابه‌جایی.'],
+      ['subtitles', 'SubtitleTrack[]', 'فایل‌های زیرنویس خارجی (زیرنویس و صدای HLS خودکار شناسایی می‌شوند).'],
       ['locale', "'fa' | 'en'", 'زبان رابط کاربری (fa ← راست‌به‌چپ). پیش‌فرض fa.'],
       ['theme', 'ThemeOverrides', 'متغیرهای CSS مانند accent / surface / text / radius.'],
       ['appearance', "'dark' | 'light'", 'حالت رنگ (ویدئو مشکی می‌ماند). پیش‌فرض dark.'],
@@ -255,6 +274,7 @@ function Playground({ lang }: { lang: Lang }) {
     appearance: appear,
     theme: { accent },
     thumbnails: THUMBNAILS,
+    subtitles: SUBTITLES,
     persistSettings: persist,
     onLike: () => undefined,
     ...(episodes ? { episodes: episodesFor(locale), currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
@@ -379,6 +399,7 @@ function HeroPlayer({ lang }: { lang: Lang }) {
         episodeLabel={fa ? FA_SUBTITLES[idx] : `Episode ${idx + 1}`}
         poster={POSTER}
         thumbnails={THUMBNAILS}
+        subtitles={SUBTITLES}
         badge={fa ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.'}
         onBack={() => undefined}
         onLike={() => undefined}
@@ -539,6 +560,17 @@ const episodes = [
   episodes={episodes}
   currentEpisodeId={current}
   onEpisodeChange={setCurrent}
+/>`}</CodeBlock>
+        </Section>
+
+        <Section id="subtitles" title={t.s.subtitles.title} intro={t.s.subtitles.intro}>
+          <CodeBlock>{`
+<LogplexPlayer
+  src={hlsWithAudioAndSubs}   // embedded audio/subtitle tracks → auto CC + audio menus
+  subtitles={[
+    { src: 'subs/fa.vtt', label: 'فارسی', language: 'fa' },
+    { src: 'subs/en.vtt', label: 'English', language: 'en' },
+  ]}
 />`}</CodeBlock>
         </Section>
 

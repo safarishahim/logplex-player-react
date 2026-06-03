@@ -5,11 +5,14 @@ import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
 import {
-  BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LikeFilledIcon, LikeIcon, LockIcon,
-  NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon, VolumeHighIcon, VolumeMutedIcon,
+  AudioIcon, BackIcon, CaptionsIcon, CaptionsOnIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon,
+  LikeFilledIcon, LikeIcon, LockIcon, NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon,
+  VolumeHighIcon, VolumeMutedIcon,
 } from './controls/icons';
 import { SettingsModal } from './controls/SettingsModal';
 import { SpeedModal } from './controls/SpeedModal';
+import { CaptionsModal } from './controls/CaptionsModal';
+import { AudioModal } from './controls/AudioModal';
 import { GestureLayer } from './GestureLayer';
 
 export interface SkinProps {
@@ -55,6 +58,9 @@ export function Skin(props: SkinProps): JSX.Element {
   const autoQuality = useMediaState('autoQuality');
   const playbackRate = useMediaState('playbackRate');
   const started = useMediaState('started');
+  const textTracks = useMediaState('textTracks');
+  const textTrack = useMediaState('textTrack');
+  const audioTracks = useMediaState('audioTracks');
 
   const [locked, setLocked] = useState(false);
   const [active, setActive] = useState(true);
@@ -62,9 +68,15 @@ export function Skin(props: SkinProps): JSX.Element {
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
+  const [captionsOpen, setCaptionsOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const [playRequested, setPlayRequested] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
+  const subtitleTracks = (textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions');
+  const hasCaptions = subtitleTracks.length > 0;
+  const hasAudioTracks = (audioTracks?.length ?? 0) > 1;
   const visible = paused || active || !canPlay;
   const isMuted = muted || volume === 0;
   const qualityLabel = autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
@@ -108,13 +120,16 @@ export function Skin(props: SkinProps): JSX.Element {
   }
 
   // Cover (pre-play): just the poster + a single play button. Tapping play
-  // starts playback and enters fullscreen.
-  if (!started) {
+  // starts playback and enters fullscreen. We dismiss the cover on tap rather
+  // than waiting for the media 'started' event, so it can't get stuck if the
+  // source stalls or the event lags.
+  if (!started && !playRequested) {
     return (
       <button
         className="lpx-cover"
         aria-label={props.strings.play}
         onClick={() => {
+          setPlayRequested(true);
           remote.play();
           if (props.fullscreenOnPlay && !fsActive) toggleFullscreen();
         }}
@@ -165,6 +180,28 @@ export function Skin(props: SkinProps): JSX.Element {
             </button>
           )}
           <span className="lpx-grow" />
+          {hasAudioTracks && (
+            <button
+              className="lpx-btn"
+              aria-label={props.strings.audioTrack}
+              aria-expanded={audioOpen}
+              onClick={() => setAudioOpen(true)}
+            >
+              <AudioIcon />
+            </button>
+          )}
+          {hasCaptions && (
+            <button
+              className="lpx-btn"
+              aria-label={props.strings.captions}
+              aria-pressed={!!textTrack}
+              data-on={!!textTrack || undefined}
+              aria-expanded={captionsOpen}
+              onClick={() => setCaptionsOpen(true)}
+            >
+              {textTrack ? <CaptionsOnIcon /> : <CaptionsIcon />}
+            </button>
+          )}
           <button
             className="lpx-btn lpx-quality-btn"
             aria-label={props.strings.quality}
@@ -356,6 +393,8 @@ export function Skin(props: SkinProps): JSX.Element {
 
       {settingsOpen && <SettingsModal strings={props.strings} onClose={() => setSettingsOpen(false)} />}
       {speedOpen && <SpeedModal strings={props.strings} onClose={() => setSpeedOpen(false)} />}
+      {captionsOpen && <CaptionsModal strings={props.strings} onClose={() => setCaptionsOpen(false)} />}
+      {audioOpen && <AudioModal strings={props.strings} onClose={() => setAudioOpen(false)} />}
     </>
   );
 }
