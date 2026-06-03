@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
+import { Captions, Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Direction, Episode } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
@@ -160,6 +160,9 @@ export function Skin(props: SkinProps): JSX.Element {
         persist={props.persistSettings}
         storageKey={props.settingsKey}
       />
+
+      {/* Subtitle cues — lifted above the control bar while it's visible. */}
+      <Captions className={`lpx-captions${visible ? ' lpx-captions--lifted' : ''}`} />
 
       {/* Buffering / loading — outside the fading controls so it always shows. */}
       {(waiting || !canPlay) && (

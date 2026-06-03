@@ -1019,8 +1019,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 5% 64px;
+  padding: 0 5% 28px;
   text-align: center;
+  transition: padding-bottom 0.2s ease;
+}
+/* Lift clear of the control bar (time row + scrubber + buttons) while visible. */
+.lpx-captions--lifted {
+  padding-bottom: 150px;
 }
 .lpx-captions [data-part='cue-display'] {
   position: static !important;

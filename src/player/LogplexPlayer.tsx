@@ -4,7 +4,6 @@ import {
   MediaProvider,
   Poster,
   Track,
-  Captions,
   type MediaPlayerInstance,
 } from '@vidstack/react';
 import type { LogplexAnalyticsConfig, LogplexPlayerProps } from '../types';
@@ -222,9 +221,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
               />
             ))}
         </MediaProvider>
-
-        {/* Renders the active subtitle/caption cues above the video. */}
-        {!showingAd && <Captions className="lpx-captions" />}
 
         {showingAd ? (
           <AdOverlay
