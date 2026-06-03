@@ -272,6 +272,30 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     });
   }, [restriction, player]);
 
+  // Simulated fullscreen: promote the container to the browser top layer so no
+  // host stacking context can paint over it. Progressive enhancement — falls
+  // back to the max z-index on browsers without the popover API.
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = containerRef.current as (HTMLDivElement & { showPopover?: () => void; hidePopover?: () => void }) | null;
+    if (!el || !simulated || typeof el.showPopover !== 'function') return;
+    if (fs.active) {
+      try {
+        if (!el.hasAttribute('popover')) el.setAttribute('popover', 'manual');
+        el.showPopover();
+      } catch {
+        /* unsupported state — z-index fallback still applies */
+      }
+    } else if (el.hasAttribute('popover')) {
+      try {
+        el.hidePopover();
+      } catch {
+        /* ignore */
+      }
+      el.removeAttribute('popover');
+    }
+  }, [simulated, fs.active]);
+
   const resolvedDir = dirFor(locale, dir);
   const strings = getStrings(locale);
 
@@ -287,7 +311,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     .join(' ');
 
   return (
-    <div className={containerClass} style={themeStyle(theme)}>
+    <div ref={containerRef} className={containerClass} style={themeStyle(theme)}>
       <MediaPlayer
         ref={setPlayer}
         className={`lpx-player${className ? ` ${className}` : ''}`}

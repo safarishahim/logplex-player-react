@@ -79,6 +79,17 @@ See the **[documentation site](https://safarishahim.github.io/logplex-player-rea
 
 Modern evergreen browsers (Chrome, Edge, Firefox, Safari) and WebViews. HLS plays via hls.js where MSE is available, and via native HLS on Safari/iOS.
 
+## Mobile & iOS notes
+
+The player is built mobile-first (inline playback, touch gestures, responsive skin):
+
+- **Inline playback** — `playsInline` is set, so video plays in place on iPhone instead of being forced into the system player.
+- **HLS everywhere** — Android Chrome/WebView uses **hls.js** (MSE); iOS Safari/WKWebView has no MSE, so it falls back to **native HLS** automatically. MP4 works on both.
+- **Fullscreen** — `fullscreenMode="auto"` (default) uses the native Fullscreen API when available, otherwise a **CSS simulated fullscreen** that keeps the custom skin (and, where supported, promotes to the browser **top layer** so no host CSS stacking context can cover it). On **iPhone Safari** the native Fullscreen API isn't available for non-video elements, so it uses the simulated path and keeps your skin. Force it with `fullscreenMode="simulated"` or `"native"`.
+- **Quality menu** — fully controllable where hls.js runs (Android/desktop). On iOS **native HLS**, bitrate is auto-selected by the OS; for guaranteed manual quality on iOS, pass an array of MP4 renditions to `src`. Embedded audio/subtitle tracks are exposed via the native track API.
+- **Autoplay** — like all browsers, mobile requires `muted` or a user gesture; the tap-to-play cover handles this.
+- **Touch hardening** — long-press callout / text selection / double-tap zoom are disabled on the player surface so gestures don't conflict; the fullscreen overlay uses dynamic viewport units (`dvh`) so the iOS address bar doesn't clip it.
+
 ## Development
 
 ```bash

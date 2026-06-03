@@ -96,6 +96,11 @@ const T: Record<Lang, {
         intro:
           'Theme via the theme prop (CSS custom properties) and switch language with locale. RTL only right-aligns text — controls, seek direction and gestures stay physical.',
       },
+      mobile: {
+        title: 'Mobile & iOS',
+        intro:
+          'Built mobile-first: inline playback (playsInline), touch gestures, and a responsive skin. HLS uses hls.js on Android and native HLS on iOS automatically; MP4 works on both. On iPhone, fullscreen uses a CSS simulated mode that keeps the custom skin and (where supported) promotes to the browser top layer so no host CSS can cover it. On iOS native HLS the OS auto-selects bitrate — for a guaranteed manual quality menu there, pass an array of MP4 renditions to src.',
+      },
       props: { title: 'Props' },
       events: {
         title: 'Analytics events',
@@ -189,6 +194,11 @@ const T: Record<Lang, {
         title: 'ظاهر و بومی‌سازی',
         intro:
           'با پراپ theme (متغیرهای CSS) ظاهر را تنظیم کنید و با locale زبان را عوض کنید. حالت RTL فقط متن را راست‌چین می‌کند — کنترل‌ها، جهت جابه‌جایی و حرکات لمسی فیزیکی می‌مانند.',
+      },
+      mobile: {
+        title: 'موبایل و iOS',
+        intro:
+          'موبایل‌محور ساخته شده: پخش درون‌خطی (playsInline)، حرکات لمسی و پوستهٔ واکنش‌گرا. HLS در اندروید با hls.js و در iOS با HLS بومی به‌طور خودکار پخش می‌شود؛ MP4 روی هر دو کار می‌کند. روی آیفون، تمام‌صفحه از حالت شبیه‌سازی‌شدهٔ CSS استفاده می‌کند که پوسته را حفظ می‌کند و (در صورت پشتیبانی) به لایهٔ بالای مرورگر می‌رود تا هیچ استایلی از سایت میزبان رویش نیفتد. در HLS بومی iOS کیفیت خودکار انتخاب می‌شود — برای منوی کیفیت دستی مطمئن، آرایه‌ای از کیفیت‌های MP4 را به src بدهید.',
       },
       props: { title: 'پراپ‌ها' },
       events: {
@@ -641,6 +651,20 @@ const episodes = [
 <LogplexPlayer
   theme={{ accent: '#e8b84b', surface: '#1c1c1e', radius: '14px' }}
   locale="fa"   // 'fa' (rtl) | 'en' (ltr)
+/>`}</CodeBlock>
+        </Section>
+
+        <Section id="mobile" title={t.s.mobile.title} intro={t.s.mobile.intro}>
+          <CodeBlock>{`
+<LogplexPlayer
+  // iOS uses native HLS (OS auto-bitrate). For a manual quality menu on iOS,
+  // provide MP4 renditions instead of a single HLS source:
+  src={[
+    { src: '1080.mp4', height: 1080 },
+    { src: '720.mp4', height: 720 },
+    { src: '480.mp4', height: 480 },
+  ]}
+  fullscreenMode="auto"   // 'auto' | 'native' | 'simulated' (simulated keeps the skin)
 />`}</CodeBlock>
         </Section>
 

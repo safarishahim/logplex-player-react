@@ -45,8 +45,22 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
+  /* Dynamic viewport units so iOS Safari's address bar doesn't clip/jump. */
+  width: 100dvw;
+  height: 100dvh;
+  /* Max z-index is the fallback; when supported we also promote to the browser
+     top layer (popover) so no host stacking context can paint over it. */
   z-index: 2147483647;
+  margin: 0;
+  border: 0;
+  padding: 0;
   background: #000;
+}
+.lpx-fs-sim:popover-open {
+  /* Override the popover UA defaults (inset:auto/margin:auto/fit-content). */
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
 }
 .lpx-fs-rotate {
   inset: auto;
@@ -54,6 +68,8 @@
   inset-inline-start: 50%;
   width: 100vh;
   height: 100vw;
+  width: 100dvh;
+  height: 100dvw;
   transform: translate(-50%, -50%) rotate(90deg);
 }
 .lpx-fs-sim .lpx-player {
@@ -84,6 +100,10 @@
   border-radius: var(--lpx-radius);
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
+  /* iOS: stop long-press callout + text selection from hijacking gestures. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 /* Buttons/inputs don't inherit font-family by default — force it so every
    control (playlist items, labels, …) uses the host/customer's font. */
@@ -392,6 +412,7 @@
   background: transparent;
   color: var(--lpx-text);
   cursor: pointer;
+  touch-action: manipulation;
   transition: background 0.15s ease;
 }
 .lpx-btn:hover {
