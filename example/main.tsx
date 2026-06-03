@@ -283,10 +283,31 @@ const EVENT_TYPES = [
   'heartbeat', 'complete', 'exit', 'error', 'play_start_success', 'ad_request', 'ad_start', 'ad_complete', 'like',
 ];
 
+const LANG_KEY = 'lpx-docs-lang';
+
+function readLang(): Lang {
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved === 'fa' || saved === 'en') return saved;
+  } catch {
+    /* localStorage unavailable (private mode / SSR) — fall back to default */
+  }
+  return 'en';
+}
+
 function Docs() {
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = useState<Lang>(readLang);
   const t = T[lang];
   const dir = lang === 'fa' ? 'rtl' : 'ltr';
+
+  const chooseLang = (next: Lang) => {
+    setLang(next);
+    try {
+      localStorage.setItem(LANG_KEY, next);
+    } catch {
+      /* ignore persistence failures */
+    }
+  };
 
   return (
     <div className="dx-app" dir={dir} lang={lang}>
@@ -302,10 +323,10 @@ function Docs() {
           <a href="#events">{t.nav.events}</a>
         </nav>
         <div className="dx-langtoggle" role="group" aria-label="Docs language">
-          <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>
+          <button aria-pressed={lang === 'en'} onClick={() => chooseLang('en')}>
             EN
           </button>
-          <button aria-pressed={lang === 'fa'} onClick={() => setLang('fa')}>
+          <button aria-pressed={lang === 'fa'} onClick={() => chooseLang('fa')}>
             فا
           </button>
         </div>
