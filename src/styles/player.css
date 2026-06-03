@@ -1,0 +1,789 @@
+/* Logplex player skin. Tokens are CSS custom properties so hosts can theme
+   via the `theme` prop (which sets these on the root) or their own CSS. */
+
+/* Container query context → the skin responds to the PLAYER's own width,
+   so it adapts whether embedded small or shown full-bleed. */
+.lpx-container {
+  container-type: inline-size;
+  width: 100%;
+}
+
+/* Simulated (CSS) fullscreen for WebViews. Fills the viewport; the rotate
+   variant centers + rotates 90° so landscape content is full-bleed inside a
+   portrait viewport (width/height are swapped to viewport units). */
+.lpx-fs-sim {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2147483647;
+  background: #000;
+}
+.lpx-fs-rotate {
+  inset: auto;
+  top: 50%;
+  inset-inline-start: 50%;
+  width: 100vh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.lpx-fs-sim .lpx-player {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.lpx-player {
+  --lpx-accent: #e8b84b; /* gold */
+  --lpx-accent-contrast: #1a1a1a;
+  --lpx-surface: #1c1c1e;
+  --lpx-scrim: rgba(0, 0, 0, 0.55);
+  --lpx-text: #ffffff;
+  --lpx-text-muted: #b8b8bd;
+  --lpx-radius: 12px;
+  --lpx-control: 44px;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  color: var(--lpx-text);
+  overflow: hidden;
+  border-radius: var(--lpx-radius);
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.lpx-player[data-fullscreen='true'] {
+  aspect-ratio: auto;
+  height: 100%;
+  border-radius: 0;
+}
+.lpx-player video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Gesture surface sits beneath the controls and captures taps/swipes on the
+   video area. touch-action:none so vertical swipes don't scroll the page. */
+.lpx-gestures {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  touch-action: none;
+}
+.lpx-dim {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+/* Controls overlay is pass-through; only its interactive children capture
+   pointer events, so background taps reach the gesture layer. */
+.lpx-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  background: linear-gradient(
+    to top,
+    var(--lpx-scrim) 0%,
+    transparent 28%,
+    transparent 72%,
+    var(--lpx-scrim) 100%
+  );
+}
+.lpx-topbar,
+.lpx-bottom,
+.lpx-center > *,
+.lpx-resume-card,
+.lpx-menu,
+.lpx-panel,
+.lpx-lock-toggle {
+  pointer-events: auto;
+}
+.lpx-controls[data-visible='false'] {
+  opacity: 0;
+  pointer-events: none;
+  cursor: none;
+}
+.lpx-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.lpx-controls--locked {
+  align-items: center;
+  justify-content: center;
+}
+.lpx-lock-toggle {
+  align-self: center;
+  margin: auto;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ── Top bar ── */
+.lpx-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.lpx-topbar .lpx-title {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+.lpx-topbar .lpx-title b {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lpx-topbar .lpx-title span {
+  font-size: 12px;
+  color: var(--lpx-text-muted);
+}
+
+/* ── Center cluster (play + skip) ── */
+.lpx-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  pointer-events: none;
+}
+.lpx-center > * {
+  pointer-events: auto;
+}
+.lpx-bigplay {
+  width: 64px;
+  height: 64px;
+}
+
+/* ── Bottom bar ── */
+.lpx-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px 14px;
+}
+.lpx-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--lpx-text-muted);
+}
+.lpx-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lpx-buttons .lpx-spacer {
+  flex: 1;
+}
+
+/* ── Buttons ── */
+.lpx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--lpx-control);
+  height: var(--lpx-control);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--lpx-text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.lpx-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.lpx-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+.lpx-btn--text {
+  width: auto;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Seek bar (Vidstack TimeSlider) ── */
+.lpx-slider {
+  --media-slider-height: 32px;
+  width: 100%;
+  height: var(--media-slider-height);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.lpx-slider .lpx-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+}
+.lpx-slider .lpx-track-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--slider-fill, 0%);
+  background: var(--lpx-accent);
+  border-radius: 999px;
+}
+.lpx-slider .lpx-track-progress {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--slider-progress, 0%);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+}
+.lpx-slider .lpx-thumb {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: var(--slider-fill, 0%);
+  width: 13px;
+  height: 13px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--lpx-accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.lpx-slider:hover .lpx-thumb,
+.lpx-slider[data-active] .lpx-thumb {
+  opacity: 1;
+}
+.lpx-slider .lpx-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.lpx-slider .lpx-thumbnail {
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 120px;
+}
+.lpx-slider .lpx-preview-time {
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ── Resume banner ── */
+.lpx-resume {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 84px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.lpx-resume-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(20, 20, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 6px 6px 6px 16px;
+  pointer-events: auto;
+}
+.lpx-resume-card .lpx-resume-text {
+  font-size: 13px;
+}
+.lpx-resume-card .lpx-resume-go {
+  background: var(--lpx-accent);
+  color: var(--lpx-accent-contrast);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Spinner ── */
+.lpx-spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* ── Settings menu (quality + speed) ── */
+.lpx-menu-root {
+  display: inline-flex;
+}
+.lpx-quality-btn {
+  width: auto;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 999px;
+}
+.lpx-quality-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.lpx-menu {
+  background: rgba(24, 24, 26, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  z-index: 30;
+}
+.lpx-menu-section + .lpx-menu-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.lpx-menu-title {
+  font-size: 11px;
+  color: var(--lpx-text-muted);
+  padding: 4px 8px;
+}
+.lpx-radio-group {
+  display: flex;
+  flex-direction: column;
+}
+.lpx-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lpx-radio:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.lpx-radio[aria-checked='true'],
+.lpx-radio[data-checked] {
+  color: var(--lpx-accent);
+  font-weight: 700;
+}
+.lpx-radio[aria-checked='true']::before,
+.lpx-radio[data-checked]::before {
+  content: '✓';
+}
+
+/* ── Scrub thumbnail preview ── */
+.lpx-thumbnail {
+  display: block;
+  width: 140px;
+  height: 79px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.lpx-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Playlist / episodes panel ── */
+.lpx-panel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(340px, 80%);
+  background: rgba(18, 18, 20, 0.96);
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 25;
+  animation: lpx-slide-in 0.2s ease;
+}
+@keyframes lpx-slide-in {
+  from {
+    transform: translateX(var(--lpx-slide, 100%));
+    opacity: 0;
+  }
+}
+.lpx-player[dir='rtl'] .lpx-panel {
+  --lpx-slide: -100%;
+}
+.lpx-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.lpx-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+.lpx-ep {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--lpx-text);
+  text-align: start;
+  cursor: pointer;
+}
+.lpx-ep:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.lpx-ep[data-active='true'] {
+  background: rgba(232, 184, 75, 0.14);
+  outline: 1px solid var(--lpx-accent);
+}
+.lpx-ep-thumb {
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: none;
+}
+.lpx-ep-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lpx-ep-meta b {
+  font-size: 13px;
+}
+.lpx-ep-meta i {
+  font-size: 11px;
+  color: var(--lpx-text-muted);
+  font-style: normal;
+}
+
+/* ── Gesture feedback ── */
+.lpx-skip {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  font-weight: 700;
+  animation: lpx-pop 0.5s ease;
+  pointer-events: none;
+}
+.lpx-skip svg {
+  width: 28px;
+  height: 28px;
+  fill: #fff;
+}
+.lpx-skip--l {
+  inset-inline-start: 12%;
+}
+.lpx-skip--r {
+  inset-inline-end: 12%;
+}
+@keyframes lpx-pop {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+  60% {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.lpx-rate-badge {
+  position: absolute;
+  top: 16px;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: fit-content;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--lpx-accent);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.lpx-gauge {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 14px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+.lpx-gauge-bar {
+  width: 6px;
+  height: 90px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.lpx-gauge-bar span {
+  width: 100%;
+  background: var(--lpx-accent);
+}
+.lpx-gauge-val {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ── Notice banner (operator/network) ── */
+.lpx-notice {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  z-index: 6;
+  pointer-events: none;
+}
+.lpx-notice-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 92%;
+  background: rgba(20, 20, 22, 0.94);
+  border: 1px solid rgba(232, 184, 75, 0.5);
+  border-radius: 999px;
+  padding: 6px 8px 6px 16px;
+  pointer-events: auto;
+}
+.lpx-notice-text {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.lpx-notice-cta {
+  flex: none;
+  background: var(--lpx-accent);
+  color: var(--lpx-accent-contrast);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lpx-notice-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+/* ── Reactions ── */
+.lpx-reactions {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 92px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.lpx-reaction-row {
+  display: flex;
+  gap: 6px;
+  background: rgba(20, 20, 22, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 6px 10px;
+  pointer-events: auto;
+}
+.lpx-reaction {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.lpx-reaction:hover {
+  transform: scale(1.3) translateY(-2px);
+}
+.lpx-float-layer {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  height: 140px;
+  pointer-events: none;
+}
+.lpx-float {
+  position: absolute;
+  inset-inline-start: 50%;
+  bottom: 0;
+  font-size: 24px;
+  animation: lpx-float-up 1.2s ease-out forwards;
+}
+@keyframes lpx-float-up {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -130px) scale(1.3);
+  }
+}
+
+/* ── Ad overlay ── */
+.lpx-ad {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.lpx-ad-click {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+.lpx-ad-top {
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+.lpx-ad-label {
+  background: var(--lpx-accent);
+  color: var(--lpx-accent-contrast);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+.lpx-ad-bottom {
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.lpx-ad-skip {
+  align-self: flex-end;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lpx-ad-skip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.lpx-ad-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.lpx-ad-progress span {
+  display: block;
+  height: 100%;
+  background: var(--lpx-accent);
+}
+
+/* ── Spinner ── */
+.lpx-spinner-ring {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--lpx-accent);
+  border-radius: 50%;
+  animation: lpx-spin 0.8s linear infinite;
+}
+@keyframes lpx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Responsive (desktop default → mobile under 640px container width) ──
+   Desktop shows the center skip+play cluster and hides the duplicate
+   transport buttons in the bottom bar; mobile flips it (transport lives in
+   the bottom bar, the big center button is play-only). */
+.lpx-hide-desktop {
+  display: none;
+}
+@container (max-width: 640px) {
+  .lpx-player {
+    --lpx-control: 40px;
+  }
+  .lpx-bigplay {
+    width: 56px;
+    height: 56px;
+  }
+  .lpx-hide-mobile {
+    display: none;
+  }
+  .lpx-hide-desktop {
+    display: inline-flex;
+  }
+  .lpx-center {
+    gap: 0;
+  }
+}
+
+/* RTL: inline-* logical properties above flip automatically. */
