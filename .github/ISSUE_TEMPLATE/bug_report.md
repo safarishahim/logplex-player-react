@@ -19,7 +19,7 @@ What you expected to happen, and what happened instead.
 
 **Environment**
 
-- `@logplex/player-react` version:
+- `logplex-player-react` version:
 - React version:
 - Browser / OS (and whether it's a WebView):
 - Desktop or mobile:

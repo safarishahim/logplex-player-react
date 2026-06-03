@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in improving `@logplex/player-react`! 🎉
+Thanks for your interest in improving `logplex-player-react`! 🎉
 
 ## Getting started
 

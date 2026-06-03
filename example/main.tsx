@@ -141,7 +141,7 @@ const T: Record<Lang, {
       ['onBack', '() => void', 'Show a back button in the top bar.'],
     ],
     eventsIntro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
-    footer: '@logplex/player-react · built on Vidstack + hls.js · Developed by Morteza Safarishahi',
+    footer: 'logplex-player-react · built on Vidstack + hls.js · Developed by Morteza Safarishahi',
   },
   fa: {
     nav: { start: 'شروع سریع', playground: 'محیط آزمایش', features: 'امکانات', props: 'پراپ‌ها', events: 'رویدادها' },
@@ -234,7 +234,7 @@ const T: Record<Lang, {
       ['onBack', '() => void', 'نمایش دکمهٔ بازگشت در نوار بالا.'],
     ],
     eventsIntro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
-    footer: '@logplex/player-react · ساخته‌شده با Vidstack و hls.js · توسعه‌یافته توسط مرتضی صفری شاهی',
+    footer: 'logplex-player-react · ساخته‌شده با Vidstack و hls.js · توسعه‌یافته توسط مرتضی صفری شاهی',
   },
 };
 
@@ -475,7 +475,7 @@ function Docs() {
     <div className="dx-app" dir={dir} lang={lang}>
       <header className="dx-header">
         <span className="dx-logo">
-          <b>@logplex</b>/player-react
+          <b>logplex</b>-player-react
         </span>
         <nav>
           <a href="#start">{t.nav.start}</a>
@@ -505,15 +505,15 @@ function Docs() {
               </span>
             ))}
           </div>
-          <div className="dx-install">npm i @logplex/player-react</div>
+          <div className="dx-install">npm i logplex-player-react</div>
           {/* key={lang} remounts so the locale switch + badge animation apply cleanly. */}
           <HeroPlayer key={lang} lang={lang} />
         </div>
 
         <Section id="start" title={t.s.start.title} intro={t.s.start.intro}>
           <CodeBlock>{`
-import { LogplexPlayer } from '@logplex/player-react';
-import '@logplex/player-react/styles.css';
+import { LogplexPlayer } from 'logplex-player-react';
+import 'logplex-player-react/styles.css';
 
 export default function Watch() {
   return (
@@ -537,8 +537,8 @@ export default function Watch() {
 
         <Section id="standalone" title={t.s.standalone.title} intro={t.s.standalone.intro}>
           <CodeBlock>{`
-import { LogplexPlayer } from '@logplex/player-react';
-import '@logplex/player-react/styles.css';
+import { LogplexPlayer } from 'logplex-player-react';
+import 'logplex-player-react/styles.css';
 
 // No analytics, no Logplex account — just a player.
 <LogplexPlayer

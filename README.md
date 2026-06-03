@@ -1,8 +1,8 @@
-# @logplex/player-react
+# logplex-player-react
 
-[![npm](https://img.shields.io/npm/v/@logplex/player-react.svg)](https://www.npmjs.com/package/@logplex/player-react)
+[![npm](https://img.shields.io/npm/v/logplex-player-react.svg)](https://www.npmjs.com/package/logplex-player-react)
 [![CI](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml/badge.svg)](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml)
-[![license](https://img.shields.io/npm/l/@logplex/player-react.svg)](./LICENSE)
+[![license](https://img.shields.io/npm/l/logplex-player-react.svg)](./LICENSE)
 
 A production-ready **React video player** built on [Vidstack](https://vidstack.io) + [hls.js](https://github.com/video-dev/hls.js). HLS/MP4, a fully custom skin (dark, gold accent, **RTL/Persian + LTR/English**), responsive via container queries, with quality / audio / subtitle menus, pre/mid/post-roll ads, touch gestures, WebView-safe fullscreen, and **optional** built-in analytics + resume.
 
@@ -13,7 +13,7 @@ A production-ready **React video player** built on [Vidstack](https://vidstack.i
 ## Install
 
 ```bash
-npm i @logplex/player-react
+npm i logplex-player-react
 ```
 
 Peer dependencies: `react` and `react-dom` (>= 18).
@@ -21,8 +21,8 @@ Peer dependencies: `react` and `react-dom` (>= 18).
 ## Quick start
 
 ```tsx
-import { LogplexPlayer } from '@logplex/player-react';
-import '@logplex/player-react/styles.css';
+import { LogplexPlayer } from 'logplex-player-react';
+import 'logplex-player-react/styles.css';
 
 export default function Watch() {
   return (
