@@ -6,6 +6,35 @@
 .lpx-container {
   container-type: inline-size;
   width: 100%;
+
+  /* Theme tokens live here (the root the `theme` prop writes to) so inline
+     overrides win and cascade into the player. Don't redeclare them on
+     .lpx-player or they'd shadow the override. */
+  --lpx-accent: #e8b84b; /* gold */
+  --lpx-accent-contrast: #1a1a1a;
+  --lpx-surface: #1c1c1e;
+  --lpx-scrim: rgba(0, 0, 0, 0.55);
+  --lpx-text: #ffffff;
+  --lpx-text-muted: #b8b8bd;
+  --lpx-radius: 12px;
+  --lpx-control: 44px;
+  /* Overlay surfaces (panels, modals, cards), borders and hovers. */
+  --lpx-panel: rgba(20, 20, 23, 0.95);
+  --lpx-border: rgba(255, 255, 255, 0.1);
+  --lpx-hover: rgba(255, 255, 255, 0.08);
+}
+
+/* Light appearance — overrides the tokens; the video stays black but chrome,
+   panels and text invert. Opt in with appearance="light". */
+.lpx-container.lpx-light {
+  --lpx-surface: #f4f4f6;
+  --lpx-scrim: rgba(255, 255, 255, 0.55);
+  --lpx-text: #16161a;
+  --lpx-text-muted: #5b5b66;
+  --lpx-accent-contrast: #1a1a1a;
+  --lpx-panel: rgba(247, 247, 249, 0.97);
+  --lpx-border: rgba(0, 0, 0, 0.12);
+  --lpx-hover: rgba(0, 0, 0, 0.06);
 }
 
 /* Simulated (CSS) fullscreen for WebViews. Fills the viewport; the rotate
@@ -46,15 +75,6 @@
 }
 
 .lpx-player {
-  --lpx-accent: #e8b84b; /* gold */
-  --lpx-accent-contrast: #1a1a1a;
-  --lpx-surface: #1c1c1e;
-  --lpx-scrim: rgba(0, 0, 0, 0.55);
-  --lpx-text: #ffffff;
-  --lpx-text-muted: #b8b8bd;
-  --lpx-radius: 12px;
-  --lpx-control: 44px;
-
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -367,7 +387,7 @@
   transition: background 0.15s ease;
 }
 .lpx-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--lpx-hover);
 }
 .lpx-btn:disabled {
   opacity: 0.35;
@@ -475,8 +495,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(20, 20, 22, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lpx-panel);
+  border: 1px solid var(--lpx-border);
   border-radius: 999px;
   padding: 6px 6px 6px 16px;
   pointer-events: auto;
@@ -525,8 +545,8 @@
   align-items: center;
   gap: 8px;
   max-width: 80%;
-  background: rgba(20, 20, 22, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--lpx-panel);
+  border: 1px solid var(--lpx-border);
   color: var(--lpx-text);
   padding: 8px 14px;
   border-radius: 999px;
@@ -656,8 +676,8 @@
   overflow-y: auto;
   padding: 18px 22px 20px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(28, 28, 30, 0.7);
+  border: 1px solid var(--lpx-border);
+  background: var(--lpx-panel);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
@@ -687,7 +707,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--lpx-hover);
 }
 .lpx-radios {
   list-style: none;
@@ -759,8 +779,8 @@
   inset-block: 0;
   left: 0;
   width: min(340px, 80%);
-  background: rgba(18, 18, 20, 0.96);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lpx-panel);
+  border-right: 1px solid var(--lpx-border);
   display: flex;
   flex-direction: column;
   z-index: 25;
@@ -781,7 +801,7 @@
   justify-content: space-between;
   padding: 12px 14px;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--lpx-border);
 }
 .lpx-panel-list {
   list-style: none;
@@ -803,7 +823,7 @@
   cursor: pointer;
 }
 .lpx-ep:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--lpx-hover);
 }
 .lpx-ep[data-active='true'] {
   background: rgba(232, 184, 75, 0.14);
@@ -946,7 +966,7 @@
   align-items: center;
   gap: 10px;
   max-width: 92%;
-  background: rgba(20, 20, 22, 0.94);
+  background: var(--lpx-panel);
   border: 1px solid rgba(232, 184, 75, 0.5);
   border-radius: 999px;
   padding: 6px 8px 6px 16px;
@@ -983,7 +1003,8 @@
 .lpx-restrict {
   position: absolute;
   inset: 0;
-  z-index: 9;
+  /* Above panels (25) and modals so it fully blocks playback + all controls. */
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -992,8 +1013,8 @@
 }
 .lpx-restrict-card {
   width: min(680px, 100%);
-  background: rgba(20, 20, 22, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lpx-panel);
+  border: 1px solid var(--lpx-border);
   border-radius: var(--lpx-radius);
   backdrop-filter: blur(6px);
   padding: 26px 28px 22px;

@@ -45,6 +45,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     onBack,
     className,
     theme,
+    appearance,
     ad,
     notice,
     restriction,
@@ -123,9 +124,14 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     [tracker, props.onLike],
   );
 
-  // A restriction blocks playback — pause as soon as it appears.
+  // A restriction blocks playback — pause immediately and keep it paused
+  // (guards against autoplay/keyboard) until the restriction is cleared.
   useEffect(() => {
-    if (restriction && player) player.pause();
+    if (!restriction || !player) return;
+    player.pause();
+    return player.subscribe(({ paused }) => {
+      if (!paused) player.pause();
+    });
   }, [restriction, player]);
 
   const resolvedDir = dirFor(locale, dir);
@@ -135,6 +141,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     'lpx-container',
     // RTL only right-aligns text; layout/operations stay physical (LTR).
     resolvedDir === 'rtl' ? 'lpx-rtl' : '',
+    appearance === 'light' ? 'lpx-light' : '',
     fs.active && !fs.rotate ? 'lpx-fs-sim' : '',
     fs.active && fs.rotate ? 'lpx-fs-sim lpx-fs-rotate' : '',
   ]

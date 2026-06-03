@@ -156,6 +156,8 @@ export interface LogplexPlayerProps {
    */
   fullscreenMode?: 'auto' | 'native' | 'simulated';
   theme?: ThemeOverrides;
+  /** Color scheme. 'light' inverts chrome/panels/text (video stays black). Default 'dark'. */
+  appearance?: 'dark' | 'light';
   className?: string;
 
   /** Playlist / episode navigation. */

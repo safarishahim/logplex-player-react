@@ -74,7 +74,7 @@ const T: Record<Lang, {
         intro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
       },
     },
-    pg: { language: 'Language', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction' },
+    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
@@ -96,6 +96,7 @@ const T: Record<Lang, {
       ['thumbnails', 'string', 'WebVTT thumbnails track for scrub previews.'],
       ['locale', "'fa' | 'en'", 'UI language (fa → RTL). Default fa.'],
       ['theme', 'ThemeOverrides', 'accent / surface / text / radius … CSS variables.'],
+      ['appearance', "'dark' | 'light'", 'Color scheme (video stays black). Default dark.'],
       ['episodes', 'Episode[]', 'Playlist; enables the panel + prev/next.'],
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'Controlled episode selection.'],
       ['analytics', 'LogplexAnalyticsConfig', 'Enables built-in analytics + resume.'],
@@ -151,7 +152,7 @@ const T: Record<Lang, {
         intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
       },
     },
-    pg: { language: 'زبان', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغ پیش از پخش', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
+    pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغ پیش از پخش', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
@@ -173,6 +174,7 @@ const T: Record<Lang, {
       ['thumbnails', 'string', 'ترک تصاویر بندانگشتی WebVTT برای پیش‌نمایش هنگام جابه‌جایی.'],
       ['locale', "'fa' | 'en'", 'زبان رابط کاربری (fa ← راست‌به‌چپ). پیش‌فرض fa.'],
       ['theme', 'ThemeOverrides', 'متغیرهای CSS مانند accent / surface / text / radius.'],
+      ['appearance', "'dark' | 'light'", 'حالت رنگ (ویدئو مشکی می‌ماند). پیش‌فرض dark.'],
       ['episodes', 'Episode[]', 'لیست پخش؛ پنل و دکمه‌های قبلی/بعدی را فعال می‌کند.'],
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'انتخاب کنترل‌شدهٔ قسمت.'],
       ['analytics', 'LogplexAnalyticsConfig', 'آنالیتیکس داخلی و ادامهٔ تماشا را فعال می‌کند.'],
@@ -211,6 +213,7 @@ function Section({ id, title, intro, children }: { id: string; title: string; in
 // ── Interactive playground ───────────────────────────────────────────────
 function Playground({ lang }: { lang: Lang }) {
   const [locale, setLocale] = useState<Lang>('en');
+  const [appear, setAppear] = useState<'dark' | 'light'>('dark');
   const [accent, setAccent] = useState('#e8b84b');
   const [badge, setBadge] = useState(true);
   const [notice, setNotice] = useState(true);
@@ -228,6 +231,7 @@ function Playground({ lang }: { lang: Lang }) {
     title: fa ? 'عنوان فیلم' : 'Sample Movie',
     episodeLabel: fa ? 'قسمت اول' : 'Episode 1',
     locale,
+    appearance: appear,
     theme: { accent },
     onLike: () => undefined,
     ...(episodes ? { episodes: episodesFor(locale), currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
@@ -264,6 +268,7 @@ function Playground({ lang }: { lang: Lang }) {
       `  src="${STREAM}"`,
       `  poster="${POSTER}"`,
       `  locale="${locale}"`,
+      `  appearance="${appear}"`,
       `  theme={{ accent: '${accent}' }}`,
       episodes ? `  episodes={episodes}\n  currentEpisodeId={current}\n  onEpisodeChange={setCurrent}` : '',
       back ? `  onBack={() => history.back()}` : '',
@@ -277,7 +282,7 @@ function Playground({ lang }: { lang: Lang }) {
     ]
       .filter(Boolean)
       .join('\n');
-  }, [locale, accent, episodes, back, badge, notice, restrict, ad, props.badge]);
+  }, [locale, appear, accent, episodes, back, badge, notice, restrict, ad, props.badge]);
 
   return (
     <>
@@ -287,6 +292,13 @@ function Playground({ lang }: { lang: Lang }) {
           <select value={locale} onChange={(e) => setLocale(e.target.value as Lang)}>
             <option value="en">English (LTR)</option>
             <option value="fa">فارسی (RTL)</option>
+          </select>
+        </label>
+        <label>
+          {pg.appearance}
+          <select value={appear} onChange={(e) => setAppear(e.target.value as 'dark' | 'light')}>
+            <option value="dark">{pg.dark}</option>
+            <option value="light">{pg.light}</option>
           </select>
         </label>
         <label>
