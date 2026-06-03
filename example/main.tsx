@@ -7,9 +7,9 @@ const STREAM = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
 const POSTER = 'https://picsum.photos/seed/logplex-hero/1280/720';
 
 const EPISODES: Episode[] = [
-  { id: 'e1', src: STREAM, poster: 'https://picsum.photos/seed/lp1/1280/720', title: 'سریال نمونه', subtitle: 'قسمت اول' },
-  { id: 'e2', src: STREAM, poster: 'https://picsum.photos/seed/lp2/1280/720', title: 'سریال نمونه', subtitle: 'قسمت دوم' },
-  { id: 'e3', src: STREAM, poster: 'https://picsum.photos/seed/lp3/1280/720', title: 'سریال نمونه', subtitle: 'قسمت سوم' },
+  { id: 'e1', src: STREAM, poster: 'https://picsum.photos/seed/lp1/1280/720', title: 'Sample Series', subtitle: 'Episode 1' },
+  { id: 'e2', src: STREAM, poster: 'https://picsum.photos/seed/lp2/1280/720', title: 'Sample Series', subtitle: 'Episode 2' },
+  { id: 'e3', src: STREAM, poster: 'https://picsum.photos/seed/lp3/1280/720', title: 'Sample Series', subtitle: 'Episode 3' },
 ];
 
 function CodeBlock({ children }: { children: string }) {
@@ -31,7 +31,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 
 // ── Interactive playground ───────────────────────────────────────────────
 function Playground() {
-  const [locale, setLocale] = useState<'fa' | 'en'>('fa');
+  const [locale, setLocale] = useState<'fa' | 'en'>('en');
   const [accent, setAccent] = useState('#e8b84b');
   const [badge, setBadge] = useState(true);
   const [notice, setNotice] = useState(true);
@@ -87,10 +87,10 @@ function Playground() {
     <>
       <div className="dx-controls">
         <label>
-          Locale
+          Language
           <select value={locale} onChange={(e) => setLocale(e.target.value as 'fa' | 'en')}>
-            <option value="fa">fa (RTL)</option>
-            <option value="en">en (LTR)</option>
+            <option value="en">English (LTR)</option>
+            <option value="fa">فارسی (RTL)</option>
           </select>
         </label>
         <label>
@@ -169,9 +169,11 @@ function Docs() {
               episodes={EPISODES}
               currentEpisodeId="e1"
               onEpisodeChange={() => undefined}
-              locale="fa"
+              locale="en"
+              title="Sample Movie"
+              episodeLabel="Episode 1"
               poster={POSTER}
-              badge="ترافیک شما به صورت تمام‌بها حساب می‌شود."
+              badge="Your traffic is billed at premium rate."
               onLike={() => undefined}
             />
           </div>
