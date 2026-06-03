@@ -5,7 +5,7 @@ import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
 import {
-  BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LikeIcon, LockIcon,
+  BackIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon, LikeFilledIcon, LikeIcon, LockIcon,
   NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon, VolumeHighIcon, VolumeMutedIcon,
 } from './controls/icons';
 import { SettingsModal } from './controls/SettingsModal';
@@ -165,8 +165,16 @@ export function Skin(props: SkinProps): JSX.Element {
             <span className="lpx-quality-label">{qualityLabel}</span>
           </button>
           {props.onLike && (
-            <button className="lpx-btn" aria-label="like" aria-pressed={liked} data-liked={liked || undefined} onClick={toggleLike}>
-              <LikeIcon />
+            <button className="lpx-btn lpx-like" aria-label="like" aria-pressed={liked} data-liked={liked || undefined} onClick={toggleLike}>
+              {liked ? <LikeFilledIcon /> : <LikeIcon />}
+              {liked && (
+                <span className="lpx-like-burst" aria-hidden="true">
+                  <span className="lpx-like-ring" />
+                  {[0, 60, 120, 180, 240, 300].map((a) => (
+                    <i key={a} style={{ ['--a' as string]: `${a}deg` }} />
+                  ))}
+                </span>
+              )}
             </button>
           )}
           {hasPlaylist && (

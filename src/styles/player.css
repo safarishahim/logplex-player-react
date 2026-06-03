@@ -222,6 +222,67 @@
 .lpx-btn[data-liked] {
   color: var(--lpx-accent);
 }
+
+/* ── Like button: filled heart + celebratory burst ── */
+.lpx-like {
+  position: relative;
+  overflow: visible;
+}
+.lpx-like[data-liked] svg {
+  animation: lpx-heart-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.4);
+}
+@keyframes lpx-heart-pop {
+  0% { transform: scale(0.2); }
+  45% { transform: scale(1.35); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.lpx-like-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lpx-like-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--lpx-accent);
+  opacity: 0;
+  animation: lpx-like-ring 0.5s ease-out forwards;
+}
+@keyframes lpx-like-ring {
+  0% { opacity: 0.7; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(2.3); }
+}
+.lpx-like-burst i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--lpx-accent);
+  opacity: 0;
+  animation: lpx-like-spark 0.55s ease-out forwards;
+}
+@keyframes lpx-like-spark {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-2px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(-18px) scale(0.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lpx-like[data-liked] svg,
+  .lpx-like-ring,
+  .lpx-like-burst i {
+    animation: none;
+  }
+  .lpx-like-burst {
+    display: none;
+  }
+}
 .lpx-bigplay {
   width: 52px;
   height: 52px;
