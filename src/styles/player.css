@@ -1007,25 +1007,35 @@
   height: 32px;
 }
 
-/* ── Subtitle / caption cues ── */
+/* ── Subtitle / caption cues ──
+   Vidstack positions cues via CSS vars its default stylesheet consumes; we use
+   a custom skin (no that stylesheet), so we bottom-center the cues ourselves. */
 .lpx-captions {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 5% 64px;
+  text-align: center;
+}
+.lpx-captions [data-part='cue-display'] {
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  max-width: 90%;
 }
 .lpx-captions [data-part='cue'] {
+  display: inline-block;
   background-color: rgba(0, 0, 0, 0.72);
   border-radius: 4px;
   padding: 0.15em 0.5em;
   color: #fff;
   font-size: clamp(13px, 3.4cqw, 22px);
-  line-height: 1.4;
-}
-/* Lift cues above the bar while the controls are visible. */
-.lpx-controls[data-visible='true'] ~ .lpx-captions,
-.lpx-captions[data-controls] {
-  bottom: 80px;
+  line-height: 1.5;
 }
 
 /* ── Restriction overlay (blocking — e.g. IP/network not allowed) ── */
