@@ -1,6 +1,10 @@
 import { StrictMode, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
+// Player styles (Vidstack base + our skin). Imported explicitly so the docs
+// build includes them — tree-shaking drops the barrel's bare CSS side-effects.
+import '@vidstack/react/player/styles/base.css';
+import '../src/styles/player.css';
 import './docs.css';
 
 // "Sprite Fight" — a free animated short. All assets (HLS, poster, thumbnails,
