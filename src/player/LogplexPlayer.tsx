@@ -9,6 +9,7 @@ import type { LogplexAnalyticsConfig, LogplexPlayerProps } from '../types';
 import { dirFor, getStrings } from '../i18n';
 import { useLogplexAnalytics } from '../analytics/useLogplexAnalytics';
 import { useResume } from './useResume';
+import { usePersistentMediaSettings } from './prefs';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
 import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
@@ -42,6 +43,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     dir,
     analytics,
     resume = true,
+    persistSettings = false,
+    settingsKey,
     onBack,
     className,
     theme,
@@ -101,6 +104,9 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // so ad playback doesn't register as content play/heartbeat.
   const tracker = useLogplexAnalytics(showingAd ? null : player, analyticsCfg);
   const { resume: resumePoint, dismiss } = useResume(tracker, resume && !!analyticsCfg && !ad);
+
+  // Opt-in: remember volume / mute / playback rate across sessions.
+  usePersistentMediaSettings(showingAd ? null : player, persistSettings, settingsKey);
 
   useEffect(() => {
     if (showingAd && tracker && !adStarted.current) {
@@ -195,6 +201,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           onToggleSimFullscreen={fs.toggle}
           resume={resumePoint}
           onDismissResume={dismiss}
+          persistSettings={persistSettings}
+          settingsKey={settingsKey}
         >
           {children}
         </Skin>

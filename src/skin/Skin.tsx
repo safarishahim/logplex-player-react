@@ -34,6 +34,9 @@ export interface SkinProps {
   onToggleSimFullscreen?: () => void;
   resume?: ResumePoint | null;
   onDismissResume?: () => void;
+  /** Persist brightness (and other settings) across sessions. */
+  persistSettings?: boolean;
+  settingsKey?: string;
   children?: ReactNode;
 }
 
@@ -125,7 +128,13 @@ export function Skin(props: SkinProps): JSX.Element {
 
   return (
     <>
-      <GestureLayer strings={props.strings} onTapToggle={toggleControls} onActivity={ping} />
+      <GestureLayer
+        strings={props.strings}
+        onTapToggle={toggleControls}
+        onActivity={ping}
+        persist={props.persistSettings}
+        storageKey={props.settingsKey}
+      />
 
       {/* Buffering / loading — outside the fading controls so it always shows. */}
       {(waiting || !canPlay) && (

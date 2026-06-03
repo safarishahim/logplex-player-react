@@ -102,3 +102,7 @@ Built and shipping:
 On the roadmap (beyond the original design):
 - Mid-roll / multiple ads (VAST), DRM (Widevine/FairPlay), DASH
 ```
+
+---
+
+Developed by **Morteza Safarishahi** · توسعه‌یافته توسط **مرتضی صفری شاهی**

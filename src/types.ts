@@ -188,6 +188,13 @@ export interface LogplexPlayerProps {
   /** Show the "continue watching" resume banner (needs analytics). Default true. */
   resume?: boolean;
 
+  /** Remember the viewer's volume, mute, playback speed and brightness in
+   * localStorage and restore them on the next visit. Default false. */
+  persistSettings?: boolean;
+  /** localStorage key for persisted settings. Default 'logplex-player'.
+   * Use distinct keys to scope preferences (e.g. per app or per profile). */
+  settingsKey?: string;
+
   onBack?: () => void;
 
   /** Show a Like button. Called when toggled; emits a `like` event when liked. */

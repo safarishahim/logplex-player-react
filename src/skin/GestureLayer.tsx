@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../i18n';
+import { loadPrefs, savePrefs } from '../player/prefs';
 import { BrightnessIcon, Forward10Icon, Replay10Icon, VolumeHighIcon } from './controls/icons';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -17,6 +18,9 @@ export interface GestureLayerProps {
   onTapToggle: () => void;
   /** Pointer activity — reveals controls + resets the idle timer. */
   onActivity?: () => void;
+  /** Persist brightness across sessions. */
+  persist?: boolean;
+  storageKey?: string;
 }
 
 /**
@@ -25,14 +29,14 @@ export interface GestureLayerProps {
  * volume (right half). Desktop single-click toggles play. Brightness is a dim
  * overlay (the web can't touch real screen brightness).
  */
-export function GestureLayer({ strings, onTapToggle, onActivity }: GestureLayerProps): JSX.Element {
+export function GestureLayer({ strings, onTapToggle, onActivity, persist, storageKey }: GestureLayerProps): JSX.Element {
   const remote = useMediaRemote();
   const currentTime = useMediaState('currentTime');
   const duration = useMediaState('duration');
   const volume = useMediaState('volume');
   const playbackRate = useMediaState('playbackRate');
 
-  const [brightness, setBrightness] = useState(1);
+  const [brightness, setBrightness] = useState(() => (persist ? loadPrefs(storageKey).brightness ?? 1 : 1));
   const [rate2x, setRate2x] = useState(false);
   const [skip, setSkip] = useState<{ side: 'l' | 'r'; n: number } | null>(null);
   const [indicator, setIndicator] = useState<Indicator>(null);
@@ -48,6 +52,8 @@ export function GestureLayer({ strings, onTapToggle, onActivity }: GestureLayerP
     axis: 'none' as 'none' | 'v' | 'h',
     startVolume: 1,
     startBrightness: 1,
+    curBright: 1,
+    brightTouched: false,
     longPress: null as ReturnType<typeof setTimeout> | null,
     singleTap: null as ReturnType<typeof setTimeout> | null,
     prevRate: 1,
@@ -117,6 +123,8 @@ export function GestureLayer({ strings, onTapToggle, onActivity }: GestureLayerP
       if (s.leftHalf) {
         const b = clamp(s.startBrightness + frac, 0.2, 1);
         setBrightness(b);
+        s.curBright = b;
+        s.brightTouched = true;
         flashIndicator({ kind: 'brightness', value: b });
       } else {
         const v = clamp(s.startVolume + frac, 0, 1);
@@ -131,6 +139,11 @@ export function GestureLayer({ strings, onTapToggle, onActivity }: GestureLayerP
     if (!s.active) return;
     s.active = false;
     if (s.longPress) clearTimeout(s.longPress);
+
+    if (persist && s.brightTouched) {
+      savePrefs({ brightness: s.curBright }, storageKey);
+      s.brightTouched = false;
+    }
 
     if (rate2x) {
       remote.changePlaybackRate(s.prevRate);

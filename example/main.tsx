@@ -3,8 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
 import './docs.css';
 
-const STREAM = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-const POSTER = 'https://picsum.photos/seed/logplex-hero/1280/720';
+// Sintel — Blender's free, openly-licensed animated short (multi-rendition HLS,
+// so the quality menu shows real options).
+const STREAM = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
+const POSTER = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Sintel_poster.jpg/800px-Sintel_poster.jpg';
+// Demo WebVTT thumbnails (frames won't match this stream — shows the feature).
+const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
 
 type Lang = 'en' | 'fa';
 
@@ -42,6 +46,11 @@ const T: Record<Lang, {
     pills: ['React 18+', 'Vidstack + hls.js', 'TypeScript', 'RTL / LTR'],
     s: {
       start: { title: 'Quick start', intro: 'Import the component and its stylesheet, then point it at an HLS or MP4 source.' },
+      standalone: {
+        title: 'Use without Logplex',
+        intro:
+          'Analytics is optional. Omit the analytics prop and the player is a self-contained video player — full skin, quality, speed, playlist, ads, gestures and fullscreen — with no network calls and nothing Logplex-specific.',
+      },
       playground: { title: 'Playground', intro: 'Toggle features live and watch the props update. The player on the left is real.' },
       features: { title: 'Features' },
       analytics: {
@@ -74,7 +83,7 @@ const T: Record<Lang, {
         intro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
       },
     },
-    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction' },
+    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
@@ -87,6 +96,7 @@ const T: Record<Lang, {
       ['WebView fullscreen', 'Native when available, else a CSS simulated fullscreen.'],
       ['Like + badge + notice', 'Like button, premium info badge, operator notice banner.'],
       ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
+      ['No-Logplex mode', 'Analytics is optional — works as a standalone player with zero backend.'],
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
     propsRows: [
@@ -101,6 +111,8 @@ const T: Record<Lang, {
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'Controlled episode selection.'],
       ['analytics', 'LogplexAnalyticsConfig', 'Enables built-in analytics + resume.'],
       ['resume', 'boolean', 'Show the continue-watching banner. Default true.'],
+      ['persistSettings', 'boolean', 'Remember volume/mute/speed/brightness in localStorage. Default false.'],
+      ['settingsKey', 'string', "localStorage key for persisted settings. Default 'logplex-player'."],
       ['ad', 'AdConfig', 'Optional pre-roll ad ({ src, skipAfterSec, clickThrough }).'],
       ['notice', 'PlayerNotice', 'Operator/network notice ({ message, ctaLabel, onCta }).'],
       ['restriction', 'PlayerRestriction', 'Blocking overlay when the network/IP is not allowed.'],
@@ -111,7 +123,7 @@ const T: Record<Lang, {
       ['onBack', '() => void', 'Show a back button in the top bar.'],
     ],
     eventsIntro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
-    footer: '@logplex/player-react · built on Vidstack + hls.js · run npm run dev for this page',
+    footer: '@logplex/player-react · built on Vidstack + hls.js · Developed by Morteza Safarishahi',
   },
   fa: {
     nav: { start: 'شروع سریع', playground: 'محیط آزمایش', features: 'امکانات', props: 'پراپ‌ها', events: 'رویدادها' },
@@ -120,6 +132,11 @@ const T: Record<Lang, {
     pills: ['React ۱۸+', 'Vidstack + hls.js', 'TypeScript', 'RTL / LTR'],
     s: {
       start: { title: 'شروع سریع', intro: 'کامپوننت و فایل استایل آن را وارد کنید، سپس آن را به یک منبع HLS یا MP4 وصل کنید.' },
+      standalone: {
+        title: 'استفاده بدون Logplex',
+        intro:
+          'آنالیتیکس اختیاری است. اگر پراپ analytics را ندهید، پخش‌کننده یک پلیر ویدئوی مستقل است — با تمام پوسته، کیفیت، سرعت، لیست پخش، تبلیغ، حرکات لمسی و تمام‌صفحه — بدون هیچ درخواست شبکه‌ای و بدون وابستگی به Logplex.',
+      },
       playground: { title: 'محیط آزمایش', intro: 'امکانات را به‌صورت زنده تغییر دهید و به‌روزرسانی props را ببینید. پخش‌کنندهٔ کنار، واقعی است.' },
       features: { title: 'امکانات' },
       analytics: {
@@ -165,6 +182,7 @@ const T: Record<Lang, {
       ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت تمام‌صفحهٔ شبیه‌سازی‌شده با CSS.'],
       ['لایک + نشان + اعلان', 'دکمهٔ لایک، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
       ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
+      ['بدون Logplex', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
     propsRows: [
@@ -179,6 +197,8 @@ const T: Record<Lang, {
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'انتخاب کنترل‌شدهٔ قسمت.'],
       ['analytics', 'LogplexAnalyticsConfig', 'آنالیتیکس داخلی و ادامهٔ تماشا را فعال می‌کند.'],
       ['resume', 'boolean', 'نمایش بنر ادامهٔ تماشا. پیش‌فرض true.'],
+      ['persistSettings', 'boolean', 'به‌خاطرسپاری صدا/بی‌صدا/سرعت/روشنایی در localStorage. پیش‌فرض false.'],
+      ['settingsKey', 'string', "کلید localStorage برای تنظیمات ذخیره‌شده. پیش‌فرض 'logplex-player'."],
       ['ad', 'AdConfig', 'تبلیغ پیش از پخش (اختیاری): { src, skipAfterSec, clickThrough }.'],
       ['notice', 'PlayerNotice', 'اعلان اپراتور/شبکه: { message, ctaLabel, onCta }.'],
       ['badge', 'string', 'نشان اطلاع‌رسانی گذرا که در ابتدا نمایش داده می‌شود.'],
@@ -188,7 +208,7 @@ const T: Record<Lang, {
       ['onBack', '() => void', 'نمایش دکمهٔ بازگشت در نوار بالا.'],
     ],
     eventsIntro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
-    footer: '@logplex/player-react · ساخته‌شده با Vidstack و hls.js · برای این صفحه npm run dev را اجرا کنید',
+    footer: '@logplex/player-react · ساخته‌شده با Vidstack و hls.js · توسعه‌یافته توسط مرتضی صفری شاهی',
   },
 };
 
@@ -221,6 +241,7 @@ function Playground({ lang }: { lang: Lang }) {
   const [episodes, setEpisodes] = useState(true);
   const [back, setBack] = useState(false);
   const [restrict, setRestrict] = useState(false);
+  const [persist, setPersist] = useState(false);
   const [current, setCurrent] = useState('e1');
   const pg = T[lang].pg;
   const fa = locale === 'fa';
@@ -233,6 +254,8 @@ function Playground({ lang }: { lang: Lang }) {
     locale,
     appearance: appear,
     theme: { accent },
+    thumbnails: THUMBNAILS,
+    persistSettings: persist,
     onLike: () => undefined,
     ...(episodes ? { episodes: episodesFor(locale), currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
     ...(back ? { onBack: () => undefined } : {}),
@@ -276,13 +299,15 @@ function Playground({ lang }: { lang: Lang }) {
       notice ? `  notice={{ message: '…', ctaLabel: '…' }}` : '',
       restrict ? `  restriction={{ title: '…', message: '…', onRetry, onExit }}` : '',
       ad ? `  ad={{ src: adUrl, skipAfterSec: 5 }}` : '',
+      `  thumbnails="thumbnails.vtt"`,
+      persist ? `  persistSettings` : '',
       `  onLike={(liked) => track(liked)}`,
       `  analytics={{ baseUrl, apiKey, userId, contentId }}`,
       `/>`,
     ]
       .filter(Boolean)
       .join('\n');
-  }, [locale, appear, accent, episodes, back, badge, notice, restrict, ad, props.badge]);
+  }, [locale, appear, accent, episodes, back, badge, notice, restrict, ad, persist, props.badge]);
 
   return (
     <>
@@ -323,6 +348,9 @@ function Playground({ lang }: { lang: Lang }) {
         <label>
           <input type="checkbox" checked={restrict} onChange={(e) => setRestrict(e.target.checked)} /> {pg.restrict}
         </label>
+        <label>
+          <input type="checkbox" checked={persist} onChange={(e) => setPersist(e.target.checked)} /> {pg.persist}
+        </label>
       </div>
       <div className="dx-playground">
         <div className="dx-player dx-player--lg">
@@ -350,6 +378,7 @@ function HeroPlayer({ lang }: { lang: Lang }) {
         title={fa ? 'فیلم نمونه' : 'Sample Movie'}
         episodeLabel={fa ? FA_SUBTITLES[idx] : `Episode ${idx + 1}`}
         poster={POSTER}
+        thumbnails={THUMBNAILS}
         badge={fa ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.'}
         onBack={() => undefined}
         onLike={() => undefined}
@@ -451,6 +480,20 @@ export default function Watch() {
     />
   );
 }`}</CodeBlock>
+        </Section>
+
+        <Section id="standalone" title={t.s.standalone.title} intro={t.s.standalone.intro}>
+          <CodeBlock>{`
+import { LogplexPlayer } from '@logplex/player-react';
+import '@logplex/player-react/styles.css';
+
+// No analytics, no Logplex account — just a player.
+<LogplexPlayer
+  src="https://cdn.example.com/movie/master.m3u8"
+  poster="poster.jpg"
+  locale="en"
+  persistSettings   // optional: remember volume / speed / brightness locally
+/>`}</CodeBlock>
         </Section>
 
         <Section id="playground" title={t.s.playground.title} intro={t.s.playground.intro}>
