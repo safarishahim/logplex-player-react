@@ -20,9 +20,7 @@ export function CaptionsModal({ strings, onClose }: CaptionsModalProps): JSX.Ele
     .filter(({ t }) => t.kind === 'subtitles' || t.kind === 'captions');
 
   const turnOff = () => {
-    (textTracks ?? []).forEach((t, i) => {
-      if (t.mode === 'showing') remote.changeTextTrackMode(i, 'disabled');
-    });
+    remote.disableCaptions();
     onClose();
   };
 

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
-import type { Direction, Episode } from '../types';
+import type { Direction, Episode, PlayerNotice } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
+import { NoticeBanner } from './overlays/NoticeBanner';
+import { BadgeOverlay } from './overlays/BadgeOverlay';
 import {
   AudioIcon, BackIcon, CaptionsIcon, CaptionsOnIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon,
   LikeFilledIcon, LikeIcon, LockIcon, NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon,
@@ -45,6 +47,9 @@ export interface SkinProps {
   manualQualities?: { label: string; index: number }[];
   currentQualityIndex?: number;
   onSelectQuality?: (index: number) => void;
+  /** Shown only after playback starts (not over the cover). */
+  notice?: PlayerNotice;
+  badge?: string;
   children?: ReactNode;
 }
 
@@ -76,6 +81,7 @@ export function Skin(props: SkinProps): JSX.Element {
   const [captionsOpen, setCaptionsOpen] = useState(false);
   const [audioOpen, setAudioOpen] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
+  const [doneBadge, setDoneBadge] = useState<string | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
@@ -161,8 +167,9 @@ export function Skin(props: SkinProps): JSX.Element {
         storageKey={props.settingsKey}
       />
 
-      {/* Subtitle cues — lifted above the control bar while it's visible. */}
-      <Captions className={`lpx-captions${visible ? ' lpx-captions--lifted' : ''}`} />
+      {/* Subtitle cues — only mounted while a track is active (so turning
+          subtitles off removes the cue), lifted above the bar when controls show. */}
+      {textTrack && <Captions className={`lpx-captions${visible ? ' lpx-captions--lifted' : ''}`} />}
 
       {/* Buffering / loading — outside the fading controls so it always shows. */}
       {(waiting || !canPlay) && (
@@ -177,6 +184,13 @@ export function Skin(props: SkinProps): JSX.Element {
         <div className="lpx-mute-badge" aria-hidden="true">
           <VolumeMutedIcon />
         </div>
+      )}
+
+      {/* Operator notice + transient badge — appear after playback starts.
+          The badge shows once (not again on every lock/unlock). */}
+      {props.notice && <NoticeBanner notice={props.notice} strings={props.strings} />}
+      {props.badge && doneBadge !== props.badge && (
+        <BadgeOverlay key={props.badge} text={props.badge} onDone={() => setDoneBadge(props.badge!)} />
       )}
 
       <div

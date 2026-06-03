@@ -169,12 +169,11 @@
   opacity: 1;
 }
 .lpx-controls--locked {
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 .lpx-lock-toggle {
-  align-self: center;
-  margin: auto;
+  margin: 12px;
   background: rgba(0, 0, 0, 0.45);
 }
 
@@ -320,12 +319,13 @@
   }
 }
 .lpx-bigplay {
-  width: 66px;
-  height: 66px;
+  width: 60px;
+  height: 60px;
 }
-.lpx-bigplay svg {
-  width: 38px;
-  height: 38px;
+/* Higher specificity than `.lpx-btn svg` so the play icon stays larger. */
+.lpx-btn.lpx-bigplay svg {
+  width: 32px;
+  height: 32px;
 }
 
 /* Desktop volume: hover-expand slider next to the mute button. Touch devices
@@ -1220,12 +1220,12 @@
     height: 20px;
   }
   .lpx-bigplay {
-    width: 58px;
-    height: 58px;
+    width: 52px;
+    height: 52px;
   }
-  .lpx-bigplay svg {
-    width: 32px;
-    height: 32px;
+  .lpx-btn.lpx-bigplay svg {
+    width: 28px;
+    height: 28px;
   }
   .lpx-group--center {
     gap: 2px;

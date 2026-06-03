@@ -14,8 +14,6 @@ import { usePersistentMediaSettings } from './prefs';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
 import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
-import { NoticeBanner } from '../skin/overlays/NoticeBanner';
-import { BadgeOverlay } from '../skin/overlays/BadgeOverlay';
 import { RestrictionOverlay } from '../skin/overlays/RestrictionOverlay';
 
 function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
@@ -256,13 +254,13 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           manualQualities={manualQualities}
           currentQualityIndex={qualityIdx}
           onSelectQuality={selectQuality}
+          notice={restriction ? undefined : notice}
+          badge={restriction ? undefined : badge}
         >
           {children}
         </Skin>
         )}
 
-        {notice && !showingAd && !restriction && <NoticeBanner notice={notice} strings={strings} />}
-        {badge && !showingAd && !restriction && <BadgeOverlay key={badge} text={badge} />}
         {restriction && <RestrictionOverlay restriction={restriction} strings={strings} />}
       </MediaPlayer>
     </div>

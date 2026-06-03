@@ -10,28 +10,19 @@ const STREAM = 'https://files.vidstack.io/sprite-fight/hls/stream.m3u8';
 const POSTER = 'https://files.vidstack.io/sprite-fight/poster.webp';
 const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
 
-// Demo subtitle tracks as data URLs with cues from 0s, so enabling a track
-// shows text immediately (the real sprite-fight VTTs have no cues until 0:17).
-const vtt = (lines: string) => `data:text/vtt,${encodeURIComponent('WEBVTT\n\n' + lines)}`;
+// Real subtitle tracks that match the video (first cue at ~0:17 when dialogue starts).
 const SUBTITLES = [
-  {
-    label: 'English',
-    language: 'en',
-    src: vtt('00:00:00.000 --> 00:00:10.000\nSubtitles are working ✓\n\n00:00:10.000 --> 00:02:00.000\nPick a language from the subtitles menu.'),
-  },
-  {
-    label: 'فارسی',
-    language: 'fa',
-    src: vtt('00:00:00.000 --> 00:00:10.000\nزیرنویس فعال است ✓\n\n00:00:10.000 --> 00:02:00.000\nاز منوی زیرنویس می‌توانید زبان را عوض کنید.'),
-  },
+  { src: 'https://files.vidstack.io/sprite-fight/subs/english.vtt', label: 'English', language: 'en' },
+  { src: 'https://files.vidstack.io/sprite-fight/subs/spanish.vtt', label: 'Español', language: 'es' },
 ];
 
 type Lang = 'en' | 'fa';
 
 const EPISODES: Episode[] = [
+  // Different streams per episode so switching is actually visible in the demo.
   { id: 'e1', src: STREAM, poster: 'https://picsum.photos/seed/lp1/1280/720', title: 'Sample Series', subtitle: 'Episode 1' },
-  { id: 'e2', src: STREAM, poster: 'https://picsum.photos/seed/lp2/1280/720', title: 'Sample Series', subtitle: 'Episode 2' },
-  { id: 'e3', src: STREAM, poster: 'https://picsum.photos/seed/lp3/1280/720', title: 'Sample Series', subtitle: 'Episode 3' },
+  { id: 'e2', src: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', poster: 'https://picsum.photos/seed/lp2/1280/720', title: 'Sample Series', subtitle: 'Episode 2' },
+  { id: 'e3', src: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8', poster: 'https://picsum.photos/seed/lp3/1280/720', title: 'Sample Series', subtitle: 'Episode 3' },
 ];
 
 const FA_SUBTITLES = ['قسمت اول', 'قسمت دوم', 'قسمت سوم'];

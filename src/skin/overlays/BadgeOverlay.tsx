@@ -5,6 +5,8 @@ export interface BadgeOverlayProps {
   text: string;
   /** How long the badge holds before animating out (default 4000ms). */
   holdMs?: number;
+  /** Called once the badge has finished animating out. */
+  onDone?: () => void;
 }
 
 /**
@@ -12,16 +14,20 @@ export interface BadgeOverlayProps {
  * می‌شود". Animates in at the start, holds a few seconds, then animates out.
  * Re-mount with a `key` to replay.
  */
-export function BadgeOverlay({ text, holdMs = 4000 }: BadgeOverlayProps): JSX.Element | null {
+export function BadgeOverlay({ text, holdMs = 4000, onDone }: BadgeOverlayProps): JSX.Element | null {
   const [phase, setPhase] = useState<'in' | 'out' | 'gone'>('in');
 
   useEffect(() => {
     const out = setTimeout(() => setPhase('out'), holdMs);
-    const gone = setTimeout(() => setPhase('gone'), holdMs + 450);
+    const gone = setTimeout(() => {
+      setPhase('gone');
+      onDone?.();
+    }, holdMs + 450);
     return () => {
       clearTimeout(out);
       clearTimeout(gone);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdMs]);
 
   if (phase === 'gone') return null;
