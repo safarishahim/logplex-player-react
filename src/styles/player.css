@@ -159,6 +159,14 @@
   height: 100%;
   object-fit: contain;
   background: #000;
+  /* Vidstack adds data-visible before playback and removes it once started —
+     so the poster fades out and reveals the video. */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.lpx-poster[data-visible] {
+  opacity: 1;
 }
 .lpx-controls--locked {
   align-items: center;

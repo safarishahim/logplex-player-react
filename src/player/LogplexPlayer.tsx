@@ -74,11 +74,48 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     return episodes.find((e) => e.id === currentEpisodeId) ?? episodes[0];
   }, [episodes, currentEpisodeId]);
 
-  const src = episode?.src ?? props.src;
+  const rawSrc = episode?.src ?? props.src;
   const poster = episode?.poster ?? props.poster;
   const thumbnails = episode?.thumbnails ?? props.thumbnails;
   const title = props.title ?? episode?.title;
   const episodeLabel = props.episodeLabel ?? episode?.subtitle;
+
+  // Manual quality: when `src` is a list of MP4 renditions, the quality menu
+  // switches the file (HLS exposes its own renditions automatically).
+  const sourceList = Array.isArray(rawSrc) ? rawSrc : null;
+  const defaultQualityIdx = useMemo(() => {
+    if (!sourceList) return 0;
+    return sourceList.reduce((best, s, i) => ((s.height ?? 0) > (sourceList[best].height ?? 0) ? i : best), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceList]);
+  const [qualityIdx, setQualityIdx] = useState(defaultQualityIdx);
+  useEffect(() => setQualityIdx(defaultQualityIdx), [defaultQualityIdx]);
+
+  const manualQualities = sourceList
+    ? sourceList.map((s, i) => ({ label: s.label ?? (s.height ? `${s.height}p` : `${i + 1}`), index: i }))
+    : undefined;
+
+  // Switch source but keep position + play state.
+  const restore = useRef<{ time: number; play: boolean } | null>(null);
+  const selectQuality = useCallback(
+    (i: number) => {
+      if (player) restore.current = { time: player.currentTime, play: !player.paused };
+      setQualityIdx(i);
+    },
+    [player],
+  );
+  const handleCanPlay = useCallback(() => {
+    if (restore.current && player) {
+      player.currentTime = restore.current.time;
+      if (restore.current.play) player.play();
+      restore.current = null;
+    }
+  }, [player]);
+
+  // Pass the URL string (Vidstack infers the MIME type from the extension);
+  // an explicit `type` on the source is advisory metadata.
+  const activeSource = sourceList ? sourceList[Math.min(qualityIdx, sourceList.length - 1)] : null;
+  const src = activeSource ? activeSource.src : (rawSrc as string | undefined);
 
   // Episode navigation.
   const idx = episodes && episode ? episodes.indexOf(episode) : -1;
@@ -169,6 +206,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         autoPlay={props.autoPlay || !!ad}
         dir="ltr"
         viewType="video"
+        onCanPlay={handleCanPlay}
       >
         <MediaProvider>
           {poster && !showingAd && <Poster className="lpx-poster" src={poster} alt={title ?? ''} />}
@@ -219,6 +257,9 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           onDismissResume={dismiss}
           persistSettings={persistSettings}
           settingsKey={settingsKey}
+          manualQualities={manualQualities}
+          currentQualityIndex={qualityIdx}
+          onSelectQuality={selectQuality}
         >
           {children}
         </Skin>

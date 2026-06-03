@@ -40,6 +40,11 @@ export interface SkinProps {
   /** Persist brightness (and other settings) across sessions. */
   persistSettings?: boolean;
   settingsKey?: string;
+  /** Manual quality options (MP4 renditions). When set, the quality menu uses
+   * these instead of the source's auto-detected (HLS) qualities. */
+  manualQualities?: { label: string; index: number }[];
+  currentQualityIndex?: number;
+  onSelectQuality?: (index: number) => void;
   children?: ReactNode;
 }
 
@@ -79,7 +84,12 @@ export function Skin(props: SkinProps): JSX.Element {
   const hasAudioTracks = (audioTracks?.length ?? 0) > 1;
   const visible = paused || active || !canPlay;
   const isMuted = muted || volume === 0;
-  const qualityLabel = autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
+  const manualQuality = props.manualQualities?.find((q) => q.index === props.currentQualityIndex);
+  const qualityLabel = manualQuality
+    ? manualQuality.label
+    : autoQuality || !quality
+      ? 'AUTO'
+      : `${quality.height}p`;
   const rateLabel = `${playbackRate || 1}X`;
 
   const ping = useCallback(() => {
@@ -391,7 +401,15 @@ export function Skin(props: SkinProps): JSX.Element {
         {props.children}
       </div>
 
-      {settingsOpen && <SettingsModal strings={props.strings} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsModal
+          strings={props.strings}
+          onClose={() => setSettingsOpen(false)}
+          manualQualities={props.manualQualities}
+          currentQualityIndex={props.currentQualityIndex}
+          onSelectQuality={props.onSelectQuality}
+        />
+      )}
       {speedOpen && <SpeedModal strings={props.strings} onClose={() => setSpeedOpen(false)} />}
       {captionsOpen && <CaptionsModal strings={props.strings} onClose={() => setCaptionsOpen(false)} />}
       {audioOpen && <AudioModal strings={props.strings} onClose={() => setAudioOpen(false)} />}

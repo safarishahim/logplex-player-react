@@ -37,11 +37,23 @@ export type LogplexEventType =
 
 export type Quality = 'auto' | '360p' | '480p' | '720p' | '1080p' | '1440p' | '4k';
 
+/** A single progressive source. Pass an array as `src` to offer manual quality
+ * switching for MP4s (HLS exposes its renditions automatically). */
+export interface VideoSource {
+  src: string;
+  /** MIME type, e.g. 'video/mp4'. */
+  type?: string;
+  /** Vertical resolution — used as the quality label (e.g. 720 → "720p"). */
+  height?: number;
+  /** Explicit label, overrides the height-derived one. */
+  label?: string;
+}
+
 /** One playable item in a playlist (series episode, related content). */
 export interface Episode {
   id: string;
-  /** HLS .m3u8 or progressive MP4. */
-  src: string;
+  /** HLS .m3u8, a progressive MP4, or a list of MP4 renditions for manual quality. */
+  src: string | VideoSource[];
   type?: string;
   title?: string;
   /** e.g. "قسمت سوم". */
@@ -148,8 +160,9 @@ export interface ThemeOverrides {
 }
 
 export interface LogplexPlayerProps {
-  /** Single source (ignored if `episodes`/`currentEpisodeId` resolve one). */
-  src?: string;
+  /** Source: an HLS/MP4 URL, or a list of MP4 renditions for a manual quality
+   * menu (ignored if `episodes`/`currentEpisodeId` resolve one). */
+  src?: string | VideoSource[];
   type?: string;
   title?: string;
   /** e.g. "قسمت سوم". */

@@ -5,6 +5,10 @@ import { CloseIcon, SettingsIcon } from './icons';
 export interface SettingsModalProps {
   strings: Strings;
   onClose: () => void;
+  /** Manual MP4 renditions; when set, replaces the auto (HLS) quality list. */
+  manualQualities?: { label: string; index: number }[];
+  currentQualityIndex?: number;
+  onSelectQuality?: (index: number) => void;
 }
 
 /**
@@ -12,12 +16,19 @@ export interface SettingsModalProps {
  * selection). Quality only — playback speed has its own menu. Layout is
  * physical; only the labels right-align in RTL.
  */
-export function SettingsModal({ strings, onClose }: SettingsModalProps): JSX.Element {
+export function SettingsModal({
+  strings,
+  onClose,
+  manualQualities,
+  currentQualityIndex,
+  onSelectQuality,
+}: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
   const qualities = useMediaState('qualities');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   const list = Array.from(qualities ?? []);
+  const manual = manualQualities && manualQualities.length > 0;
 
   const Radio = ({ label, on, onSelect }: { label: string; on: boolean; onSelect: () => void }) => (
     <li>
@@ -47,25 +58,40 @@ export function SettingsModal({ strings, onClose }: SettingsModalProps): JSX.Ele
         </div>
 
         <ul className="lpx-radios">
-          {list.map((q, i) => (
+          {manual
+            ? manualQualities!.map((q) => (
+                <Radio
+                  key={q.index}
+                  label={q.label}
+                  on={q.index === currentQualityIndex}
+                  onSelect={() => {
+                    onSelectQuality?.(q.index);
+                    onClose();
+                  }}
+                />
+              ))
+            : list.map((q, i) => (
+                <Radio
+                  key={`${q.height}-${i}`}
+                  label={`${q.height}p`}
+                  on={!autoQuality && quality === q}
+                  onSelect={() => {
+                    remote.changeQuality(i);
+                    onClose();
+                  }}
+                />
+              ))}
+          {/* Auto only applies to adaptive (HLS) sources. */}
+          {!manual && (
             <Radio
-              key={`${q.height}-${i}`}
-              label={`${q.height}`}
-              on={!autoQuality && quality === q}
+              label={`${strings.qualityAuto} (AUTO)`}
+              on={autoQuality}
               onSelect={() => {
-                remote.changeQuality(i);
+                remote.requestAutoQuality();
                 onClose();
               }}
             />
-          ))}
-          <Radio
-            label={`${strings.qualityAuto} (AUTO)`}
-            on={autoQuality}
-            onSelect={() => {
-              remote.requestAutoQuality();
-              onClose();
-            }}
-          />
+          )}
         </ul>
       </div>
     </div>

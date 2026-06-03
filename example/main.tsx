@@ -3,13 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
 import './docs.css';
 
-// Reliable multi-rendition demo stream (CORS-enabled), so the quality menu has
-// real options. Pick any HLS/MP4 of your own in real use.
-const STREAM = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-const POSTER = 'https://picsum.photos/seed/logplex-hero/1280/720';
-// Demo WebVTT thumbnails (frames won't match this stream — shows the feature).
+// "Sprite Fight" — a free animated short. All assets (HLS, poster, thumbnails,
+// subtitles) come from one CDN and match the video, so quality, scrub previews
+// and subtitles all work. The HLS exposes 5 renditions (240p–1080p).
+const STREAM = 'https://files.vidstack.io/sprite-fight/hls/stream.m3u8';
+const POSTER = 'https://files.vidstack.io/sprite-fight/poster.webp';
 const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
-// Demo external subtitle tracks (also won't match the stream — shows the CC menu).
+// External subtitle tracks that actually match the video.
 const SUBTITLES = [
   { src: 'https://files.vidstack.io/sprite-fight/subs/english.vtt', label: 'English', language: 'en' },
   { src: 'https://files.vidstack.io/sprite-fight/subs/spanish.vtt', label: 'Español', language: 'es' },
@@ -111,7 +111,7 @@ const T: Record<Lang, {
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
     propsRows: [
-      ['src', 'string', 'HLS (.m3u8) or MP4 source. Ignored if episodes resolve one.'],
+      ['src', 'string | VideoSource[]', 'HLS/MP4 URL — or an array of MP4 renditions ({src,height}) for a manual quality menu.'],
       ['poster', 'string', 'Poster image shown on the cover (before play).'],
       ['title / episodeLabel', 'string', 'Shown above the scrubber, right-aligned.'],
       ['thumbnails', 'string', 'WebVTT thumbnails track for scrub previews.'],
@@ -204,7 +204,7 @@ const T: Record<Lang, {
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
     propsRows: [
-      ['src', 'string', 'منبع HLS (‎.m3u8‎) یا MP4. اگر لیست پخش منبعی تعیین کند، نادیده گرفته می‌شود.'],
+      ['src', 'string | VideoSource[]', 'نشانی HLS/MP4 — یا آرایه‌ای از کیفیت‌های MP4 ({src,height}) برای منوی انتخاب کیفیت دستی.'],
       ['poster', 'string', 'تصویر پوستر که روی کاور (پیش از پخش) نمایش داده می‌شود.'],
       ['title / episodeLabel', 'string', 'بالای نوار پیشروی و راست‌چین نمایش داده می‌شود.'],
       ['thumbnails', 'string', 'ترک تصاویر بندانگشتی WebVTT برای پیش‌نمایش هنگام جابه‌جایی.'],

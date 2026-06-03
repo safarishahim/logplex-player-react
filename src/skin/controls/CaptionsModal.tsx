@@ -1,4 +1,4 @@
-import { useMediaState } from '@vidstack/react';
+import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import { CaptionsIcon, CloseIcon } from './icons';
 
@@ -7,16 +7,20 @@ export interface CaptionsModalProps {
   onClose: () => void;
 }
 
-/** Subtitle/caption picker — lists subtitle & caption text tracks plus an Off
- * option. Selecting a track sets its mode to 'showing' and disables the rest. */
+/** Subtitle/caption picker. Switches tracks via the media remote, using each
+ * track's index in the FULL text-track list (the index the remote expects). */
 export function CaptionsModal({ strings, onClose }: CaptionsModalProps): JSX.Element {
+  const remote = useMediaRemote();
   const textTracks = useMediaState('textTracks');
   const current = useMediaState('textTrack');
-  const list = (textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions');
+  // Keep original indices — changeTextTrackMode addresses the full list.
+  const subs = (textTracks ?? [])
+    .map((t, i) => ({ t, i }))
+    .filter(({ t }) => t.kind === 'subtitles' || t.kind === 'captions');
 
-  const select = (track: (typeof list)[number] | null) => {
-    list.forEach((t) => {
-      t.mode = t === track ? 'showing' : 'disabled';
+  const turnOff = () => {
+    (textTracks ?? []).forEach((t, i) => {
+      if (t.mode === 'showing') remote.changeTextTrackMode(i, 'disabled');
     });
     onClose();
   };
@@ -44,13 +48,16 @@ export function CaptionsModal({ strings, onClose }: CaptionsModalProps): JSX.Ele
         </div>
 
         <ul className="lpx-radios">
-          <Radio label={strings.off} on={!current} onSelect={() => select(null)} />
-          {list.map((t, i) => (
+          <Radio label={strings.off} on={!current} onSelect={turnOff} />
+          {subs.map(({ t, i }) => (
             <Radio
               key={`${t.label}-${i}`}
               label={t.label || t.language || `${i + 1}`}
               on={current === t}
-              onSelect={() => select(t)}
+              onSelect={() => {
+                remote.changeTextTrackMode(i, 'showing');
+                onClose();
+              }}
             />
           ))}
         </ul>
