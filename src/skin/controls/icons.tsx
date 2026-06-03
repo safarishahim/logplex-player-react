@@ -33,3 +33,22 @@ export function LikeFilledIcon(props: SVGProps<SVGSVGElement>): JSX.Element {
     </svg>
   );
 }
+
+/** Broadcast/signal glyph — center dot with radiating arcs (restriction overlay). */
+export function BroadcastIcon(props: SVGProps<SVGSVGElement>): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M8.4 8.4a5 5 0 0 0 0 7.2M15.6 15.6a5 5 0 0 0 0-7.2M5.6 5.6a9 9 0 0 0 0 12.8M18.4 18.4a9 9 0 0 0 0-12.8" />
+    </svg>
+  );
+}
+
+/** Circular refresh arrow — retry action. */
+export function RetryIcon(props: SVGProps<SVGSVGElement>): JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.45 10.93h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+    </svg>
+  );
+}

@@ -105,6 +105,24 @@ export interface AdConfig {
   clickThrough?: string;
 }
 
+/** A blocking restriction overlay — e.g. the viewer's IP/network isn't allowed
+ * ("playback only works on operator X or Y's network"). Covers the whole player
+ * and pauses playback. Host-controlled: pass it to block, remove it to resume. */
+export interface PlayerRestriction {
+  /** Heading, e.g. "شبکه نامعتبر" / "Network not allowed". */
+  title: string;
+  /** Explanatory message. */
+  message: string;
+  /** Retry/re-check handler. If omitted, the retry button is hidden. */
+  onRetry?: () => void;
+  /** Exit handler. If omitted, the exit button is hidden. */
+  onExit?: () => void;
+  /** Override the default retry button label. */
+  retryLabel?: string;
+  /** Override the default exit button label. */
+  exitLabel?: string;
+}
+
 /** Theme overrides — each maps to a CSS custom property on the root. */
 export interface ThemeOverrides {
   accent?: string;
@@ -150,6 +168,10 @@ export interface LogplexPlayerProps {
 
   /** Operator/network (or any) notice shown over the player. */
   notice?: PlayerNotice;
+
+  /** Blocking restriction overlay (e.g. IP/network not allowed). Covers the
+   * player and pauses playback while present. */
+  restriction?: PlayerRestriction;
 
   /** Short badge (e.g. "تمام‌بها" / premium) that animates in at the start and
    * out after a few seconds. */

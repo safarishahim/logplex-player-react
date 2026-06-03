@@ -14,6 +14,7 @@ import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
 import { NoticeBanner } from '../skin/overlays/NoticeBanner';
 import { BadgeOverlay } from '../skin/overlays/BadgeOverlay';
+import { RestrictionOverlay } from '../skin/overlays/RestrictionOverlay';
 
 function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
   if (!theme) return {};
@@ -46,6 +47,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     theme,
     ad,
     notice,
+    restriction,
     badge,
     fullscreenOnPlay,
     fullscreenMode = 'auto',
@@ -121,6 +123,11 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     [tracker, props.onLike],
   );
 
+  // A restriction blocks playback — pause as soon as it appears.
+  useEffect(() => {
+    if (restriction && player) player.pause();
+  }, [restriction, player]);
+
   const resolvedDir = dirFor(locale, dir);
   const strings = getStrings(locale);
 
@@ -186,8 +193,9 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         </Skin>
         )}
 
-        {notice && !showingAd && <NoticeBanner notice={notice} strings={strings} />}
-        {badge && !showingAd && <BadgeOverlay key={badge} text={badge} />}
+        {notice && !showingAd && !restriction && <NoticeBanner notice={notice} strings={strings} />}
+        {badge && !showingAd && !restriction && <BadgeOverlay key={badge} text={badge} />}
+        {restriction && <RestrictionOverlay restriction={restriction} strings={strings} />}
       </MediaPlayer>
     </div>
   );

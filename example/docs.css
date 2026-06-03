@@ -218,6 +218,17 @@ code {
 }
 
 /* ── Playground ── */
+.dx-playground {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+.dx-player--lg {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+}
 .dx-controls {
   display: flex;
   flex-wrap: wrap;

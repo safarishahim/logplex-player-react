@@ -58,6 +58,11 @@ const T: Record<Lang, {
         intro:
           'Resolve the creative yourself (e.g. from VAST) and pass its URL; the player handles ad playback, the skip-after countdown, click-through and ad analytics, then plays the content.',
       },
+      restriction: {
+        title: 'IP / network restriction',
+        intro:
+          "Block playback when the viewer's IP/network isn't allowed. The overlay covers the player, pauses it, and offers retry / exit. Detect the condition yourself and pass — or clear — the prop.",
+      },
       theming: {
         title: 'Theming & localization',
         intro:
@@ -69,7 +74,7 @@ const T: Record<Lang, {
         intro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
       },
     },
-    pg: { language: 'Language', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad' },
+    pg: { language: 'Language', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
@@ -81,6 +86,7 @@ const T: Record<Lang, {
       ['Gestures', 'Mobile: double-tap ±10s, long-press 2×, brightness/volume swipe.'],
       ['WebView fullscreen', 'Native when available, else a CSS simulated fullscreen.'],
       ['Like + badge + notice', 'Like button, premium info badge, operator notice banner.'],
+      ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
     propsRows: [
@@ -96,6 +102,7 @@ const T: Record<Lang, {
       ['resume', 'boolean', 'Show the continue-watching banner. Default true.'],
       ['ad', 'AdConfig', 'Optional pre-roll ad ({ src, skipAfterSec, clickThrough }).'],
       ['notice', 'PlayerNotice', 'Operator/network notice ({ message, ctaLabel, onCta }).'],
+      ['restriction', 'PlayerRestriction', 'Blocking overlay when the network/IP is not allowed.'],
       ['badge', 'string', 'Transient info pill shown at the start.'],
       ['onLike', '(liked) => void', 'Show a Like button; emits a like event.'],
       ['fullscreenMode', "'auto'|'native'|'simulated'", 'Fullscreen strategy (WebView-safe).'],
@@ -128,6 +135,11 @@ const T: Record<Lang, {
         intro:
           'خودتان تبلیغ را تعیین کنید (مثلاً از VAST) و نشانی آن را بدهید؛ پخش‌کننده پخش تبلیغ، شمارش معکوس رد شدن، کلیک به مقصد و آنالیتیکس تبلیغ را مدیریت می‌کند و سپس محتوا را پخش می‌کند.',
       },
+      restriction: {
+        title: 'محدودیت شبکه / آی‌پی',
+        intro:
+          'وقتی شبکه/آی‌پی کاربر مجاز نیست، پخش را مسدود کنید. این پوشش روی پخش‌کننده می‌نشیند، آن را متوقف می‌کند و دکمه‌های تلاش مجدد/خروج را نشان می‌دهد. شرط را خودتان تشخیص دهید و پراپ را بدهید یا حذف کنید.',
+      },
       theming: {
         title: 'ظاهر و بومی‌سازی',
         intro:
@@ -139,7 +151,7 @@ const T: Record<Lang, {
         intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
       },
     },
-    pg: { language: 'زبان', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغ پیش از پخش' },
+    pg: { language: 'زبان', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغ پیش از پخش', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
@@ -151,6 +163,7 @@ const T: Record<Lang, {
       ['حرکات لمسی', 'موبایل: دوبار-ضربه ±۱۰ ثانیه، فشار طولانی ۲×، کشیدن برای روشنایی/صدا.'],
       ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت تمام‌صفحهٔ شبیه‌سازی‌شده با CSS.'],
       ['لایک + نشان + اعلان', 'دکمهٔ لایک، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
+      ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
     propsRows: [
@@ -203,26 +216,42 @@ function Playground({ lang }: { lang: Lang }) {
   const [notice, setNotice] = useState(true);
   const [ad, setAd] = useState(false);
   const [episodes, setEpisodes] = useState(true);
+  const [back, setBack] = useState(false);
+  const [restrict, setRestrict] = useState(false);
   const [current, setCurrent] = useState('e1');
   const pg = T[lang].pg;
+  const fa = locale === 'fa';
 
   const props: LogplexPlayerProps = {
     src: STREAM,
     poster: POSTER,
-    title: locale === 'fa' ? 'عنوان فیلم' : 'Sample Movie',
-    episodeLabel: locale === 'fa' ? 'قسمت سوم' : 'Episode 3',
+    title: fa ? 'عنوان فیلم' : 'Sample Movie',
+    episodeLabel: fa ? 'قسمت اول' : 'Episode 1',
     locale,
     theme: { accent },
     onLike: () => undefined,
-    ...(episodes ? { episodes: EPISODES, currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
+    ...(episodes ? { episodes: episodesFor(locale), currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
+    ...(back ? { onBack: () => undefined } : {}),
     ...(badge
-      ? { badge: locale === 'fa' ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.' }
+      ? { badge: fa ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.' }
       : {}),
     ...(notice
       ? {
           notice: {
-            message: locale === 'fa' ? 'این فیلم فقط با اینترنت اپراتور همراه اول رایگان است.' : 'Free only on the sponsor network.',
-            ctaLabel: locale === 'fa' ? 'فعال‌سازی' : 'Activate',
+            message: fa ? 'این فیلم فقط با اینترنت اپراتور همراه اول رایگان است.' : 'Free only on the sponsor network.',
+            ctaLabel: fa ? 'فعال‌سازی' : 'Activate',
+          },
+        }
+      : {}),
+    ...(restrict
+      ? {
+          restriction: {
+            title: fa ? 'شبکه نامعتبر' : 'Network not allowed',
+            message: fa
+              ? 'برای پخش فیلم فقط از اینترنت همراه اول یا ایرانسل می‌توانید استفاده کنید.'
+              : 'Playback is only available on the sponsor mobile network.',
+            onRetry: () => setRestrict(false),
+            onExit: () => setRestrict(false),
           },
         }
       : {}),
@@ -237,8 +266,10 @@ function Playground({ lang }: { lang: Lang }) {
       `  locale="${locale}"`,
       `  theme={{ accent: '${accent}' }}`,
       episodes ? `  episodes={episodes}\n  currentEpisodeId={current}\n  onEpisodeChange={setCurrent}` : '',
+      back ? `  onBack={() => history.back()}` : '',
       badge ? `  badge="${props.badge}"` : '',
       notice ? `  notice={{ message: '…', ctaLabel: '…' }}` : '',
+      restrict ? `  restriction={{ title: '…', message: '…', onRetry, onExit }}` : '',
       ad ? `  ad={{ src: adUrl, skipAfterSec: 5 }}` : '',
       `  onLike={(liked) => track(liked)}`,
       `  analytics={{ baseUrl, apiKey, userId, contentId }}`,
@@ -246,7 +277,7 @@ function Playground({ lang }: { lang: Lang }) {
     ]
       .filter(Boolean)
       .join('\n');
-  }, [locale, accent, episodes, badge, notice, ad, props.badge]);
+  }, [locale, accent, episodes, back, badge, notice, restrict, ad, props.badge]);
 
   return (
     <>
@@ -274,15 +305,44 @@ function Playground({ lang }: { lang: Lang }) {
         <label>
           <input type="checkbox" checked={ad} onChange={(e) => setAd(e.target.checked)} /> {pg.ad}
         </label>
+        <label>
+          <input type="checkbox" checked={back} onChange={(e) => setBack(e.target.checked)} /> {pg.back}
+        </label>
+        <label>
+          <input type="checkbox" checked={restrict} onChange={(e) => setRestrict(e.target.checked)} /> {pg.restrict}
+        </label>
       </div>
-      <div className="dx-grid" style={{ marginTop: 16 }}>
-        <div className="dx-player">
+      <div className="dx-playground">
+        <div className="dx-player dx-player--lg">
           {/* key forces a clean remount when the ad toggles. */}
           <LogplexPlayer key={`${ad}`} {...props} />
         </div>
         <CodeBlock>{code}</CodeBlock>
       </div>
     </>
+  );
+}
+
+// Hero demo — episode-stateful so prev/next actually navigate.
+function HeroPlayer({ lang }: { lang: Lang }) {
+  const fa = lang === 'fa';
+  const [current, setCurrent] = useState('e1');
+  const idx = Math.max(0, EPISODES.findIndex((e) => e.id === current));
+  return (
+    <div className="dx-player" style={{ maxWidth: 860, margin: '32px auto 0' }}>
+      <LogplexPlayer
+        episodes={episodesFor(lang)}
+        currentEpisodeId={current}
+        onEpisodeChange={setCurrent}
+        locale={lang}
+        title={fa ? 'فیلم نمونه' : 'Sample Movie'}
+        episodeLabel={fa ? FA_SUBTITLES[idx] : `Episode ${idx + 1}`}
+        poster={POSTER}
+        badge={fa ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.'}
+        onBack={() => undefined}
+        onLike={() => undefined}
+      />
+    </div>
   );
 }
 
@@ -352,21 +412,8 @@ function Docs() {
             ))}
           </div>
           <div className="dx-install">npm i @logplex/player-react</div>
-          <div className="dx-player" style={{ maxWidth: 860, margin: '32px auto 0' }}>
-            {/* key={lang} remounts so the locale switch + badge animation apply cleanly. */}
-            <LogplexPlayer
-              key={lang}
-              episodes={episodesFor(lang)}
-              currentEpisodeId="e1"
-              onEpisodeChange={() => undefined}
-              locale={lang}
-              title={lang === 'fa' ? 'فیلم نمونه' : 'Sample Movie'}
-              episodeLabel={lang === 'fa' ? 'قسمت اول' : 'Episode 1'}
-              poster={POSTER}
-              badge={lang === 'fa' ? 'ترافیک شما به صورت تمام‌بها حساب می‌شود.' : 'Your traffic is billed at premium rate.'}
-              onLike={() => undefined}
-            />
-          </div>
+          {/* key={lang} remounts so the locale switch + badge animation apply cleanly. */}
+          <HeroPlayer key={lang} lang={lang} />
         </div>
 
         <Section id="start" title={t.s.start.title} intro={t.s.start.intro}>
@@ -445,6 +492,19 @@ const episodes = [
 <LogplexPlayer
   src={contentUrl}
   ad={{ src: adUrl, skipAfterSec: 5, clickThrough: 'https://advertiser.example' }}
+/>`}</CodeBlock>
+        </Section>
+
+        <Section id="restriction" title={t.s.restriction.title} intro={t.s.restriction.intro}>
+          <CodeBlock>{`
+<LogplexPlayer
+  src={src}
+  restriction={blocked ? {
+    title: 'شبکه نامعتبر',
+    message: 'برای پخش فقط از اینترنت همراه اول یا ایرانسل استفاده کنید.',
+    onRetry: recheckAccess,   // re-check the IP/network, then clear on success
+    onExit: () => router.back(),
+  } : undefined}
 />`}</CodeBlock>
         </Section>
 

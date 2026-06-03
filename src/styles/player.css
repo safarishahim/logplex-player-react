@@ -65,6 +65,14 @@
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
+/* Buttons/inputs don't inherit font-family by default — force it so every
+   control (playlist items, labels, …) uses the host/customer's font. */
+.lpx-container button,
+.lpx-container input,
+.lpx-container select,
+.lpx-container textarea {
+  font-family: inherit;
+}
 .lpx-player[data-fullscreen='true'] {
   aspect-ratio: auto;
   height: 100%;
@@ -284,12 +292,12 @@
   }
 }
 .lpx-bigplay {
-  width: 52px;
-  height: 52px;
+  width: 66px;
+  height: 66px;
 }
 .lpx-bigplay svg {
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
 }
 
 /* Desktop volume: hover-expand slider next to the mute button. Touch devices
@@ -971,6 +979,89 @@
   height: 32px;
 }
 
+/* ── Restriction overlay (blocking — e.g. IP/network not allowed) ── */
+.lpx-restrict {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.lpx-restrict-card {
+  width: min(680px, 100%);
+  background: rgba(20, 20, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--lpx-radius);
+  backdrop-filter: blur(6px);
+  padding: 26px 28px 22px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.lpx-restrict-icon {
+  display: inline-flex;
+  color: #ef6f5b;
+}
+.lpx-restrict-icon svg {
+  width: 40px;
+  height: 40px;
+}
+.lpx-restrict-title {
+  margin: 8px 0 12px;
+  color: #ef6f5b;
+  font-size: 17px;
+  font-weight: 700;
+}
+.lpx-restrict-msg {
+  margin: 0 auto 20px;
+  max-width: 520px;
+  color: var(--lpx-text);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.lpx-rtl .lpx-restrict-msg,
+.lpx-rtl .lpx-restrict-title {
+  direction: rtl;
+}
+.lpx-restrict-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.lpx-restrict-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--lpx-accent);
+  color: var(--lpx-accent-contrast);
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 28px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lpx-rtl .lpx-restrict-retry {
+  flex-direction: row-reverse;
+}
+.lpx-restrict-retry svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.lpx-restrict-exit {
+  background: transparent;
+  border: 0;
+  color: var(--lpx-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 12px;
+}
+
 /* ── Ad overlay ── */
 .lpx-ad {
   position: absolute;
@@ -1064,8 +1155,12 @@
     height: 20px;
   }
   .lpx-bigplay {
-    width: 48px;
-    height: 48px;
+    width: 58px;
+    height: 58px;
+  }
+  .lpx-bigplay svg {
+    width: 32px;
+    height: 32px;
   }
   .lpx-group--center {
     gap: 2px;

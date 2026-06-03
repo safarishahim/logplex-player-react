@@ -27,6 +27,8 @@ export interface Strings {
   adLabel: string;
   back: string;
   loading: string;
+  retry: string;
+  exit: string;
 }
 
 const fa: Strings = {
@@ -56,6 +58,8 @@ const fa: Strings = {
   adLabel: 'آگهی',
   back: 'بازگشت',
   loading: 'لطفاً صبر کنید …',
+  retry: 'تلاش مجدد',
+  exit: 'خروج',
 };
 
 const en: Strings = {
@@ -85,6 +89,8 @@ const en: Strings = {
   adLabel: 'Ad',
   back: 'Back',
   loading: 'Please wait …',
+  retry: 'Retry',
+  exit: 'Exit',
 };
 
 const TABLE: Record<Locale, Strings> = { fa, en };
