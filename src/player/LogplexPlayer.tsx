@@ -108,7 +108,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const defaultQualityIdx = useMemo(() => {
     if (!sourceList) return 0;
     return sourceList.reduce((best, s, i) => ((s.height ?? 0) > (sourceList[best].height ?? 0) ? i : best), 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceList]);
   const [qualityIdx, setQualityIdx] = useState(defaultQualityIdx);
   useEffect(() => setQualityIdx(defaultQualityIdx), [defaultQualityIdx]);
@@ -169,7 +168,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       restore.current = { time: 0, play: wasPlaying.current || forcePlayNext.current };
       forcePlayNext.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode?.id]);
 
   // Analytics config — default content duration from the episode.
@@ -182,7 +180,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       contentDurationMs: analytics.contentDurationMs ?? episode?.durationMs,
       contentTitle: analytics.contentTitle ?? title,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analytics, episode?.contentId, episode?.durationMs, title]);
 
   // Content analytics is suspended while an ad plays (player passed as null),
@@ -202,7 +199,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       pendingAdPlay.current = true;
       setActiveAdId(pre.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player, adBreaks]);
 
   // Mid-roll (content second reached) + post-roll (content ended) scheduling.

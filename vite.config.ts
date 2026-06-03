@@ -5,7 +5,7 @@ import dts from 'vite-plugin-dts';
 // Library build: bundle our source, keep React + Vidstack external so the
 // host app dedupes them. Emits ESM + CJS + .d.ts and a single styles.css.
 export default defineConfig({
-  plugins: [dts({ rollupTypes: true, include: ['src'] })],
+  plugins: [dts({ rollupTypes: true, include: ['src'], exclude: ['src/**/*.test.ts'] })],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

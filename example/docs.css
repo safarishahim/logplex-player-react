@@ -1,25 +1,25 @@
-/* ── Persian font (IRANSansX) — only loaded/used in the fa docs view ── */
+/* ── Persian font (Vazirmatn, SIL OFL) — only used in the fa docs view ── */
 @font-face {
-  font-family: 'IRANSansX';
-  src: url('/fonts/IRANSansXFaNum-Regular.woff2') format('woff2');
+  font-family: 'Vazirmatn';
+  src: url('./fonts/Vazirmatn-Regular.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: 'IRANSansX';
-  src: url('/fonts/IRANSansXFaNum-Medium.woff2') format('woff2');
+  font-family: 'Vazirmatn';
+  src: url('./fonts/Vazirmatn-Medium.woff2') format('woff2');
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
-  font-family: 'IRANSansX';
-  src: url('/fonts/IRANSansXFaNum-DemiBold.woff2') format('woff2');
+  font-family: 'Vazirmatn';
+  src: url('./fonts/Vazirmatn-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-display: swap;
 }
 @font-face {
-  font-family: 'IRANSansX';
-  src: url('/fonts/IRANSansXFaNum-Bold.woff2') format('woff2');
+  font-family: 'Vazirmatn';
+  src: url('./fonts/Vazirmatn-Bold.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
@@ -344,7 +344,7 @@ code {
 
 /* ── RTL / Persian docs view ── */
 .dx-app[dir='rtl'] {
-  font-family: 'IRANSansX', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 .dx-app[dir='rtl'] .dx-section > p,
 .dx-app[dir='rtl'] .dx-feature p {

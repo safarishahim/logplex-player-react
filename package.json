@@ -1,17 +1,17 @@
 {
   "name": "@logplex/player-react",
   "version": "0.1.0",
-  "description": "Logplex video player for React — Vidstack-based, HLS/MP4, fully skinned (RTL/LTR), with built-in Logplex analytics, resume, ads, gestures and WebView-safe fullscreen.",
+  "description": "A production React video player — Vidstack-based, HLS/MP4, fully skinned (RTL/LTR), with quality/audio/subtitle menus, pre/mid/post-roll ads, gestures, WebView-safe fullscreen, and optional built-in analytics + resume.",
   "type": "module",
-  "license": "UNLICENSED",
-  "author": "Logplex",
-  "homepage": "https://gitlab.noyanet.ir/shad-core/logplex/player-react#readme",
+  "license": "MIT",
+  "author": "Morteza Safarishahi <safarishahim@gmail.com> (https://github.com/safarishahim)",
+  "homepage": "https://safarishahim.github.io/logplex-player-react",
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.noyanet.ir/shad-core/logplex/player-react.git"
+    "url": "git+https://github.com/safarishahim/logplex-player-react.git"
   },
   "bugs": {
-    "url": "https://gitlab.noyanet.ir/shad-core/logplex/player-react/-/issues"
+    "url": "https://github.com/safarishahim/logplex-player-react/issues"
   },
   "keywords": [
     "react",
@@ -20,16 +20,18 @@
     "hls",
     "vidstack",
     "rtl",
+    "persian",
+    "subtitles",
+    "ads",
     "analytics",
     "resume",
-    "continue-watching",
-    "logplex"
+    "continue-watching"
   ],
   "engines": {
     "node": ">=18"
   },
   "publishConfig": {
-    "access": "restricted"
+    "access": "public"
   },
   "files": [
     "dist"
@@ -52,6 +54,11 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "docs:build": "vite build --config vite.docs.config.ts",
     "docs:preview": "vite preview --config vite.docs.config.ts",
@@ -67,12 +74,20 @@
     "media-icons": "^1.1.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.18.0",
     "vite": "^5.4.11",
-    "vite-plugin-dts": "^4.3.0"
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^2.1.8"
   }
 }

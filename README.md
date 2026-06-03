@@ -1,20 +1,22 @@
 # @logplex/player-react
 
-A React video player for Logplex customers. Vidstack-based, HLS/MP4, fully
-custom-skinned (dark, gold accent, **RTL/Persian + LTR/English**), responsive
-(desktop + mobile via container queries), with **built-in Logplex analytics**
-and a **resume ("continue watching") banner** — wired to the Logplex ingest
-pipeline out of the box.
+[![npm](https://img.shields.io/npm/v/@logplex/player-react.svg)](https://www.npmjs.com/package/@logplex/player-react)
+[![CI](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml/badge.svg)](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/@logplex/player-react.svg)](./LICENSE)
 
-External playback links in, analytics + resume to your Logplex backend out.
+A production-ready **React video player** built on [Vidstack](https://vidstack.io) + [hls.js](https://github.com/video-dev/hls.js). HLS/MP4, a fully custom skin (dark, gold accent, **RTL/Persian + LTR/English**), responsive via container queries, with quality / audio / subtitle menus, pre/mid/post-roll ads, touch gestures, WebView-safe fullscreen, and **optional** built-in analytics + resume.
+
+**🎬 [Live demo & docs](https://safarishahim.github.io/logplex-player-react/)**
+
+> Analytics is completely optional — omit the `analytics` prop and it's a self-contained player with zero network calls.
 
 ## Install
 
 ```bash
 npm i @logplex/player-react
-# peers:
-npm i react react-dom
 ```
+
+Peer dependencies: `react` and `react-dom` (>= 18).
 
 ## Quick start
 
@@ -25,84 +27,73 @@ import '@logplex/player-react/styles.css';
 export default function Watch() {
   return (
     <LogplexPlayer
-      src="https://cdn.example.com/movie/master.m3u8"   // HLS or MP4
-      title="عنوان فیلم"
-      episodeLabel="قسمت سوم"
-      poster="https://cdn.example.com/movie/poster.jpg"
-      locale="fa"                                        // 'fa' (rtl) | 'en' (ltr)
-      analytics={{
-        baseUrl: 'https://ingest.your-logplex.com',
-        apiKey: 'mk_live_xxx',                           // your merchant key
-        userId: 'viewer-42',                             // stable per-viewer id
-        contentId: 'movie-123',
-        contentType: 'movie',
-        contentDurationMs: 6_752_000,
-        userType: 'authenticated',
-      }}
+      src="https://cdn.example.com/movie/master.m3u8"
+      poster="https://cdn.example.com/poster.jpg"
+      title="Sample Movie"
+      locale="en" // 'fa' (RTL) | 'en' (LTR)
     />
   );
 }
 ```
 
-That's it — the player emits `play / pause / resume / seek / buffer_start /
-buffer_end / quality_change / heartbeat / complete / exit / error /
-play_start_success` to `/v1/ingest/*` (batched, retried, flushed on page hide),
-and on load it fetches the saved resume point and offers the banner.
+## Features
 
-## Playlist / episodes
+- **HLS + MP4** — adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4. Pass an array of MP4 renditions for a manual quality menu.
+- **Custom skin** — dark, gold-accented, light mode, RTL/LTR, fully responsive (container queries).
+- **Quality / speed / subtitles / audio** menus — HLS-embedded subtitle and multi-language audio tracks are detected automatically; add external WebVTT subtitles too.
+- **Ads** — pre-roll, mid-rolls (at content seconds) and post-roll, with skip countdown and click-through. Ad playback is never counted in content analytics.
+- **Playlist** — episode list + prev/next, auto-advance and auto-resume across episodes.
+- **Gestures** — mobile double-tap ±10s, long-press 2×, brightness/volume swipe; YouTube-style on desktop.
+- **WebView-safe fullscreen** — native when available, CSS-simulated fallback.
+- **Like / badge / operator notice / IP-restriction** overlays.
+- **Optional analytics + resume** — emits canonical events to your ingest endpoint and offers a "continue watching" banner.
+- **TypeScript**, tree-shakeable ESM + CJS, a single `styles.css`.
+
+## Theming & i18n
 
 ```tsx
 <LogplexPlayer
-  episodes={[
-    { id: 'e1', src: '.../e1.m3u8', title: 'سریال', subtitle: 'قسمت اول', durationMs: 2_700_000 },
-    { id: 'e2', src: '.../e2.m3u8', title: 'سریال', subtitle: 'قسمت دوم' },
-  ]}
-  currentEpisodeId="e1"
-  onEpisodeChange={(id) => setCurrent(id)}
-  analytics={{ /* ... contentId per episode ... */ }}
+  appearance="dark"             // 'dark' | 'light'
+  theme={{ accent: '#e8b84b' }} // CSS custom properties
+  locale="fa"                   // RTL right-aligns text; layout stays physical
 />
 ```
 
-## Theming
+The player inherits the host font, so Persian/Arabic UIs pick up your own font automatically.
 
-Pass `theme` (maps to CSS custom properties), or override the `--lpx-*`
-variables in your own CSS.
+## Optional analytics
 
 ```tsx
-<LogplexPlayer theme={{ accent: '#e8b84b', surface: '#1c1c1e', radius: '14px' }} … />
+<LogplexPlayer
+  src={src}
+  analytics={{ baseUrl, apiKey, userId, contentId, contentType: 'movie' }}
+  resume // continue-watching banner
+/>
 ```
 
-## Analytics API (advanced)
+Omit `analytics` entirely to run the player standalone — no requests, nothing backend-specific.
 
-`useLogplexAnalytics(player, config)` and the `LogplexAnalytics` class are
-exported if you want to drive events yourself (e.g. `like`, `share`,
-`watchlist_add`, ad events). The client mirrors the Logplex Go SDK contract.
+See the **[documentation site](https://safarishahim.github.io/logplex-player-react/)** for the full props/events reference and a live playground.
 
-## Status
+## Browser support
 
-Built and shipping:
-- Vidstack core (HLS via hls.js + MP4), custom RTL skin, responsive desktop/mobile
-- Top bar, center play + ±10s, bottom transport, gold scrubber + time, volume,
-  lock-controls, episode prev/next
-- **Scrub thumbnail previews** (WebVTT via `thumbnails` → `TimeSlider.Thumbnail`)
-- **Settings menu**: quality (AUTO + renditions) + playback speed
-- **Playlist** panel with episode thumbnails
-- **Emoji reactions** bar (floating animation; emits `like` + `onReaction`)
-- **Pre-roll ads**: ADS label, mute, skip-after countdown, progress, click-through
-  → `ad_request/ad_start/ad_complete`; content analytics suspended during the ad
-- **Mobile gestures**: double-tap ±10s, long-press 2×, brightness/volume swipe;
-  **desktop** is YouTube-style (click = play/pause, double-click = fullscreen)
-- **WebView-safe fullscreen**: native when available, else CSS simulated —
-  fills the viewport, rotates 90° to present landscape in a portrait WebView
-  (`fullscreenMode: 'auto' | 'native' | 'simulated'`)
-- **Operator/network notice banner** (host-controlled, dismissible, gold CTA)
-- Logplex analytics (full event set, heartbeats, batch + retry + beacon flush)
-- Resume / continue-watching banner
+Modern evergreen browsers (Chrome, Edge, Firefox, Safari) and WebViews. HLS plays via hls.js where MSE is available, and via native HLS on Safari/iOS.
 
-On the roadmap (beyond the original design):
-- Mid-roll / multiple ads (VAST), DRM (Widevine/FairPlay), DASH
+## Development
+
+```bash
+npm install
+npm run dev          # docs/demo site with HMR
+npm test             # unit tests (vitest)
+npm run lint         # eslint
+npm run build        # build the library to dist/
+npm run docs:build   # build the docs site to site/
 ```
 
----
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Developed by **Morteza Safarishahi** · توسعه‌یافته توسط **مرتضی صفری شاهی**
+## License
+
+[MIT](./LICENSE) © Morteza Safarishahi
+
+Built on [Vidstack](https://vidstack.io) and [hls.js](https://github.com/video-dev/hls.js). The demo uses the [Sprite Fight](https://vidstack.io) sample and the [Vazirmatn](https://github.com/rastikerdar/vazirmatn) font (SIL OFL).
