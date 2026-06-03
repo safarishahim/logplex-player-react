@@ -62,6 +62,9 @@ export interface Episode {
   /** WebVTT thumbnails track for scrub previews. */
   thumbnails?: string;
   durationMs?: number;
+  /** Analytics content id for this episode. When set, switching episodes
+   * re-keys analytics so each episode reports as its own content. */
+  contentId?: string;
 }
 
 /** Configures the built-in Logplex analytics + resume integration. */
@@ -131,6 +134,14 @@ export interface AdConfig {
   clickThrough?: string;
 }
 
+/** An ad break at a position in the timeline. Use the `ads` prop for multiple
+ * breaks (pre-roll, mid-rolls, post-roll). */
+export interface AdBreak extends AdConfig {
+  /** 'pre' (before content), 'post' (after it ends), or seconds into the
+   * content for a mid-roll. Default 'pre'. */
+  offset?: 'pre' | 'post' | number;
+}
+
 /** A blocking restriction overlay — e.g. the viewer's IP/network isn't allowed
  * ("playback only works on operator X or Y's network"). Covers the whole player
  * and pauses playback. Host-controlled: pass it to block, remove it to resume. */
@@ -195,8 +206,11 @@ export interface LogplexPlayerProps {
   currentEpisodeId?: string;
   onEpisodeChange?: (episodeId: string) => void;
 
-  /** Optional pre-roll ad played before the content. */
+  /** Optional pre-roll ad played before the content (shorthand for a single
+   * `ads` entry with offset 'pre'). */
   ad?: AdConfig;
+  /** Multiple ad breaks: pre-roll, mid-rolls (at content seconds) and post-roll. */
+  ads?: AdBreak[];
 
   /** Operator/network (or any) notice shown over the player. */
   notice?: PlayerNotice;

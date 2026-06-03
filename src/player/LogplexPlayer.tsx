@@ -49,6 +49,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     theme,
     appearance,
     ad,
+    ads,
     notice,
     restriction,
     badge,
@@ -63,7 +64,31 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const fs = useSimulatedFullscreen(simulated);
 
   const [player, setPlayer] = useState<MediaPlayerInstance | null>(null);
-  const [adDone, setAdDone] = useState(false);
+
+  // Ad breaks — normalize `ad` (legacy pre-roll) + `ads` into a positioned list.
+  const adBreaks = useMemo(() => {
+    const list: { id: string; offset: 'pre' | 'post' | number; src: string; skipAfterSec?: number; clickThrough?: string }[] = [];
+    if (ad) list.push({ id: 'pre', offset: 'pre', src: ad.src, skipAfterSec: ad.skipAfterSec, clickThrough: ad.clickThrough });
+    (ads ?? []).forEach((b, i) =>
+      list.push({ id: `ads-${i}`, offset: b.offset ?? 'pre', src: b.src, skipAfterSec: b.skipAfterSec, clickThrough: b.clickThrough }),
+    );
+    return list;
+  }, [ad, ads]);
+  const hasPreRoll = adBreaks.some((b) => b.offset === 'pre');
+
+  const [playedAds, setPlayedAds] = useState<Set<string>>(() => new Set());
+  const [activeAdId, setActiveAdId] = useState<string | null>(null);
+  const activeAd = adBreaks.find((b) => b.id === activeAdId) ?? null;
+  const showingAd = !!activeAd;
+  const pendingAdPlay = useRef(false);
+  const resumeAfterAd = useRef<number | null>(null);
+  const wasPlaying = useRef(false);
+  const prevEpisodeId = useRef<string | undefined>(undefined);
+  const forcePlayNext = useRef(false);
+  const episodeNav = useRef<{ hasNext: boolean; goNext: () => void }>({ hasNext: false, goNext: () => {} });
+  // Snapshot for the player subscription (avoids stale closures).
+  const adState = useRef({ adBreaks, playedAds, activeAdId });
+  adState.current = { adBreaks, playedAds, activeAdId };
 
   // Resolve the active source (episode wins over the flat `src`).
   const episode = useMemo(() => {
@@ -102,7 +127,15 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     [player],
   );
   const handleCanPlay = useCallback(() => {
-    if (restore.current && player) {
+    if (!player) return;
+    // An ad just loaded → start it.
+    if (pendingAdPlay.current) {
+      pendingAdPlay.current = false;
+      player.play();
+      return;
+    }
+    // Content (re)loaded after a quality switch or an ad → restore position.
+    if (restore.current) {
       player.currentTime = restore.current.time;
       if (restore.current.play) player.play();
       restore.current = null;
@@ -120,41 +153,108 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const hasNext = episodes != null && idx >= 0 && idx < episodes.length - 1;
   const goPrev = () => hasPrev && onEpisodeChange?.(episodes![idx - 1].id);
   const goNext = () => hasNext && onEpisodeChange?.(episodes![idx + 1].id);
+  episodeNav.current = { hasNext, goNext };
+
+  // Switching episodes: resume playback automatically if it was already playing
+  // (so the new episode plays without a separate tap, and the poster hides).
+  // Auto-advance (episode ended → next) forces play.
+  useEffect(() => {
+    const epId = episode?.id;
+    if (prevEpisodeId.current === undefined) {
+      prevEpisodeId.current = epId;
+      return; // initial mount — leave the cover/poster behaviour to the skin
+    }
+    if (epId !== prevEpisodeId.current) {
+      prevEpisodeId.current = epId;
+      restore.current = { time: 0, play: wasPlaying.current || forcePlayNext.current };
+      forcePlayNext.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episode?.id]);
 
   // Analytics config — default content duration from the episode.
   const analyticsCfg: LogplexAnalyticsConfig | undefined = useMemo(() => {
     if (!analytics) return undefined;
     return {
       ...analytics,
+      // Per-episode content id so reports change when the episode changes.
+      contentId: episode?.contentId ?? analytics.contentId,
       contentDurationMs: analytics.contentDurationMs ?? episode?.durationMs,
       contentTitle: analytics.contentTitle ?? title,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analytics, episode?.durationMs, title]);
+  }, [analytics, episode?.contentId, episode?.durationMs, title]);
 
-  // Pre-roll ad: play the ad source first, then switch to content.
-  const showingAd = !!ad && !adDone;
-  const adStarted = useRef(false);
-
-  // Content analytics is suspended while the ad plays (player passed as null),
+  // Content analytics is suspended while an ad plays (player passed as null),
   // so ad playback doesn't register as content play/heartbeat.
   const tracker = useLogplexAnalytics(showingAd ? null : player, analyticsCfg);
-  const { resume: resumePoint, dismiss } = useResume(tracker, resume && !!analyticsCfg && !ad);
+  const { resume: resumePoint, dismiss } = useResume(tracker, resume && !!analyticsCfg && !hasPreRoll);
 
   // Opt-in: remember volume / mute / playback rate across sessions.
   usePersistentMediaSettings(showingAd ? null : player, persistSettings, settingsKey);
 
+  // Pre-roll: start the first unplayed 'pre' break once a player exists.
   useEffect(() => {
-    if (showingAd && tracker && !adStarted.current) {
-      adStarted.current = true;
+    if (!player || adState.current.activeAdId) return;
+    const pre = adBreaks.find((b) => b.offset === 'pre' && !adState.current.playedAds.has(b.id));
+    if (pre) {
+      resumeAfterAd.current = 0;
+      pendingAdPlay.current = true;
+      setActiveAdId(pre.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player, adBreaks]);
+
+  // Mid-roll (content second reached) + post-roll (content ended) scheduling.
+  useEffect(() => {
+    if (!player) return;
+    return player.subscribe(({ currentTime, ended, paused }) => {
+      const { adBreaks: list, playedAds: played, activeAdId: active } = adState.current;
+      if (active) return; // an ad is already playing
+      wasPlaying.current = !paused; // remember content play state for episode switches
+      const mid = list.find((b) => typeof b.offset === 'number' && !played.has(b.id) && currentTime >= (b.offset as number));
+      if (mid) {
+        resumeAfterAd.current = currentTime;
+        pendingAdPlay.current = true;
+        player.pause();
+        setActiveAdId(mid.id);
+        return;
+      }
+      if (ended) {
+        const post = list.find((b) => b.offset === 'post' && !played.has(b.id));
+        if (post) {
+          resumeAfterAd.current = null; // content stays ended after a post-roll
+          pendingAdPlay.current = true;
+          setActiveAdId(post.id);
+          return;
+        }
+        // No (remaining) post-roll → auto-advance to the next episode and play it.
+        if (episodeNav.current.hasNext) {
+          forcePlayNext.current = true;
+          episodeNav.current.goNext();
+        }
+      }
+    });
+  }, [player]);
+
+  // Fire ad analytics when a break becomes active.
+  useEffect(() => {
+    if (activeAdId && tracker) {
       tracker.track('ad_request');
       tracker.track('ad_start');
     }
-  }, [showingAd, tracker]);
+  }, [activeAdId, tracker]);
 
   const onAdEnd = useCallback(() => {
     tracker?.track('ad_complete');
-    setAdDone(true);
+    // Arm the content resume (seek + play on the next canplay) before switching
+    // the source back; post-rolls leave it null so the content stays ended.
+    if (resumeAfterAd.current != null) restore.current = { time: resumeAfterAd.current, play: true };
+    resumeAfterAd.current = null;
+    setActiveAdId((cur) => {
+      if (cur) setPlayedAds((prev) => new Set(prev).add(cur));
+      return null;
+    });
   }, [tracker]);
 
   const onLike = useCallback(
@@ -195,12 +295,12 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       <MediaPlayer
         ref={setPlayer}
         className={`lpx-player${className ? ` ${className}` : ''}`}
-        src={showingAd ? ad!.src : src ?? ''}
+        src={showingAd ? activeAd!.src : src ?? ''}
         title={title}
         playsInline
         crossOrigin
         muted={props.muted}
-        autoPlay={props.autoPlay || !!ad}
+        autoPlay={props.autoPlay || hasPreRoll}
         dir="ltr"
         viewType="video"
         onCanPlay={handleCanPlay}
@@ -222,9 +322,10 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
 
         {showingAd ? (
           <AdOverlay
+            key={activeAd!.id}
             strings={strings}
-            skipAfterSec={ad!.skipAfterSec ?? 5}
-            clickThrough={ad!.clickThrough}
+            skipAfterSec={activeAd!.skipAfterSec ?? 5}
+            clickThrough={activeAd!.clickThrough}
             onEnd={onAdEnd}
           />
         ) : (

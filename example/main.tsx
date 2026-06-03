@@ -10,6 +10,9 @@ const STREAM = 'https://files.vidstack.io/sprite-fight/hls/stream.m3u8';
 const POSTER = 'https://files.vidstack.io/sprite-fight/poster.webp';
 const THUMBNAILS = 'https://files.vidstack.io/sprite-fight/thumbnails.vtt';
 
+// Ad creative (a different stream so the ad is visibly distinct from the content).
+const AD_SRC = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+
 // Real subtitle tracks that match the video (first cue at ~0:17 when dialogue starts).
 const SUBTITLES = [
   { src: 'https://files.vidstack.io/sprite-fight/subs/english.vtt', label: 'English', language: 'en' },
@@ -77,7 +80,7 @@ const T: Record<Lang, {
       ads: {
         title: 'Pre-roll ads',
         intro:
-          'Resolve the creative yourself (e.g. from VAST) and pass its URL; the player handles ad playback, the skip-after countdown, click-through and ad analytics, then plays the content.',
+          'Resolve the creatives yourself (e.g. from VAST) and pass URLs as pre-roll, mid-rolls (at content seconds) and post-roll. The player handles playback, the skip countdown, click-through and ad analytics, and resumes the content afterwards. Ad playback is never counted in the content analytics.',
       },
       restriction: {
         title: 'IP / network restriction',
@@ -95,7 +98,7 @@ const T: Record<Lang, {
         intro: 'With analytics set, the player emits these event_type values to /v1/ingest/* (mirroring the Logplex SDK contract):',
       },
     },
-    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Pre-roll ad', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
+    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Ads (pre/mid/post)', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
@@ -127,7 +130,8 @@ const T: Record<Lang, {
       ['resume', 'boolean', 'Show the continue-watching banner. Default true.'],
       ['persistSettings', 'boolean', 'Remember volume/mute/speed/brightness in localStorage. Default false.'],
       ['settingsKey', 'string', "localStorage key for persisted settings. Default 'logplex-player'."],
-      ['ad', 'AdConfig', 'Optional pre-roll ad ({ src, skipAfterSec, clickThrough }).'],
+      ['ad', 'AdConfig', 'Pre-roll ad shorthand ({ src, skipAfterSec, clickThrough }).'],
+      ['ads', 'AdBreak[]', "Ad breaks: offset 'pre' | 'post' | seconds (mid-roll). Ads aren't counted in content analytics."],
       ['notice', 'PlayerNotice', 'Operator/network notice ({ message, ctaLabel, onCta }).'],
       ['restriction', 'PlayerRestriction', 'Blocking overlay when the network/IP is not allowed.'],
       ['badge', 'string', 'Transient info pill shown at the start.'],
@@ -170,7 +174,7 @@ const T: Record<Lang, {
       ads: {
         title: 'تبلیغ پیش از پخش',
         intro:
-          'خودتان تبلیغ را تعیین کنید (مثلاً از VAST) و نشانی آن را بدهید؛ پخش‌کننده پخش تبلیغ، شمارش معکوس رد شدن، کلیک به مقصد و آنالیتیکس تبلیغ را مدیریت می‌کند و سپس محتوا را پخش می‌کند.',
+          'تبلیغ‌ها را خودتان تعیین کنید (مثلاً از VAST) و به‌صورت پیش از پخش، میان‌برنامه‌ای (در ثانیه‌های محتوا) و پس از پخش بدهید. پخش‌کننده پخش، شمارش معکوس رد شدن، کلیک به مقصد و آنالیتیکس تبلیغ را مدیریت می‌کند و سپس محتوا را ادامه می‌دهد. تبلیغ‌ها هرگز در آمار محتوا شمرده نمی‌شوند.',
       },
       restriction: {
         title: 'محدودیت شبکه / آی‌پی',
@@ -188,7 +192,7 @@ const T: Record<Lang, {
         intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به /v1/ingest/* ارسال می‌کند (مطابق قرارداد SDK لاگ‌پلکس):',
       },
     },
-    pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغ پیش از پخش', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
+    pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغات (ابتدا/میان/پایان)', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
@@ -220,7 +224,8 @@ const T: Record<Lang, {
       ['resume', 'boolean', 'نمایش بنر ادامهٔ تماشا. پیش‌فرض true.'],
       ['persistSettings', 'boolean', 'به‌خاطرسپاری صدا/بی‌صدا/سرعت/روشنایی در localStorage. پیش‌فرض false.'],
       ['settingsKey', 'string', "کلید localStorage برای تنظیمات ذخیره‌شده. پیش‌فرض 'logplex-player'."],
-      ['ad', 'AdConfig', 'تبلیغ پیش از پخش (اختیاری): { src, skipAfterSec, clickThrough }.'],
+      ['ad', 'AdConfig', 'میان‌بُر تبلیغ پیش از پخش: { src, skipAfterSec, clickThrough }.'],
+      ['ads', 'AdBreak[]', "بریک‌های تبلیغ: offset برابر 'pre' | 'post' | ثانیه (میان‌برنامه‌ای). تبلیغ‌ها در آمار محتوا شمرده نمی‌شوند."],
       ['notice', 'PlayerNotice', 'اعلان اپراتور/شبکه: { message, ctaLabel, onCta }.'],
       ['badge', 'string', 'نشان اطلاع‌رسانی گذرا که در ابتدا نمایش داده می‌شود.'],
       ['onLike', '(liked) => void', 'نمایش دکمهٔ لایک؛ رویداد like ارسال می‌کند.'],
@@ -304,7 +309,15 @@ function Playground({ lang }: { lang: Lang }) {
           },
         }
       : {}),
-    ...(ad ? { ad: { src: STREAM, skipAfterSec: 5 } } : {}),
+    ...(ad
+      ? {
+          ads: [
+            { src: AD_SRC, offset: 'pre' as const, skipAfterSec: 3 },
+            { src: AD_SRC, offset: 8, skipAfterSec: 3 },
+            { src: AD_SRC, offset: 'post' as const, skipAfterSec: 3 },
+          ],
+        }
+      : {}),
   };
 
   const code = useMemo(() => {
@@ -320,7 +333,7 @@ function Playground({ lang }: { lang: Lang }) {
       badge ? `  badge="${props.badge}"` : '',
       notice ? `  notice={{ message: '…', ctaLabel: '…' }}` : '',
       restrict ? `  restriction={{ title: '…', message: '…', onRetry, onExit }}` : '',
-      ad ? `  ad={{ src: adUrl, skipAfterSec: 5 }}` : '',
+      ad ? `  ads={[{ src, offset: 'pre' }, { src, offset: 8 }, { src, offset: 'post' }]}` : '',
       `  thumbnails="thumbnails.vtt"`,
       persist ? `  persistSettings` : '',
       `  onLike={(liked) => track(liked)}`,
@@ -580,8 +593,13 @@ const episodes = [
           <CodeBlock>{`
 <LogplexPlayer
   src={contentUrl}
-  ad={{ src: adUrl, skipAfterSec: 5, clickThrough: 'https://advertiser.example' }}
-/>`}</CodeBlock>
+  ads={[
+    { src: adUrl, offset: 'pre', skipAfterSec: 5 },   // pre-roll
+    { src: adUrl, offset: 600 },                       // mid-roll at 10:00
+    { src: adUrl, offset: 'post' },                    // post-roll
+  ]}
+/>
+// Ad playback is never counted in the content's analytics.`}</CodeBlock>
         </Section>
 
         <Section id="restriction" title={t.s.restriction.title} intro={t.s.restriction.intro}>
