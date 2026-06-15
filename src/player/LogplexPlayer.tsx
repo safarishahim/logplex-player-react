@@ -220,53 +220,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     return () => onPlayerReady(null);
   }, [player, onPlayerReady]);
 
-  // Native fullscreen on touch devices: lock the screen to the video's
-  // orientation (landscape for landscape videos). WebViews without a native
-  // Fullscreen API use the CSS simulated-rotation path instead (see above).
-  useEffect(() => {
-    if (!player || simulated) return;
-    const coarse = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)')?.matches;
-    const orientation =
-      typeof screen !== 'undefined'
-        ? (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void> }) | undefined)
-        : undefined;
-    if (!coarse || !orientation?.lock) return;
-
-    const onFsChange = (e: Event) => {
-      const isFs = (e as CustomEvent<boolean>).detail;
-      if (!isFs) {
-        try {
-          orientation.unlock?.();
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-      // Defer the lock to the next frame: locking synchronously inside the
-      // fullscreen-change handler can race the browser and drop fullscreen on
-      // some Android builds. Guard that we're still fullscreen before locking.
-      requestAnimationFrame(() => {
-        const stillFs =
-          typeof document !== 'undefined' &&
-          (document.fullscreenElement != null || !!player.state?.fullscreen);
-        if (!stillFs) return;
-        const { mediaWidth: w, mediaHeight: h } = player.state;
-        const portraitVideo = !!w && !!h && h > w;
-        try {
-          orientation.lock?.(portraitVideo ? 'portrait' : 'landscape')?.catch(() => undefined);
-        } catch {
-          /* lock unsupported */
-        }
-      });
-    };
-
-    player.addEventListener('fullscreen-change', onFsChange);
-    return () => {
-      player.removeEventListener('fullscreen-change', onFsChange);
-      orientation.unlock?.();
-    };
-  }, [player, simulated]);
-
   // Pre-roll: start the first unplayed 'pre' break once a player exists.
   useEffect(() => {
     if (!player || adState.current.activeAdId) return;

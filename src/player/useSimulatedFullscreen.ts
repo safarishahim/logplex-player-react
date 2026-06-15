@@ -1,8 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/** Whether the real Fullscreen API is usable. Often false inside WebViews. */
+/**
+ * Whether a real (OS) fullscreen is usable. True when the element Fullscreen API
+ * is available, OR — on iOS, where it isn't — when the <video> element supports
+ * its own native fullscreen (`webkitEnterFullscreen`). Vidstack uses the video
+ * element on iOS, which rotates correctly and (unlike a CSS-simulated rotation)
+ * doesn't render black. Typically false in WebViews without either.
+ */
 export function nativeFullscreenSupported(): boolean {
-  return typeof document !== 'undefined' && document.fullscreenEnabled === true;
+  if (typeof document === 'undefined') return false;
+  if (document.fullscreenEnabled) return true;
+  try {
+    const v = document.createElement('video') as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+    return typeof v.webkitEnterFullscreen === 'function';
+  } catch {
+    return false;
+  }
 }
 
 interface SimFullscreen {

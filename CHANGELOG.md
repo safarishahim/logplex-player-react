@@ -5,6 +5,13 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-06-15
+
+### Changed
+
+- Removed the custom screen-orientation lock (it caused a visible double-rotation on Android). Fullscreen rotation is now handled by the OS in native mode, or by the CSS-simulated path otherwise.
+- `nativeFullscreenSupported()` now also detects iOS `<video>` fullscreen, so `auto` uses the native iOS video fullscreen (rotates correctly, no black screen) instead of the CSS-simulated path. Use `fullscreenMode="simulated"` to force CSS rotation (e.g. an Android WebView with locked rotation).
+
 ## [0.2.2] - 2026-06-15
 
 ### Changed
