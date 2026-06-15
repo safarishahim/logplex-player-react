@@ -54,7 +54,8 @@ export interface WatchIntervalInfo {
   playDuration: number;
   /** Current playback position, in seconds. */
   duration: number;
-  /** Current resolution as "WxH" (e.g. "1920x1080"), or "unknown". */
+  /** Current resolution as "W*H" with a literal asterisk (e.g. "1920*1080"),
+   * or "" when unknown. */
   quality?: string;
   /** The id returned by the previous handler call, chained back so the
    * back-end can update the same watch record. */

@@ -5,6 +5,10 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+### Docs
+
+- Brought the README and the docs/landing site up to date with the 0.2.x features: VOD providers (`vodType`/`vodCustomUrl`), external tracker (`onWatchInterval`/`watchIntervalMs`), `resolveResume`, `qualityValidate`, `loading`, controlled `liked`, `onPlayerReady`, season-grouped playlist + up-next card, and the pixel-based simulated-rotation fullscreen with remapped gestures. Added a full props table and a "VOD providers & your own back-end" section; corrected the `WatchIntervalInfo.quality` doc to `"W*H"`.
+
 ## [0.2.8] - 2026-06-15
 
 ### Performance

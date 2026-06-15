@@ -111,21 +111,27 @@ const T: Record<Lang, {
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
+      ['VOD providers', 'Exchange an opaque play token for the real stream via a provider API (ABR Hamrahi, Poyan).'],
       ['Built-in analytics', 'Emits play/pause/seek/buffer/heartbeat/complete to your ingest endpoint.'],
-      ['Resume', '“Continue watching” banner from the saved position.'],
-      ['Quality & speed', 'Quality menu from the real HLS renditions; separate speed menu.'],
-      ['Playlist', 'Episode list panel + prev/next, disabled at the ends.'],
-      ['Pre-roll ads', 'Ad playback with a skip-after countdown and click-through.'],
-      ['Gestures', 'Mobile: double-tap ±10s, long-press 2×, brightness/volume swipe.'],
-      ['WebView fullscreen', 'Native when available, else a CSS simulated fullscreen.'],
-      ['Like + badge + notice', 'Like button, premium info badge, operator notice banner.'],
+      ['External tracker', 'Report a periodic “user watch” heartbeat to your own back-end via onWatchInterval.'],
+      ['Resume', '“Continue watching” banner — from analytics or your own resolveResume back-end.'],
+      ['Quality & speed', 'Quality menu from the real HLS renditions (filter with qualityValidate); separate speed menu.'],
+      ['Playlist & seasons', 'Episode panel + prev/next; Episode.group renders season headers.'],
+      ['Up-next card', 'Near an episode’s end, a cover + progress card to jump to the next one (or auto-advance).'],
+      ['Ads', 'Pre-roll, mid-rolls (at content seconds) and post-roll, with skip countdown + click-through.'],
+      ['Gestures', 'Mobile: double-tap ±10s, long-press 2×, brightness/volume swipe (remapped in simulated fullscreen).'],
+      ['WebView fullscreen', 'Native when available, else a CSS simulated rotation that keeps the skin.'],
+      ['Like + badge + notice', 'Controlled Like button, premium info badge, operator notice banner.'],
       ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
       ['Subtitles & audio', 'Auto CC + multi-language audio menus from HLS; add external subtitle files too.'],
       ['Standalone mode', 'Analytics is optional — works as a standalone player with zero backend.'],
     ],
     propsHead: { prop: 'Prop', type: 'Type', desc: 'Description' },
     propsRows: [
-      ['src', 'string | VideoSource[]', 'HLS/MP4 URL — or an array of MP4 renditions ({src,height}) for a manual quality menu.'],
+      ['src', 'string | VideoSource[]', 'HLS/MP4 URL — or an array of MP4 renditions ({src,height}) for a manual quality menu. For non-standard vodType, an opaque play token.'],
+      ['vodType', "'standard'|'abr_hamrahi'|'poyan'", 'VOD provider. Non-standard exchanges src (a token) for the real stream via the provider API. Default standard.'],
+      ['vodCustomUrl', 'Partial<Record<VodProvider,string>>', 'Override the provider API endpoint(s); {token} is substituted.'],
+      ['qualityValidate', '(height) => boolean', 'Hide auto (HLS) renditions whose height fails the predicate (e.g. drop < 400p). Auto stays available.'],
       ['poster', 'string', 'Poster image shown on the cover (before play).'],
       ['title / episodeLabel', 'string', 'Shown above the scrubber, right-aligned.'],
       ['thumbnails', 'string', 'WebVTT thumbnails track for scrub previews.'],
@@ -133,10 +139,15 @@ const T: Record<Lang, {
       ['locale', "'fa' | 'en'", 'UI language (fa → RTL). Default fa.'],
       ['theme', 'ThemeOverrides', 'accent / surface / text / radius … CSS variables.'],
       ['appearance', "'dark' | 'light'", 'Color scheme (video stays black). Default dark.'],
-      ['episodes', 'Episode[]', 'Playlist; enables the panel + prev/next.'],
+      ['episodes', 'Episode[]', 'Playlist; enables the panel + prev/next. Episode.group adds season headers; near the end an up-next card appears.'],
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'Controlled episode selection.'],
       ['analytics', 'LogplexAnalyticsConfig', 'Enables built-in analytics + resume.'],
       ['resume', 'boolean', 'Show the continue-watching banner. Default true.'],
+      ['resolveResume', '() => Promise<ResumePoint|null>', 'Feed the resume banner from your own back-end (no analytics needed). Memoize it.'],
+      ['onWatchInterval', '(info) => Promise<string|void>', 'Periodic “user watch” heartbeat to a non-Logplex tracker; return an id to chain into the next call.'],
+      ['watchIntervalMs', 'number', 'Watch-interval cadence in ms. Default 5000.'],
+      ['onPlayerReady', '(player|null) => void', 'Exposes the underlying Vidstack instance for imperative control (seek, pause, live sync).'],
+      ['loading', 'boolean', 'Force the loading overlay (also shown automatically while a provider source resolves).'],
       ['persistSettings', 'boolean', 'Remember volume/mute/speed/brightness in localStorage. Default false.'],
       ['settingsKey', 'string', "localStorage key for persisted settings. Default 'logplex-player'."],
       ['ad', 'AdConfig', 'Pre-roll ad shorthand ({ src, skipAfterSec, clickThrough }).'],
@@ -144,8 +155,8 @@ const T: Record<Lang, {
       ['notice', 'PlayerNotice', 'Operator/network notice ({ message, ctaLabel, onCta }).'],
       ['restriction', 'PlayerRestriction', 'Blocking overlay when the network/IP is not allowed.'],
       ['badge', 'string', 'Transient info pill shown at the start.'],
-      ['onLike', '(liked) => void', 'Show a Like button; emits a like event.'],
-      ['fullscreenMode', "'auto'|'native'|'simulated'", 'Fullscreen strategy (WebView-safe).'],
+      ['onLike / liked', '(liked) => void / boolean', 'Show a Like button (emits a like event); liked makes it controlled.'],
+      ['fullscreenMode', "'auto'|'native'|'simulated'", 'Fullscreen strategy. simulated forces a CSS rotation for locked WebViews.'],
       ['fullscreenOnPlay', 'boolean', 'Enter fullscreen when playback starts from the cover.'],
       ['onBack', '() => void', 'Show a back button in the top bar.'],
     ],
@@ -210,21 +221,27 @@ const T: Record<Lang, {
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
+      ['ارائه‌دهندگان VOD', 'تبدیل توکن پخش به نشانی واقعی استریم از طریق API ارائه‌دهنده (ABR همراهی، پویان).'],
       ['آنالیتیکس داخلی', 'ارسال رویدادهای play/pause/seek/buffer/heartbeat/complete به نقطهٔ ورودی شما.'],
-      ['ادامهٔ تماشا', 'بنر «ادامهٔ تماشا» از موقعیت ذخیره‌شده.'],
-      ['کیفیت و سرعت', 'منوی کیفیت از رندیشن‌های واقعی HLS؛ منوی سرعت جداگانه.'],
-      ['لیست پخش', 'پنل لیست قسمت‌ها به‌همراه قبلی/بعدی که در ابتدا و انتها غیرفعال می‌شوند.'],
-      ['تبلیغ پیش از پخش', 'پخش تبلیغ با شمارش معکوس رد شدن و کلیک به مقصد.'],
-      ['حرکات لمسی', 'موبایل: دوبار-ضربه ±۱۰ ثانیه، فشار طولانی ۲×، کشیدن برای روشنایی/صدا.'],
-      ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت تمام‌صفحهٔ شبیه‌سازی‌شده با CSS.'],
-      ['لایک + نشان + اعلان', 'دکمهٔ لایک، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
+      ['ترکر خارجی', 'ارسال ضربان دوره‌ای «تماشای کاربر» به بک‌اند خودتان با onWatchInterval.'],
+      ['ادامهٔ تماشا', 'بنر «ادامهٔ تماشا» — از آنالیتیکس یا از بک‌اند خودتان با resolveResume.'],
+      ['کیفیت و سرعت', 'منوی کیفیت از رندیشن‌های واقعی HLS (فیلتر با qualityValidate)؛ منوی سرعت جداگانه.'],
+      ['لیست پخش و فصل‌ها', 'پنل قسمت‌ها + قبلی/بعدی؛ Episode.group سرتیتر فصل می‌سازد.'],
+      ['کارت قسمت بعد', 'نزدیک پایان قسمت، کارتی با کاور و نوار پیشرفت برای رفتن به قسمت بعد (یا رفتن خودکار).'],
+      ['تبلیغات', 'پیش از پخش، میان‌برنامه‌ای (در ثانیهٔ محتوا) و پایان، با شمارش رد شدن و کلیک به مقصد.'],
+      ['حرکات لمسی', 'موبایل: دوبار-ضربه ±۱۰ ثانیه، فشار طولانی ۲×، کشیدن برای روشنایی/صدا (در تمام‌صفحهٔ شبیه‌سازی‌شده هم درست کار می‌کند).'],
+      ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت چرخش شبیه‌سازی‌شدهٔ CSS که پوسته را حفظ می‌کند.'],
+      ['لایک + نشان + اعلان', 'دکمهٔ لایک کنترل‌شده، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
       ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
       ['زیرنویس و صدا', 'منوی زیرنویس و صدای چندزبانه از HLS؛ افزودن فایل زیرنویس خارجی هم ممکن است.'],
       ['حالت مستقل', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
     ],
     propsHead: { prop: 'پراپ', type: 'نوع', desc: 'توضیح' },
     propsRows: [
-      ['src', 'string | VideoSource[]', 'نشانی HLS/MP4 — یا آرایه‌ای از کیفیت‌های MP4 ({src,height}) برای منوی انتخاب کیفیت دستی.'],
+      ['src', 'string | VideoSource[]', 'نشانی HLS/MP4 — یا آرایه‌ای از کیفیت‌های MP4 ({src,height}) برای منوی کیفیت دستی. برای vodType غیراستاندارد، یک توکن پخش.'],
+      ['vodType', "'standard'|'abr_hamrahi'|'poyan'", 'ارائه‌دهندهٔ VOD. حالت غیراستاندارد، src (توکن) را از طریق API ارائه‌دهنده به استریم واقعی تبدیل می‌کند. پیش‌فرض standard.'],
+      ['vodCustomUrl', 'Partial<Record<VodProvider,string>>', 'بازنویسی نشانی API ارائه‌دهنده‌ها؛ {token} جایگزین می‌شود.'],
+      ['qualityValidate', '(height) => boolean', 'پنهان‌کردن کیفیت‌های خودکار (HLS) که از این شرط رد نشوند (مثلاً حذف زیر ۴۰۰p). خودکار باقی می‌ماند.'],
       ['poster', 'string', 'تصویر پوستر که روی کاور (پیش از پخش) نمایش داده می‌شود.'],
       ['title / episodeLabel', 'string', 'بالای نوار پیشروی و راست‌چین نمایش داده می‌شود.'],
       ['thumbnails', 'string', 'ترک تصاویر بندانگشتی WebVTT برای پیش‌نمایش هنگام جابه‌جایی.'],
@@ -232,18 +249,24 @@ const T: Record<Lang, {
       ['locale', "'fa' | 'en'", 'زبان رابط کاربری (fa ← راست‌به‌چپ). پیش‌فرض fa.'],
       ['theme', 'ThemeOverrides', 'متغیرهای CSS مانند accent / surface / text / radius.'],
       ['appearance', "'dark' | 'light'", 'حالت رنگ (ویدئو مشکی می‌ماند). پیش‌فرض dark.'],
-      ['episodes', 'Episode[]', 'لیست پخش؛ پنل و دکمه‌های قبلی/بعدی را فعال می‌کند.'],
+      ['episodes', 'Episode[]', 'لیست پخش؛ پنل و قبلی/بعدی را فعال می‌کند. Episode.group سرتیتر فصل می‌سازد و نزدیک پایان، کارت قسمت بعد ظاهر می‌شود.'],
       ['currentEpisodeId / onEpisodeChange', 'string / fn', 'انتخاب کنترل‌شدهٔ قسمت.'],
       ['analytics', 'LogplexAnalyticsConfig', 'آنالیتیکس داخلی و ادامهٔ تماشا را فعال می‌کند.'],
       ['resume', 'boolean', 'نمایش بنر ادامهٔ تماشا. پیش‌فرض true.'],
+      ['resolveResume', '() => Promise<ResumePoint|null>', 'تغذیهٔ بنر ادامهٔ تماشا از بک‌اند خودتان (بدون نیاز به آنالیتیکس). آن را memoize کنید.'],
+      ['onWatchInterval', '(info) => Promise<string|void>', 'ضربان دوره‌ای «تماشای کاربر» به ترکر غیر-Logplex؛ یک id برگردانید تا در فراخوانی بعدی زنجیر شود.'],
+      ['watchIntervalMs', 'number', 'بازهٔ ضربان تماشا بر حسب میلی‌ثانیه. پیش‌فرض ۵۰۰۰.'],
+      ['onPlayerReady', '(player|null) => void', 'نمونهٔ زیرین Vidstack را برای کنترل دستی (seek، pause، همگام‌سازی پخش زنده) در اختیار می‌گذارد.'],
+      ['loading', 'boolean', 'نمایش اجباری اورلی لودینگ (هنگام تبدیل منبع ارائه‌دهنده هم خودکار نمایش داده می‌شود).'],
       ['persistSettings', 'boolean', 'به‌خاطرسپاری صدا/بی‌صدا/سرعت/روشنایی در localStorage. پیش‌فرض false.'],
       ['settingsKey', 'string', "کلید localStorage برای تنظیمات ذخیره‌شده. پیش‌فرض 'logplex-player'."],
       ['ad', 'AdConfig', 'میان‌بُر تبلیغ پیش از پخش: { src, skipAfterSec, clickThrough }.'],
       ['ads', 'AdBreak[]', "بریک‌های تبلیغ: offset برابر 'pre' | 'post' | ثانیه (میان‌برنامه‌ای). تبلیغ‌ها در آمار محتوا شمرده نمی‌شوند."],
       ['notice', 'PlayerNotice', 'اعلان اپراتور/شبکه: { message, ctaLabel, onCta }.'],
+      ['restriction', 'PlayerRestriction', 'اورلی مسدودکننده وقتی شبکه/آی‌پی مجاز نیست (پخش را متوقف می‌کند).'],
       ['badge', 'string', 'نشان اطلاع‌رسانی گذرا که در ابتدا نمایش داده می‌شود.'],
-      ['onLike', '(liked) => void', 'نمایش دکمهٔ لایک؛ رویداد like ارسال می‌کند.'],
-      ['fullscreenMode', "'auto'|'native'|'simulated'", 'راهبرد تمام‌صفحه (سازگار با WebView).'],
+      ['onLike / liked', '(liked) => void / boolean', 'نمایش دکمهٔ لایک (رویداد like)؛ liked آن را کنترل‌شده می‌کند.'],
+      ['fullscreenMode', "'auto'|'native'|'simulated'", 'راهبرد تمام‌صفحه. simulated برای WebViewهای قفل‌شده چرخش CSS را اجبار می‌کند.'],
       ['fullscreenOnPlay', 'boolean', 'ورود به تمام‌صفحه هنگام شروع پخش از کاور.'],
       ['onBack', '() => void', 'نمایش دکمهٔ بازگشت در نوار بالا.'],
     ],
@@ -595,17 +618,47 @@ import 'logplex-player-react/styles.css';
 />`}</CodeBlock>
         </Section>
 
+        <Section
+          id="providers"
+          title={lang === 'fa' ? 'ارائه‌دهندگان VOD و بک‌اند خودتان' : 'VOD providers & your own back-end'}
+          intro={
+            lang === 'fa'
+              ? 'برای ارائه‌دهنده‌های توکنی، src را به‌صورت توکن بدهید. گزارش به بک‌اند فعلی‌تان با onWatchInterval و ادامهٔ تماشا با resolveResume — بدون نیاز به آنالیتیکس Logplex.'
+              : 'For token-based providers, pass src as the token. Report to your current back-end with onWatchInterval and drive resume with resolveResume — no Logplex analytics required.'
+          }>
+          <CodeBlock>{`<LogplexPlayer
+  src={playToken}                    // opaque token for the provider
+  vodType="abr_hamrahi"              // 'standard' | 'abr_hamrahi' | 'poyan'
+  vodCustomUrl={{ abr_hamrahi: '/vod/abrehamrahi/{token}' }}
+  qualityValidate={(h) => h > 400}   // hide tiny renditions
+
+  // report to your existing (non-Logplex) tracker every 5s
+  onWatchInterval={async ({ playDuration, duration, quality, userWatchId }) => {
+    return reportWatch({ playDuration, duration, quality, userWatchId });
+    // ↑ return a watch id to chain it into the next call
+  }}
+
+  // feed the resume banner from your own back-end (memoize it)
+  resolveResume={async () => {
+    const w = await getWatch(contentId);
+    return w ? { positionSeconds: w.duration } : null;
+  }}
+/>`}</CodeBlock>
+        </Section>
+
         <Section id="playlist" title={t.s.playlist.title} intro={t.s.playlist.intro}>
           <CodeBlock>{`
 const episodes = [
-  { id: 'e1', src: '.../e1.m3u8', title: 'سریال', subtitle: 'قسمت اول' },
-  { id: 'e2', src: '.../e2.m3u8', title: 'سریال', subtitle: 'قسمت دوم' },
+  // group → season headers in the panel; poster → up-next card cover
+  { id: 'e1', src: '.../e1.m3u8', title: 'سریال', subtitle: 'قسمت اول', group: 'فصل اول', poster: '...' },
+  { id: 'e2', src: '.../e2.m3u8', title: 'سریال', subtitle: 'قسمت دوم', group: 'فصل اول', poster: '...' },
+  { id: 'e3', src: '.../e3.m3u8', title: 'سریال', subtitle: 'قسمت اول', group: 'فصل دوم', poster: '...' },
 ];
 
 <LogplexPlayer
   episodes={episodes}
   currentEpisodeId={current}
-  onEpisodeChange={setCurrent}
+  onEpisodeChange={setCurrent}   // auto-advances on end; up-next card near the end
 />`}</CodeBlock>
         </Section>
 
