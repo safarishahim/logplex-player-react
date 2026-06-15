@@ -220,6 +220,62 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     return () => onPlayerReady(null);
   }, [player, onPlayerReady]);
 
+  // Native fullscreen: force landscape only when the OS didn't already rotate.
+  // We wait a moment after entering fullscreen — if auto-rotate is on the OS
+  // turns the viewport to landscape and we do nothing (avoids the double-spin
+  // of fighting it); if it's still portrait (auto-rotate off), we lock
+  // landscape for a landscape video. iOS Safari has no orientation.lock, so it
+  // skips this and uses its own native video fullscreen rotation.
+  useEffect(() => {
+    if (!player || simulated) return;
+    const orientation =
+      typeof screen !== 'undefined'
+        ? (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void> }) | undefined)
+        : undefined;
+    if (!orientation?.lock) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onFsChange = (e: Event) => {
+      const isFs = (e as CustomEvent<boolean>).detail;
+      if (timer) clearTimeout(timer);
+      if (!isFs) {
+        try {
+          orientation.unlock?.();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      timer = setTimeout(() => {
+        const stillFs =
+          typeof document !== 'undefined' &&
+          (document.fullscreenElement != null || !!player.state?.fullscreen);
+        if (!stillFs) return;
+        const { mediaWidth: w, mediaHeight: h } = player.state;
+        const landscapeVideo = !w || !h || w >= h;
+        const portraitViewport = window.innerHeight > window.innerWidth;
+        if (landscapeVideo && portraitViewport) {
+          try {
+            orientation.lock?.('landscape').catch(() => undefined);
+          } catch {
+            /* lock unsupported */
+          }
+        }
+      }, 300);
+    };
+
+    player.addEventListener('fullscreen-change', onFsChange);
+    return () => {
+      if (timer) clearTimeout(timer);
+      player.removeEventListener('fullscreen-change', onFsChange);
+      try {
+        orientation.unlock?.();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [player, simulated]);
+
   // Pre-roll: start the first unplayed 'pre' break once a player exists.
   useEffect(() => {
     if (!player || adState.current.activeAdId) return;

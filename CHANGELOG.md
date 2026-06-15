@@ -5,6 +5,16 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-06-15
+
+### Added
+
+- Native fullscreen now forces landscape for a landscape video when the OS didn't already rotate (i.e. device auto-rotate is off). It waits briefly after entering fullscreen and only locks if the viewport is still portrait, so it doesn't fight the OS auto-rotation (no double-spin). iOS keeps its own native video-fullscreen rotation.
+
+### Fixed
+
+- Simulated (CSS) fullscreen rotation is now centered with a physical `left` instead of `inset-inline-start`, so the rotated player is positioned correctly in RTL documents (e.g. a Persian Android WebView).
+
 ## [0.2.3] - 2026-06-15
 
 ### Changed

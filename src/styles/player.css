@@ -69,7 +69,11 @@
 .lpx-fs-sim.lpx-fs-rotate:popover-open {
   inset: auto;
   top: 50%;
-  inset-inline-start: 50%;
+  /* Physical left (not inset-inline-start) — the rotation is a physical
+     transform, so centering must not flip in an RTL document (otherwise the
+     rotated player is mispositioned in RTL WebViews). */
+  left: 50%;
+  right: auto;
   width: 100vh;
   height: 100vw;
   width: 100dvh;
