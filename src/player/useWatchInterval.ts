@@ -51,12 +51,16 @@ export function useWatchInterval(
       }
     };
 
+    // The host back-end derives traffic from the resolution string and only
+    // accepts the exact form "WIDTH*HEIGHT" with a literal asterisk (regex
+    // /^[0-9]+[*][0-9]+$/, then width*height = pixels, ×playDuration = bytes).
+    // Any other shape (e.g. "1280x720") fails the regex → pixels 0 → traffic 0
+    // while watch duration still climbs. So report "WIDTH*HEIGHT".
     const currentQuality = (): string => {
       const q = player.qualities?.selected;
-      if (q?.width && q?.height) return `${q.width}x${q.height}`;
-      const w = player.state?.mediaWidth;
-      const h = player.state?.mediaHeight;
-      return w && h ? `${w}x${h}` : 'unknown';
+      const w = q?.width || player.state?.mediaWidth;
+      const h = q?.height || player.state?.mediaHeight;
+      return w && h ? `${w}*${h}` : '';
     };
 
     const report = async () => {

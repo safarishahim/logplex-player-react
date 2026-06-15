@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-06-15
+
+### Fixed
+
+- `onWatchInterval` now reports the quality as `"WIDTH*HEIGHT"` (literal asterisk, e.g. `"1280*720"`) instead of `"WIDTHxHEIGHT"`. Hosts that derive traffic/bandwidth from this string (matching `^[0-9]+[*][0-9]+$`, then `width*height*playDuration`) were getting zero traffic from the `x`-separated form while watch duration still accumulated correctly.
+
 ## [0.2.4] - 2026-06-15
 
 ### Added
