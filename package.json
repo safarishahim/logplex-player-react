@@ -1,6 +1,6 @@
 {
   "name": "logplex-player-react",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A production React video player — Vidstack-based, HLS/MP4, fully skinned (RTL/LTR), with quality/audio/subtitle menus, pre/mid/post-roll ads, gestures, WebView-safe fullscreen, and optional built-in analytics + resume.",
   "type": "module",
   "license": "MIT",

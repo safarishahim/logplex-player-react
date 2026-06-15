@@ -136,6 +136,14 @@ export function Skin(props: SkinProps): JSX.Element {
     return () => clearTimeout(t);
   }, [active, paused, activityTick]);
 
+  // Auto-dismiss the resume card if no choice is made (keep playing from start).
+  const { resume: resumePoint, onDismissResume } = props;
+  useEffect(() => {
+    if (!resumePoint) return undefined;
+    const t = setTimeout(() => onDismissResume?.(), 30_000);
+    return () => clearTimeout(t);
+  }, [resumePoint, onDismissResume]);
+
   const toggleLike = () => {
     const next = !liked;
     if (!likeControlled) setInternalLiked(next); // controlled: host drives via props.liked

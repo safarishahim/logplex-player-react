@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { LogplexAnalytics, ResumePoint } from '../analytics/client';
 
 /** Supplies a saved resume point from a host back-end (used instead of the
@@ -32,5 +32,7 @@ export function useResume(
     };
   }, [analytics, enabled, resolver]);
 
-  return { resume, dismiss: () => setResume(null) };
+  const dismiss = useCallback(() => setResume(null), []);
+
+  return { resume, dismiss };
 }

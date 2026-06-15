@@ -135,6 +135,9 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
       } else {
         const v = clamp(s.startVolume + frac, 0, 1);
         remote.changeVolume(v);
+        // Keep mute in sync with the gesture so the mute button reflects it.
+        if (v > 0) remote.unmute();
+        else remote.mute();
         setIndicator({ kind: 'volume', value: v });
       }
     }

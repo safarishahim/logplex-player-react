@@ -5,6 +5,18 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-06-15
+
+### Changed
+
+- Resume card auto-dismisses after 30s if no choice is made (playback keeps going from the start).
+
+### Fixed
+
+- Fullscreen rotation no longer double-rotates: native device rotation is used when it actually turns the viewport, otherwise a CSS 90° rotation is applied — including WebViews that accept `screen.orientation.lock()` but don't rotate.
+- iOS Safari popover fullscreen: the rotated player no longer lands in the top-left corner (rotate rule now outranks the popover-open rule).
+- Volume gesture now stays in sync with the mute button (swiping the volume up unmutes; to zero mutes).
+
 ## [0.2.1] - 2026-06-15
 
 ### Changed

@@ -62,7 +62,11 @@
   width: 100dvw;
   height: 100dvh;
 }
-.lpx-fs-rotate {
+/* Higher specificity than .lpx-fs-sim:popover-open so the rotated centering
+   (inset:auto + 50/50 + transform) wins over the popover's inset:0 — otherwise
+   the rotated player lands in the top-left corner (iOS Safari popover). */
+.lpx-fs-sim.lpx-fs-rotate,
+.lpx-fs-sim.lpx-fs-rotate:popover-open {
   inset: auto;
   top: 50%;
   inset-inline-start: 50%;

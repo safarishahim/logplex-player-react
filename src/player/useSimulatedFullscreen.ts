@@ -26,35 +26,41 @@ export function useSimulatedFullscreen(enabled: boolean): SimFullscreen {
   const portraitViewport = () =>
     typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
 
-  const toggle = useCallback(() => {
-    setActive((a) => {
-      const next = !a;
-      if (next) {
-        setRotate(portraitViewport());
-        try {
-          // Best-effort native rotate; if it succeeds the resize handler
-          // clears `rotate` (viewport becomes landscape).
-          (screen.orientation as unknown as { lock?: (o: string) => Promise<void> })?.lock?.('landscape')?.catch(
-            () => undefined,
-          );
-        } catch {
-          /* unsupported in WebView */
-        }
-      } else {
-        try {
-          screen.orientation?.unlock?.();
-        } catch {
-          /* */
-        }
-      }
-      return next;
-    });
-  }, []);
-
+  const toggle = useCallback(() => setActive((a) => !a), []);
   const exit = useCallback(() => setActive(false), []);
 
   useEffect(() => {
     if (!enabled || !active) return;
+
+    let cancelled = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+
+    // Try a real device rotation first. If the environment can't rotate — the
+    // lock API is missing, it rejects, or (some WebViews) it "succeeds" but the
+    // viewport never turns — fall back to a CSS 90° rotation. We start with CSS
+    // off so a successful native rotation doesn't briefly double-rotate.
+    let lock: Promise<void> | undefined;
+    try {
+      lock = (screen.orientation as unknown as { lock?: (o: string) => Promise<void> })?.lock?.('landscape');
+    } catch {
+      lock = undefined;
+    }
+    if (lock && typeof lock.then === 'function') {
+      setRotate(false);
+      lock
+        .then(() => {
+          fallbackTimer = setTimeout(() => {
+            if (!cancelled && portraitViewport()) setRotate(true); // lock didn't actually rotate
+          }, 350);
+        })
+        .catch(() => {
+          if (!cancelled) setRotate(portraitViewport());
+        });
+    } else {
+      setRotate(portraitViewport());
+    }
+
+    // Keep rotation in sync with the real viewport (native rotation clears CSS).
     const onResize = () => setRotate(portraitViewport());
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
@@ -64,11 +70,20 @@ export function useSimulatedFullscreen(enabled: boolean): SimFullscreen {
       if (e.key === 'Escape') setActive(false);
     };
     window.addEventListener('keydown', onKey);
+
     return () => {
+      cancelled = true;
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
+      setRotate(false);
+      try {
+        screen.orientation?.unlock?.();
+      } catch {
+        /* */
+      }
     };
   }, [enabled, active]);
 
