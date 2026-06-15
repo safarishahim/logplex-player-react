@@ -455,6 +455,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           liked={props.liked}
           simulatedFullscreen={simulated}
           simIsFullscreen={fs.active}
+          simRotated={fs.active && fs.rotate}
           onToggleSimFullscreen={fs.toggle}
           resume={resumePoint}
           onDismissResume={dismiss}

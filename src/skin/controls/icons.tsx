@@ -10,6 +10,7 @@ export {
   ArrowLeftIcon as BackIcon,
   SeekBackward10Icon as Replay10Icon,
   SeekForward10Icon as Forward10Icon,
+  FastForwardIcon,
   VolumeHighIcon,
   MuteIcon as VolumeMutedIcon,
   LockClosedIcon as LockIcon,

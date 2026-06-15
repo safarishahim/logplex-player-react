@@ -100,6 +100,10 @@
 
 .lpx-player {
   position: relative;
+  /* The Vidstack root ([data-media-player]) lays its provider/video out more
+     reliably as a flex box (helps it fill, especially in fullscreen). The
+     overlays are absolutely positioned, so flex doesn't affect them. */
+  display: flex;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
@@ -586,6 +590,116 @@
   color: var(--lpx-text);
 }
 
+/* ── Up-next card (end of episode) ── */
+.lpx-nextup {
+  position: absolute;
+  z-index: 4;
+  inset-block-end: 88px;
+  inset-inline-end: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: min(340px, 72vw);
+  animation: lpx-nextup-in 0.28s ease both;
+}
+@keyframes lpx-nextup-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.lpx-nextup-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  border: 0;
+  text-align: start;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(20, 20, 22, 0.82);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+.lpx-nextup-cover {
+  position: relative;
+  flex: none;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #000 center / cover no-repeat;
+  display: grid;
+  place-items: center;
+}
+.lpx-nextup-play {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+}
+.lpx-nextup-play svg {
+  width: 15px;
+  height: 15px;
+}
+.lpx-nextup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.lpx-nextup-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}
+.lpx-nextup-name {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lpx-nextup-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.lpx-nextup-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lpx-accent);
+}
+.lpx-nextup-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(20, 20, 22, 0.82);
+  backdrop-filter: blur(10px);
+}
+.lpx-nextup-close svg {
+  width: 16px;
+  height: 16px;
+}
+.lpx-rtl .lpx-nextup-label,
+.lpx-rtl .lpx-nextup-name {
+  direction: rtl;
+  text-align: right;
+}
+
 /* ── Spinner ── */
 .lpx-spinner {
   position: absolute;
@@ -811,6 +925,21 @@
   color: var(--lpx-accent);
   font-weight: 700;
 }
+.lpx-radio-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+/* Small muted suffix, e.g. the active resolution shown next to "Auto". */
+.lpx-radio-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lpx-text-muted);
+}
+.lpx-radio-opt[aria-checked='true'] .lpx-radio-hint {
+  color: var(--lpx-accent);
+  opacity: 0.85;
+}
 .lpx-radio-dot {
   flex: none;
   width: 18px;
@@ -919,7 +1048,8 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  padding: 6px 14px 12px;
+  /* Equal top/bottom padding (sticky header); the list below adds the gap. */
+  padding: 10px 14px;
   font-size: 13px;
   font-weight: 700;
   color: var(--lpx-text);
@@ -951,7 +1081,8 @@
 .lpx-panel-groups .lpx-panel-list {
   overflow: visible;
   flex: none;
-  padding-block: 0 4px;
+  /* Small gap between the sticky season header and the first episode card. */
+  padding-block: 6px 4px;
 }
 .lpx-ep {
   display: flex;
@@ -1043,13 +1174,38 @@
   inset-inline: 0;
   margin-inline: auto;
   width: fit-content;
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--lpx-accent);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
   font-weight: 800;
   font-size: 13px;
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-radius: 999px;
   pointer-events: none;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.lpx-rate-ff {
+  width: 18px;
+  height: 18px;
+  color: var(--lpx-accent);
+  animation: lpx-ff-pulse 0.9s ease-in-out infinite;
+}
+.lpx-rate-text {
+  letter-spacing: 0.5px;
+}
+@keyframes lpx-ff-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateX(-1px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(1px);
+  }
 }
 /* Brightness (left) / volume (right) side sliders shown during a vertical
    swipe — positioned on their respective sides, not centered. */

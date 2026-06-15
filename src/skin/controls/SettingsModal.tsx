@@ -78,6 +78,8 @@ export function SettingsModal({
           {!manual && (
             <RadioOption
               label={`${strings.qualityAuto} (AUTO)`}
+              // While on Auto, show the resolution ABR is currently playing.
+              hint={autoQuality && quality?.height ? `${quality.height}p` : undefined}
               on={autoQuality}
               onSelect={() => {
                 remote.requestAutoQuality();

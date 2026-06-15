@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Direction, Episode, PlayerNotice } from '../types';
 import type { Strings } from '../i18n';
@@ -54,6 +54,8 @@ export interface SkinProps {
   /** When true, the fullscreen button uses the simulated (CSS) path. */
   simulatedFullscreen?: boolean;
   simIsFullscreen?: boolean;
+  /** True while the simulated fullscreen is CSS-rotated 90° (gestures remap). */
+  simRotated?: boolean;
   onToggleSimFullscreen?: () => void;
   resume?: ResumePoint | null;
   onDismissResume?: () => void;
@@ -84,6 +86,7 @@ export function Skin(props: SkinProps): JSX.Element {
   const waiting = useMediaState('waiting');
   const canPlay = useMediaState('canPlay');
   const currentTime = useMediaState('currentTime');
+  const duration = useMediaState('duration');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   const playbackRate = useMediaState('playbackRate');
@@ -110,10 +113,31 @@ export function Skin(props: SkinProps): JSX.Element {
   const [activityTick, setActivityTick] = useState(0);
 
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
+  // Any open overlay/menu pins the controls open (the playlist lives inside the
+  // fading controls layer, so idle-hiding would otherwise close it under you).
+  const anyPanelOpen = playlistOpen || settingsOpen || speedOpen || captionsOpen || audioOpen;
+
+  // "Up next" card: near the end of an episode that has a next one, show a
+  // dismissible card with the next episode's cover and a bar that fills over the
+  // last NEXT_UP_SECONDS. Ignoring it lets the player auto-advance on end;
+  // clicking jumps straight to the next episode.
+  const nextEpisode = useMemo(() => {
+    if (!props.episodes || !props.hasNext) return undefined;
+    const i = props.episodes.findIndex((e) => e.id === props.currentEpisodeId);
+    return i >= 0 ? props.episodes[i + 1] : undefined;
+  }, [props.episodes, props.currentEpisodeId, props.hasNext]);
+  const [nextUpDismissed, setNextUpDismissed] = useState(false);
+  // Reset the dismissal when the episode changes.
+  useEffect(() => setNextUpDismissed(false), [props.currentEpisodeId]);
+  const NEXT_UP_SECONDS = 30;
+  const remaining = duration > 0 ? duration - currentTime : Infinity;
+  const showNextUp =
+    !!nextEpisode && started && duration > 0 && remaining <= NEXT_UP_SECONDS && remaining > 0.3 && !nextUpDismissed;
+  const nextUpProgress = Math.min(1, Math.max(0, (NEXT_UP_SECONDS - remaining) / NEXT_UP_SECONDS));
   const subtitleTracks = (textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions');
   const hasCaptions = subtitleTracks.length > 0;
   const hasAudioTracks = (audioTracks?.length ?? 0) > 1;
-  const visible = paused || active || !canPlay;
+  const visible = paused || active || !canPlay || anyPanelOpen;
   const isMuted = muted || volume === 0;
   const manualQuality = props.manualQualities?.find((q) => q.index === props.currentQualityIndex);
   const qualityLabel = manualQuality ? manualQuality.label : autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
@@ -131,10 +155,10 @@ export function Skin(props: SkinProps): JSX.Element {
   // activity ticks, so each interaction restarts the countdown. Toggling the
   // controls off clears it (no flicker), and we keep them up while paused.
   useEffect(() => {
-    if (!active || paused) return undefined;
+    if (!active || paused || anyPanelOpen) return undefined;
     const t = setTimeout(() => setActive(false), IDLE_MS);
     return () => clearTimeout(t);
-  }, [active, paused, activityTick]);
+  }, [active, paused, anyPanelOpen, activityTick]);
 
   // Auto-dismiss the resume card if no choice is made (keep playing from start).
   const { resume: resumePoint, onDismissResume } = props;
@@ -196,6 +220,7 @@ export function Skin(props: SkinProps): JSX.Element {
         onActivity={ping}
         persist={props.persistSettings}
         storageKey={props.settingsKey}
+        rotated={props.simRotated}
       />
 
       {/* Subtitle cues — only mounted while a track is active (so turning
@@ -458,6 +483,44 @@ export function Skin(props: SkinProps): JSX.Element {
 
         {props.children}
       </div>
+
+      {/* Up-next card — outside the fading controls so it stays put near the end. */}
+      {showNextUp && nextEpisode && (
+        <div className="lpx-nextup">
+          <button
+            type="button"
+            className="lpx-nextup-card"
+            onClick={() => props.onNext?.()}
+            aria-label={`${props.strings.nextUpTitle}: ${nextEpisode.title ?? ''}`}
+          >
+            <span
+              className="lpx-nextup-cover"
+              style={nextEpisode.poster ? { backgroundImage: `url("${nextEpisode.poster}")` } : undefined}
+            >
+              <span className="lpx-nextup-play">
+                <PlayIcon />
+              </span>
+            </span>
+            <span className="lpx-nextup-body">
+              <span className="lpx-nextup-label">{props.strings.nextUpTitle}</span>
+              {(nextEpisode.title || nextEpisode.subtitle) && (
+                <span className="lpx-nextup-name">{nextEpisode.title ?? nextEpisode.subtitle}</span>
+              )}
+              <span className="lpx-nextup-bar" aria-hidden="true">
+                <span className="lpx-nextup-fill" style={{ width: `${nextUpProgress * 100}%` }} />
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            className="lpx-nextup-close"
+            aria-label={props.strings.dismiss}
+            onClick={() => setNextUpDismissed(true)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+      )}
 
       {settingsOpen && (
         <SettingsModal

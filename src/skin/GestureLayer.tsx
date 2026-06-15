@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../i18n';
 import { loadPrefs, savePrefs } from '../player/prefs';
-import { BrightnessIcon, Forward10Icon, Replay10Icon, VolumeHighIcon } from './controls/icons';
+import { BrightnessIcon, FastForwardIcon, Forward10Icon, Replay10Icon, VolumeHighIcon } from './controls/icons';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const MOVE_THRESHOLD = 8;
@@ -21,6 +21,19 @@ export interface GestureLayerProps {
   /** Persist brightness across sessions. */
   persist?: boolean;
   storageKey?: string;
+  /** Simulated fullscreen rotated the player 90° (CSS). Pointer coords are in
+   * screen space but the user perceives the rotated frame, so we remap them. */
+  rotated?: boolean;
+}
+
+/** A pointer position + the surface size, in the frame the *user* perceives. In
+ * normal mode that's the element box as-is; when the player is CSS-rotated 90°
+ * clockwise we map screen coords into the upright (landscape) local frame. */
+interface LocalPoint {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 /**
@@ -29,7 +42,14 @@ export interface GestureLayerProps {
  * volume (right half). Desktop single-click toggles play. Brightness is a dim
  * overlay (the web can't touch real screen brightness).
  */
-export function GestureLayer({ strings, onTapToggle, onActivity, persist, storageKey }: GestureLayerProps): JSX.Element {
+export function GestureLayer({
+  strings,
+  onTapToggle,
+  onActivity,
+  persist,
+  storageKey,
+  rotated,
+}: GestureLayerProps): JSX.Element {
   const remote = useMediaRemote();
   const currentTime = useMediaState('currentTime');
   const duration = useMediaState('duration');
@@ -62,6 +82,25 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
     indicatorTimer: null as ReturnType<typeof setTimeout> | null,
   });
 
+  // Map a pointer event into the frame the user perceives. Normal: offset within
+  // the element. Rotated (90° cw, centered): a screen point maps to local
+  // (lx, ly) = (screenY - cy + h/2, -(screenX - cx) + w/2), with the local box
+  // dimensions swapped (local width = rect.height, local height = rect.width).
+  const toLocal = (e: React.PointerEvent<HTMLDivElement>): LocalPoint => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rotated) {
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top, w: rect.width, h: rect.height };
+    }
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return {
+      x: e.clientY - cy + rect.height / 2,
+      y: -(e.clientX - cx) + rect.width / 2,
+      w: rect.height,
+      h: rect.width,
+    };
+  };
+
   const clearTimers = () => {
     if (g.current.longPress) clearTimeout(g.current.longPress);
     if (g.current.singleTap) clearTimeout(g.current.singleTap);
@@ -84,16 +123,15 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
     // On touch, a tap is a toggle (handled on pointer-up) — don't reveal here or
     // it fights the toggle and the controls flash then hide. Mouse/pen reveal.
     if (e.pointerType !== 'touch') onActivity?.();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const p = toLocal(e);
     const s = g.current;
     if (s.indicatorTimer) clearTimeout(s.indicatorTimer); // keep indicator up if re-grabbed
     s.active = true;
     s.touch = e.pointerType === 'touch';
-    s.x0 = x;
-    s.y0 = e.clientY - rect.top;
-    s.side = x < rect.width / 3 ? 'l' : x > (rect.width * 2) / 3 ? 'r' : 'c';
-    s.leftHalf = x < rect.width / 2;
+    s.x0 = p.x;
+    s.y0 = p.y;
+    s.side = p.x < p.w / 3 ? 'l' : p.x > (p.w * 2) / 3 ? 'r' : 'c';
+    s.leftHalf = p.x < p.w / 2;
     s.moved = false;
     s.axis = 'none';
     s.startVolume = volume ?? 1;
@@ -116,16 +154,16 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
       if (e.pointerType !== 'touch') onActivity?.(); // hover reveals controls
       return;
     }
-    const rect = e.currentTarget.getBoundingClientRect();
-    const dx = e.clientX - rect.left - s.x0;
-    const dy = e.clientY - rect.top - s.y0;
+    const p = toLocal(e);
+    const dx = p.x - s.x0;
+    const dy = p.y - s.y0;
     if (!s.moved && Math.hypot(dx, dy) > MOVE_THRESHOLD) {
       s.moved = true;
       s.axis = Math.abs(dy) > Math.abs(dx) ? 'v' : 'h';
       if (s.longPress) clearTimeout(s.longPress);
     }
     if (s.touch && s.axis === 'v' && !rate2x) {
-      const frac = -dy / rect.height; // up increases
+      const frac = -dy / p.h; // up increases
       if (s.leftHalf) {
         const b = clamp(s.startBrightness + frac, 0.2, 1);
         setBrightness(b);
@@ -213,7 +251,12 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
         </div>
       )}
 
-      {rate2x && <div className="lpx-rate-badge" aria-hidden="true">2×&nbsp;»</div>}
+      {rate2x && (
+        <div className="lpx-rate-badge" aria-hidden="true">
+          <FastForwardIcon className="lpx-rate-ff" />
+          <span className="lpx-rate-text">2×</span>
+        </div>
+      )}
 
       {indicator && (
         <div

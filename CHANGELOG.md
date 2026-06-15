@@ -5,6 +5,21 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-06-15
+
+### Added
+
+- "Up next" card near the end of an episode that has a next one: shows the next episode's cover and a bar that fills over the last 30s. Ignoring it lets the player auto-advance on end; clicking it (or its play button) jumps straight to the next episode. Dismissible, and reset per episode. Adds the `nextUpTitle` string.
+- Quality menu now shows the resolution ABR is currently playing next to "Auto" (small muted suffix) while on auto quality.
+
+### Fixed / Changed
+
+- Controls (and the playlist, which lives in the controls layer) no longer auto-hide while any menu/panel is open — the idle timer is paused until everything is closed.
+- Gestures now work in simulated (CSS-rotated) fullscreen: pointer coordinates are remapped into the rotated frame, so brightness/volume halves, swipe axis, and double-tap-seek edges match what the user sees.
+- 2× long-press indicator is now a polished pill with an animated fast-forward icon (from the media-icons set) instead of plain "2× »" text.
+- Season-grouped playlist: sticky season headers have balanced padding and a small gap above the first episode.
+- The player root ([data-media-player]) is now `display: flex`, so the provider/video fills more reliably (especially in fullscreen).
+
 ## [0.2.6] - 2026-06-15
 
 ### Fixed

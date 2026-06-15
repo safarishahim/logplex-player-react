@@ -7,6 +7,8 @@ export interface Strings {
   forward10: string;
   prevEpisode: string;
   nextEpisode: string;
+  /** Header of the "up next" card shown near the end of an episode. */
+  nextUpTitle: string;
   mute: string;
   unmute: string;
   fullscreenEnter: string;
@@ -45,6 +47,7 @@ const fa: Strings = {
   forward10: '۱۰ ثانیه جلو',
   prevEpisode: 'قسمت قبل',
   nextEpisode: 'قسمت بعد',
+  nextUpTitle: 'قسمت بعدی',
   mute: 'بی‌صدا',
   unmute: 'صدا',
   fullscreenEnter: 'تمام‌صفحه',
@@ -82,6 +85,7 @@ const en: Strings = {
   forward10: 'Forward 10s',
   prevEpisode: 'Previous episode',
   nextEpisode: 'Next episode',
+  nextUpTitle: 'Up next',
   mute: 'Mute',
   unmute: 'Unmute',
   fullscreenEnter: 'Fullscreen',
