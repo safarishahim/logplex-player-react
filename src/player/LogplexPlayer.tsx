@@ -397,7 +397,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     .join(' ');
 
   return (
-    <div ref={containerRef} className={containerClass} style={themeStyle(theme)}>
+    <div ref={containerRef} className={containerClass} style={{ ...themeStyle(theme), ...fs.rotateStyle }}>
       <MediaPlayer
         ref={setPlayer}
         className={`lpx-player${className ? ` ${className}` : ''}`}

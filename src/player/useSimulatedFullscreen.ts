@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 
 /**
  * Whether a real (OS) fullscreen is usable. True when the element Fullscreen API
@@ -22,6 +23,14 @@ interface SimFullscreen {
   active: boolean;
   /** Rotate 90° to simulate landscape inside a portrait viewport. */
   rotate: boolean;
+  /**
+   * Inline style for the rotated box, with explicit pixel dimensions taken from
+   * the live viewport. Some Android WebViews resolve `100dvh`/`100dvw` (and even
+   * `vh`/`vw`) incorrectly, leaving the rotated player covering only part of the
+   * screen — pixels from `window.inner*` are exact there. Undefined unless
+   * rotating.
+   */
+  rotateStyle?: CSSProperties;
   toggle: () => void;
   exit: () => void;
 }
@@ -35,6 +44,9 @@ interface SimFullscreen {
 export function useSimulatedFullscreen(enabled: boolean): SimFullscreen {
   const [active, setActive] = useState(false);
   const [rotate, setRotate] = useState(false);
+  // Live viewport size in CSS px — the rotated box is sized from these instead
+  // of viewport units (which some WebViews resolve wrong).
+  const [vp, setVp] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
 
   const portraitViewport = () =>
     typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
@@ -73,8 +85,14 @@ export function useSimulatedFullscreen(enabled: boolean): SimFullscreen {
       setRotate(portraitViewport());
     }
 
-    // Keep rotation in sync with the real viewport (native rotation clears CSS).
-    const onResize = () => setRotate(portraitViewport());
+    // Keep rotation + measured size in sync with the real viewport (native
+    // rotation clears CSS; a resize changes the px the rotated box needs).
+    const syncVp = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    syncVp();
+    const onResize = () => {
+      setRotate(portraitViewport());
+      syncVp();
+    };
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
     const prevOverflow = document.body.style.overflow;
@@ -100,5 +118,22 @@ export function useSimulatedFullscreen(enabled: boolean): SimFullscreen {
     };
   }, [enabled, active]);
 
-  return { active: enabled && active, rotate, toggle, exit };
+  // Landscape box inside a portrait viewport: width = viewport height, height =
+  // viewport width (swapped), centered, then rotated 90°. Exact pixels dodge the
+  // WebView viewport-unit bugs. Inline style overrides the CSS class.
+  const rotateStyle: CSSProperties | undefined =
+    enabled && active && rotate && vp.w > 0
+      ? {
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          right: 'auto',
+          bottom: 'auto',
+          width: `${vp.h}px`,
+          height: `${vp.w}px`,
+          transform: 'translate(-50%, -50%) rotate(90deg)',
+        }
+      : undefined;
+
+  return { active: enabled && active, rotate, rotateStyle, toggle, exit };
 }

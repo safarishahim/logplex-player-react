@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-06-15
+
+### Fixed
+
+- Simulated (CSS) fullscreen rotation now sizes the rotated box from the live viewport in pixels (`window.innerWidth/innerHeight`) instead of `dvh`/`dvw`. Some Android WebViews resolve dynamic (and even static) viewport units incorrectly, leaving the rotated player covering only part of the screen with the rest black; exact pixels fill it edge-to-edge.
+
 ## [0.2.5] - 2026-06-15
 
 ### Fixed
