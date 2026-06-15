@@ -286,11 +286,19 @@ export function Skin(props: SkinProps): JSX.Element {
           )}
         </div>
 
-        {/* Resume banner */}
+        {/* Resume card */}
         {props.resume && (
           <div className="lpx-resume">
             <div className="lpx-resume-card">
-              <span className="lpx-resume-text">{props.strings.resumeTitle}</span>
+              <button
+                className="lpx-resume-close"
+                aria-label={props.strings.dismiss}
+                onClick={() => props.onDismissResume?.()}
+              >
+                <CloseIcon />
+              </button>
+              <span className="lpx-resume-title">{props.strings.resumeTitle}</span>
+              <span className="lpx-resume-text">{props.strings.resumeMessage}</span>
               <button
                 className="lpx-resume-go"
                 onClick={() => {
@@ -299,10 +307,11 @@ export function Skin(props: SkinProps): JSX.Element {
                   props.onDismissResume?.();
                 }}
               >
-                {props.strings.resumeCta}
-              </button>
-              <button className="lpx-btn" aria-label={props.strings.dismiss} onClick={() => props.onDismissResume?.()}>
-                <CloseIcon />
+                {`${props.strings.resumeCta} ${
+                  props.dir === 'rtl'
+                    ? Math.floor(props.resume.positionSeconds / 60).toLocaleString('fa-IR')
+                    : Math.floor(props.resume.positionSeconds / 60)
+                }`}
               </button>
             </div>
           </div>

@@ -235,12 +235,29 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     const onFsChange = (e: Event) => {
       const isFs = (e as CustomEvent<boolean>).detail;
       if (!isFs) {
-        orientation.unlock?.();
+        try {
+          orientation.unlock?.();
+        } catch {
+          /* ignore */
+        }
         return;
       }
-      const { mediaWidth: w, mediaHeight: h } = player.state;
-      const portraitVideo = !!w && !!h && h > w;
-      orientation.lock?.(portraitVideo ? 'portrait' : 'landscape').catch(() => undefined);
+      // Defer the lock to the next frame: locking synchronously inside the
+      // fullscreen-change handler can race the browser and drop fullscreen on
+      // some Android builds. Guard that we're still fullscreen before locking.
+      requestAnimationFrame(() => {
+        const stillFs =
+          typeof document !== 'undefined' &&
+          (document.fullscreenElement != null || !!player.state?.fullscreen);
+        if (!stillFs) return;
+        const { mediaWidth: w, mediaHeight: h } = player.state;
+        const portraitVideo = !!w && !!h && h > w;
+        try {
+          orientation.lock?.(portraitVideo ? 'portrait' : 'landscape')?.catch(() => undefined);
+        } catch {
+          /* lock unsupported */
+        }
+      });
     };
 
     player.addEventListener('fullscreen-change', onFsChange);

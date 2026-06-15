@@ -516,34 +516,66 @@
 /* ── Resume banner ── */
 .lpx-resume {
   position: absolute;
-  inset-inline: 0;
-  bottom: 84px;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-.lpx-resume-card {
+  inset: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 6;
+}
+.lpx-resume-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: min(420px, 86%);
+  padding: 20px 24px;
+  text-align: center;
   background: var(--lpx-panel);
   border: 1px solid var(--lpx-border);
-  border-radius: 999px;
-  padding: 6px 6px 6px 16px;
+  border-radius: var(--lpx-radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   pointer-events: auto;
+}
+.lpx-resume-title {
+  font-size: 15px;
+  font-weight: 700;
 }
 .lpx-resume-card .lpx-resume-text {
   font-size: 13px;
+  color: var(--lpx-text-muted);
+  text-align: center;
 }
 .lpx-resume-card .lpx-resume-go {
+  margin-top: 6px;
   background: var(--lpx-accent);
   color: var(--lpx-accent-contrast);
   border: 0;
-  border-radius: 999px;
-  padding: 8px 16px;
+  border-radius: 10px;
+  padding: 10px 22px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
+}
+.lpx-resume-close {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lpx-text-muted);
+  cursor: pointer;
+}
+.lpx-resume-close:hover {
+  background: var(--lpx-hover);
+  color: var(--lpx-text);
 }
 
 /* ── Spinner ── */

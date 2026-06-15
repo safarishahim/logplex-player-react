@@ -21,6 +21,8 @@ export interface Strings {
   unlock: string;
   playlist: string;
   resumeTitle: string;
+  resumeMessage: string;
+  /** Resume button prefix; the minute is appended (e.g. "مشاهده از دقیقه ۳۲"). */
   resumeCta: string;
   dismiss: string;
   skipAd: string;
@@ -56,8 +58,9 @@ const fa: Strings = {
   lock: 'قفل کنترل‌ها',
   unlock: 'باز کردن قفل',
   playlist: 'لیست پخش',
-  resumeTitle: 'ادامه از جایی که متوقف شده بود',
-  resumeCta: 'برو ادامه فیلم',
+  resumeTitle: 'ادامه پخش',
+  resumeMessage: 'شما این فیلم/سریال رو از گذشته مشاهده کردی',
+  resumeCta: 'مشاهده از دقیقه',
   dismiss: 'بستن',
   skipAd: 'رد کردن آگهی',
   adLabel: 'آگهی',
@@ -92,8 +95,9 @@ const en: Strings = {
   lock: 'Lock controls',
   unlock: 'Unlock',
   playlist: 'Playlist',
-  resumeTitle: 'Continue from where you left off',
-  resumeCta: 'Resume',
+  resumeTitle: 'Continue watching',
+  resumeMessage: 'You already watched part of this',
+  resumeCta: 'Resume from minute',
   dismiss: 'Dismiss',
   skipAd: 'Skip ad',
   adLabel: 'Ad',

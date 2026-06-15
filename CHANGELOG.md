@@ -5,6 +5,16 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-15
+
+### Changed
+
+- Resume ("continue watching") is now a centered card (title + message + a gold button showing the resume minute, e.g. "مشاهده از دقیقه ۳۲") instead of a bottom pill. Adds the `resumeMessage` string.
+
+### Fixed
+
+- Native fullscreen orientation lock is deferred to the next frame and guarded by the current fullscreen state, so it no longer races the browser and drops fullscreen on some Android builds.
+
 ## [0.2.0] - 2026-06-15
 
 ### Added
