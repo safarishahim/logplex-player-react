@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Captions, Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
+import { Captions, Time, TimeSlider, VolumeSlider, useMediaPlayer, useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Direction, Episode, PlayerNotice } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
+import { NextUpCard } from './overlays/NextUpCard';
 import { NoticeBanner } from './overlays/NoticeBanner';
 import { BadgeOverlay } from './overlays/BadgeOverlay';
 import {
@@ -79,14 +80,15 @@ const IDLE_MS = 4000;
 
 export function Skin(props: SkinProps): JSX.Element {
   const remote = useMediaRemote();
+  // Player instance for reads that don't need a re-render subscription (e.g. the
+  // ±10s buttons read the current time only at click time).
+  const player = useMediaPlayer();
   const paused = useMediaState('paused');
   const muted = useMediaState('muted');
   const volume = useMediaState('volume');
   const fullscreen = useMediaState('fullscreen');
   const waiting = useMediaState('waiting');
   const canPlay = useMediaState('canPlay');
-  const currentTime = useMediaState('currentTime');
-  const duration = useMediaState('duration');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   const playbackRate = useMediaState('playbackRate');
@@ -117,23 +119,14 @@ export function Skin(props: SkinProps): JSX.Element {
   // fading controls layer, so idle-hiding would otherwise close it under you).
   const anyPanelOpen = playlistOpen || settingsOpen || speedOpen || captionsOpen || audioOpen;
 
-  // "Up next" card: near the end of an episode that has a next one, show a
-  // dismissible card with the next episode's cover and a bar that fills over the
-  // last NEXT_UP_SECONDS. Ignoring it lets the player auto-advance on end;
-  // clicking jumps straight to the next episode.
+  // The next episode (if any) for the end-of-episode "up next" card. The card
+  // itself (NextUpCard) owns the high-frequency time subscription so the whole
+  // skin doesn't re-render every tick.
   const nextEpisode = useMemo(() => {
     if (!props.episodes || !props.hasNext) return undefined;
     const i = props.episodes.findIndex((e) => e.id === props.currentEpisodeId);
     return i >= 0 ? props.episodes[i + 1] : undefined;
   }, [props.episodes, props.currentEpisodeId, props.hasNext]);
-  const [nextUpDismissed, setNextUpDismissed] = useState(false);
-  // Reset the dismissal when the episode changes.
-  useEffect(() => setNextUpDismissed(false), [props.currentEpisodeId]);
-  const NEXT_UP_SECONDS = 30;
-  const remaining = duration > 0 ? duration - currentTime : Infinity;
-  const showNextUp =
-    !!nextEpisode && started && duration > 0 && remaining <= NEXT_UP_SECONDS && remaining > 0.3 && !nextUpDismissed;
-  const nextUpProgress = Math.min(1, Math.max(0, (NEXT_UP_SECONDS - remaining) / NEXT_UP_SECONDS));
   const subtitleTracks = (textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions');
   const hasCaptions = subtitleTracks.length > 0;
   const hasAudioTracks = (audioTracks?.length ?? 0) > 1;
@@ -412,7 +405,7 @@ export function Skin(props: SkinProps): JSX.Element {
               <button
                 className="lpx-btn lpx-seek-btn"
                 aria-label={props.strings.rewind10}
-                onClick={() => remote.seek(Math.max(0, currentTime - 10))}
+                onClick={() => remote.seek(Math.max(0, (player?.currentTime ?? 0) - 10))}
               >
                 <Replay10Icon />
               </button>
@@ -426,7 +419,7 @@ export function Skin(props: SkinProps): JSX.Element {
               <button
                 className="lpx-btn lpx-seek-btn"
                 aria-label={props.strings.forward10}
-                onClick={() => remote.seek(currentTime + 10)}
+                onClick={() => remote.seek((player?.currentTime ?? 0) + 10)}
               >
                 <Forward10Icon />
               </button>
@@ -484,42 +477,15 @@ export function Skin(props: SkinProps): JSX.Element {
         {props.children}
       </div>
 
-      {/* Up-next card — outside the fading controls so it stays put near the end. */}
-      {showNextUp && nextEpisode && (
-        <div className="lpx-nextup">
-          <button
-            type="button"
-            className="lpx-nextup-card"
-            onClick={() => props.onNext?.()}
-            aria-label={`${props.strings.nextUpTitle}: ${nextEpisode.title ?? ''}`}
-          >
-            <span
-              className="lpx-nextup-cover"
-              style={nextEpisode.poster ? { backgroundImage: `url("${nextEpisode.poster}")` } : undefined}
-            >
-              <span className="lpx-nextup-play">
-                <PlayIcon />
-              </span>
-            </span>
-            <span className="lpx-nextup-body">
-              <span className="lpx-nextup-label">{props.strings.nextUpTitle}</span>
-              {(nextEpisode.title || nextEpisode.subtitle) && (
-                <span className="lpx-nextup-name">{nextEpisode.title ?? nextEpisode.subtitle}</span>
-              )}
-              <span className="lpx-nextup-bar" aria-hidden="true">
-                <span className="lpx-nextup-fill" style={{ width: `${nextUpProgress * 100}%` }} />
-              </span>
-            </span>
-          </button>
-          <button
-            type="button"
-            className="lpx-nextup-close"
-            aria-label={props.strings.dismiss}
-            onClick={() => setNextUpDismissed(true)}
-          >
-            <CloseIcon />
-          </button>
-        </div>
+      {/* Up-next card — outside the fading controls so it stays put near the end.
+          Keyed by episode so its dismissed state resets on episode change. */}
+      {nextEpisode && (
+        <NextUpCard
+          key={props.currentEpisodeId}
+          episode={nextEpisode}
+          strings={props.strings}
+          onNext={props.onNext}
+        />
       )}
 
       {settingsOpen && (

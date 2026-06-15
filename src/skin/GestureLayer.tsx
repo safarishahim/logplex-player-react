@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMediaRemote, useMediaState } from '@vidstack/react';
+import { useMediaPlayer, useMediaRemote } from '@vidstack/react';
 import type { Strings } from '../i18n';
 import { loadPrefs, savePrefs } from '../player/prefs';
 import { BrightnessIcon, FastForwardIcon, Forward10Icon, Replay10Icon, VolumeHighIcon } from './controls/icons';
@@ -51,10 +51,9 @@ export function GestureLayer({
   rotated,
 }: GestureLayerProps): JSX.Element {
   const remote = useMediaRemote();
-  const currentTime = useMediaState('currentTime');
-  const duration = useMediaState('duration');
-  const volume = useMediaState('volume');
-  const playbackRate = useMediaState('playbackRate');
+  // Read time/volume/rate from the player at gesture time instead of subscribing
+  // — gestures don't need to re-render the surface on every time tick.
+  const player = useMediaPlayer();
 
   const [brightness, setBrightness] = useState(() => (persist ? loadPrefs(storageKey).brightness ?? 1 : 1));
   const [rate2x, setRate2x] = useState(false);
@@ -134,13 +133,13 @@ export function GestureLayer({
     s.leftHalf = p.x < p.w / 2;
     s.moved = false;
     s.axis = 'none';
-    s.startVolume = volume ?? 1;
+    s.startVolume = player?.volume ?? 1;
     s.startBrightness = brightness;
     if (s.singleTap) clearTimeout(s.singleTap);
     if (s.touch) {
       s.longPress = setTimeout(() => {
         if (!s.moved) {
-          s.prevRate = playbackRate || 1;
+          s.prevRate = player?.playbackRate || 1;
           remote.changePlaybackRate(2);
           setRate2x(true);
         }
@@ -209,7 +208,7 @@ export function GestureLayer({
       if (dbl && s.side !== 'c') {
         if (s.singleTap) clearTimeout(s.singleTap);
         const amount = s.side === 'l' ? -10 : 10;
-        remote.seek(clamp((currentTime || 0) + amount, 0, duration || Infinity));
+        remote.seek(clamp((player?.currentTime || 0) + amount, 0, player?.duration || Infinity));
         showSkip(s.side, 10);
         s.lastTapAt = 0;
         return;

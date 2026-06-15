@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-06-15
+
+### Performance
+
+- The skin and the gesture surface no longer subscribe to the high-frequency `currentTime` state, so they stop re-rendering ~4×/sec during playback. The ±10s buttons and double-tap-seek now read the time from the player only at click/tap; the "up next" card was extracted into its own small component (`NextUpCard`) that owns the time subscription, so only it re-renders each tick. The gesture surface also reads volume/playback-rate from the player at gesture start instead of subscribing.
+
 ## [0.2.7] - 2026-06-15
 
 ### Added
