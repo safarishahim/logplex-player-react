@@ -10,6 +10,8 @@ export interface SettingsModalProps {
   manualQualities?: { label: string; index: number }[];
   currentQualityIndex?: number;
   onSelectQuality?: (index: number) => void;
+  /** Hide auto (HLS) qualities whose height fails this predicate. */
+  qualityValidate?: (height: number) => boolean;
 }
 
 /**
@@ -23,12 +25,16 @@ export function SettingsModal({
   manualQualities,
   currentQualityIndex,
   onSelectQuality,
+  qualityValidate,
 }: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
   const qualities = useMediaState('qualities');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
-  const list = Array.from(qualities ?? []);
+  // Keep each quality's real list index for changeQuality() while filtering.
+  const list = Array.from(qualities ?? [])
+    .map((q, i) => ({ q, i }))
+    .filter(({ q }) => !qualityValidate || typeof q.height !== 'number' || qualityValidate(q.height));
   const manual = manualQualities && manualQualities.length > 0;
 
   return (
@@ -57,7 +63,7 @@ export function SettingsModal({
                   }}
                 />
               ))
-            : list.map((q, i) => (
+            : list.map(({ q, i }) => (
                 <RadioOption
                   key={`${q.height}-${i}`}
                   label={`${q.height}p`}

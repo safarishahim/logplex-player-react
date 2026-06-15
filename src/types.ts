@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import type { MediaPlayerInstance } from '@vidstack/react';
+import type { ResumePoint } from './analytics/client';
 
 /** UI language. Drives strings + text direction. */
 export type Locale = 'fa' | 'en';
@@ -37,6 +39,34 @@ export type LogplexEventType =
 
 export type Quality = 'auto' | '360p' | '480p' | '720p' | '1080p' | '1440p' | '4k';
 
+/** VOD source provider. `standard` plays the `src` URL directly; the others
+ * exchange an opaque play token (passed as `src`) for the real stream URL via
+ * the provider's API. Keeps pre-Logplex back-ends working. */
+export type VodProvider = 'standard' | 'abr_hamrahi' | 'poyan';
+
+/** Override the provider API endpoint per provider. The `{token}` placeholder
+ * (where supported) is replaced with the play token. */
+export type VodCustomUrl = Partial<Record<VodProvider, string>>;
+
+/** Payload handed to the watch-interval handler each tick. */
+export interface WatchIntervalInfo {
+  /** Accumulated wall-clock seconds the viewer actually spent playing. */
+  playDuration: number;
+  /** Current playback position, in seconds. */
+  duration: number;
+  /** Current resolution as "WxH" (e.g. "1920x1080"), or "unknown". */
+  quality?: string;
+  /** The id returned by the previous handler call, chained back so the
+   * back-end can update the same watch record. */
+  userWatchId?: string;
+}
+
+/** Periodic "user watch" reporter for an external (pre-Logplex) tracker.
+ * Return a watch id to have it chained into subsequent calls. */
+export type WatchIntervalHandler = (
+  info: WatchIntervalInfo,
+) => Promise<string | void> | string | void;
+
 /** A single progressive source. Pass an array as `src` to offer manual quality
  * switching for MP4s (HLS exposes its renditions automatically). */
 export interface VideoSource {
@@ -62,6 +92,10 @@ export interface Episode {
   /** WebVTT thumbnails track for scrub previews. */
   thumbnails?: string;
   durationMs?: number;
+  /** Optional group label (e.g. a season title like "فصل اول"). When episodes
+   * carry a `group`, the playlist panel renders them under collapsible section
+   * headers, in the order the groups first appear. */
+  group?: string;
   /** Analytics content id for this episode. When set, switching episodes
    * re-keys analytics so each episode reports as its own content. */
   contentId?: string;
@@ -175,6 +209,15 @@ export interface LogplexPlayerProps {
    * menu (ignored if `episodes`/`currentEpisodeId` resolve one). */
   src?: string | VideoSource[];
   type?: string;
+  /** VOD provider. For non-`standard` providers, `src` is treated as an opaque
+   * play token that is exchanged for the real stream URL (+ scrub thumbnails)
+   * via the provider's API. Default 'standard'. */
+  vodType?: VodProvider;
+  /** Override provider API endpoints (per provider). */
+  vodCustomUrl?: VodCustomUrl;
+  /** Hide auto (HLS) qualities whose height fails this predicate (e.g. drop
+   * sub-400p renditions). Auto stays available. */
+  qualityValidate?: (height: number) => boolean;
   title?: string;
   /** e.g. "قسمت سوم". */
   episodeLabel?: string;
@@ -223,14 +266,36 @@ export interface LogplexPlayerProps {
    * out after a few seconds. */
   badge?: string;
 
+  /** Force the loading spinner overlay (on top of the cover/skin) — e.g. while
+   * the host is still fetching ads or other prerequisites. The player also
+   * shows it automatically while resolving a provider source. */
+  loading?: boolean;
+
   /** Enter fullscreen (per `fullscreenMode`) when playback starts from the
    * cover. Default false. */
   fullscreenOnPlay?: boolean;
 
   /** Built-in Logplex analytics + resume. Omit to disable. */
   analytics?: LogplexAnalyticsConfig;
-  /** Show the "continue watching" resume banner (needs analytics). Default true. */
+  /** Show the "continue watching" resume banner. Needs either `analytics` or
+   * `resolveResume`. Default true. */
   resume?: boolean;
+  /** Supply a saved resume point from your own back-end — drives the built-in
+   * resume banner without the Logplex analytics integration (e.g. while Logplex
+   * is not yet launched). Memoize it to avoid repeat fetches. */
+  resolveResume?: () => Promise<ResumePoint | null>;
+
+  /** External "user watch" heartbeat for a non-Logplex tracker. Runs alongside
+   * (or instead of) the built-in analytics — useful while Logplex is not yet
+   * launched and the host keeps reporting to its current back-end. */
+  onWatchInterval?: WatchIntervalHandler;
+  /** Cadence of the watch-interval heartbeat in ms. Default 5000. */
+  watchIntervalMs?: number;
+
+  /** Exposes the underlying Vidstack player instance for imperative control
+   * (seeking, pausing, custom live sync, etc.). Called with the instance when
+   * ready and with null on teardown. */
+  onPlayerReady?: (player: MediaPlayerInstance | null) => void;
 
   /** Remember the viewer's volume, mute, playback speed and brightness in
    * localStorage and restore them on the next visit. Default false. */
@@ -243,6 +308,9 @@ export interface LogplexPlayerProps {
 
   /** Show a Like button. Called when toggled; emits a `like` event when liked. */
   onLike?: (liked: boolean) => void;
+  /** Controlled initial/like state for the Like button (e.g. fetched from your
+   * back-end). The button reflects this and re-syncs when it changes. */
+  liked?: boolean;
 
   /** Extra overlays rendered inside the player surface. */
   children?: ReactNode;

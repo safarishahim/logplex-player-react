@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Direction, Episode, PlayerNotice } from '../types';
 import type { Strings } from '../i18n';
@@ -7,9 +7,25 @@ import { PlaylistPanel } from './overlays/PlaylistPanel';
 import { NoticeBanner } from './overlays/NoticeBanner';
 import { BadgeOverlay } from './overlays/BadgeOverlay';
 import {
-  AudioIcon, BackIcon, CaptionsIcon, CaptionsOnIcon, CloseIcon, Forward10Icon, FullscreenExitIcon, FullscreenIcon,
-  LikeFilledIcon, LikeIcon, LockIcon, NextIcon, PauseIcon, PlayIcon, PlaylistIcon, PrevIcon, Replay10Icon,
-  VolumeHighIcon, VolumeMutedIcon,
+  AudioIcon,
+  BackIcon,
+  CaptionsIcon,
+  CaptionsOnIcon,
+  CloseIcon,
+  Forward10Icon,
+  FullscreenExitIcon,
+  FullscreenIcon,
+  LikeFilledIcon,
+  LikeIcon,
+  LockIcon,
+  NextIcon,
+  PauseIcon,
+  PlayIcon,
+  PlaylistIcon,
+  PrevIcon,
+  Replay10Icon,
+  VolumeHighIcon,
+  VolumeMutedIcon,
 } from './controls/icons';
 import { SettingsModal } from './controls/SettingsModal';
 import { SpeedModal } from './controls/SpeedModal';
@@ -33,6 +49,8 @@ export interface SkinProps {
   currentEpisodeId?: string;
   onSelectEpisode?: (id: string) => void;
   onLike?: (liked: boolean) => void;
+  /** Controlled like state (reflected by the Like button). */
+  liked?: boolean;
   /** When true, the fullscreen button uses the simulated (CSS) path. */
   simulatedFullscreen?: boolean;
   simIsFullscreen?: boolean;
@@ -47,13 +65,15 @@ export interface SkinProps {
   manualQualities?: { label: string; index: number }[];
   currentQualityIndex?: number;
   onSelectQuality?: (index: number) => void;
+  /** Hide auto (HLS) qualities whose height fails this predicate. */
+  qualityValidate?: (height: number) => boolean;
   /** Shown only after playback starts (not over the cover). */
   notice?: PlayerNotice;
   badge?: string;
   children?: ReactNode;
 }
 
-const IDLE_MS = 3000;
+const IDLE_MS = 4000;
 
 export function Skin(props: SkinProps): JSX.Element {
   const remote = useMediaRemote();
@@ -74,7 +94,11 @@ export function Skin(props: SkinProps): JSX.Element {
 
   const [locked, setLocked] = useState(false);
   const [active, setActive] = useState(true);
-  const [liked, setLiked] = useState(false);
+  // Controlled when `liked` is provided (host owns the state); otherwise the
+  // button keeps its own optimistic state.
+  const likeControlled = props.liked !== undefined;
+  const [internalLiked, setInternalLiked] = useState(false);
+  const liked = likeControlled ? !!props.liked : internalLiked;
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [speedOpen, setSpeedOpen] = useState(false);
@@ -82,7 +106,8 @@ export function Skin(props: SkinProps): JSX.Element {
   const [audioOpen, setAudioOpen] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
   const [doneBadge, setDoneBadge] = useState<string | null>(null);
-  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Bumped on every pointer activity so the idle effect re-arms its hide timer.
+  const [activityTick, setActivityTick] = useState(0);
 
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
   const subtitleTracks = (textTracks ?? []).filter((t) => t.kind === 'subtitles' || t.kind === 'captions');
@@ -91,31 +116,29 @@ export function Skin(props: SkinProps): JSX.Element {
   const visible = paused || active || !canPlay;
   const isMuted = muted || volume === 0;
   const manualQuality = props.manualQualities?.find((q) => q.index === props.currentQualityIndex);
-  const qualityLabel = manualQuality
-    ? manualQuality.label
-    : autoQuality || !quality
-      ? 'AUTO'
-      : `${quality.height}p`;
+  const qualityLabel = manualQuality ? manualQuality.label : autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
   const rateLabel = `${playbackRate || 1}X`;
 
+  // Reveal controls and re-arm the idle timer (via the activity tick).
   const ping = useCallback(() => {
     setActive(true);
-    if (idleTimer.current) clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(() => setActive(false), IDLE_MS);
+    setActivityTick((t) => t + 1);
   }, []);
-
-  useEffect(() => {
-    ping();
-    return () => {
-      if (idleTimer.current) clearTimeout(idleTimer.current);
-    };
-  }, [ping]);
 
   const toggleControls = useCallback(() => setActive((a) => !a), []);
 
+  // Auto-hide after inactivity. Re-runs whenever the controls show or any
+  // activity ticks, so each interaction restarts the countdown. Toggling the
+  // controls off clears it (no flicker), and we keep them up while paused.
+  useEffect(() => {
+    if (!active || paused) return undefined;
+    const t = setTimeout(() => setActive(false), IDLE_MS);
+    return () => clearTimeout(t);
+  }, [active, paused, activityTick]);
+
   const toggleLike = () => {
     const next = !liked;
-    setLiked(next);
+    if (!likeControlled) setInternalLiked(next); // controlled: host drives via props.liked
     props.onLike?.(next);
   };
 
@@ -193,12 +216,7 @@ export function Skin(props: SkinProps): JSX.Element {
         <BadgeOverlay key={props.badge} text={props.badge} onDone={() => setDoneBadge(props.badge!)} />
       )}
 
-      <div
-        className="lpx-controls"
-        data-visible={visible ? 'true' : 'false'}
-        onPointerMove={ping}
-        onPointerDown={ping}
-      >
+      <div className="lpx-controls" data-visible={visible ? 'true' : 'false'} onPointerMove={ping} onPointerDown={ping}>
         {/* Top bar */}
         <div className="lpx-topbar">
           {props.onBack && (
@@ -238,7 +256,13 @@ export function Skin(props: SkinProps): JSX.Element {
             <span className="lpx-quality-label">{qualityLabel}</span>
           </button>
           {props.onLike && (
-            <button className="lpx-btn lpx-like" aria-label="like" aria-pressed={liked} data-liked={liked || undefined} onClick={toggleLike}>
+            <button
+              className="lpx-btn lpx-like"
+              aria-label="like"
+              aria-pressed={liked}
+              data-liked={liked || undefined}
+              onClick={toggleLike}
+            >
               {liked ? <LikeFilledIcon /> : <LikeIcon />}
               {liked && (
                 <span className="lpx-like-burst" aria-hidden="true">
@@ -344,7 +368,7 @@ export function Skin(props: SkinProps): JSX.Element {
                 </button>
               )}
               <button
-                className="lpx-btn"
+                className="lpx-btn lpx-seek-btn"
                 aria-label={props.strings.rewind10}
                 onClick={() => remote.seek(Math.max(0, currentTime - 10))}
               >
@@ -358,7 +382,7 @@ export function Skin(props: SkinProps): JSX.Element {
                 {paused ? <PlayIcon /> : <PauseIcon />}
               </button>
               <button
-                className="lpx-btn"
+                className="lpx-btn lpx-seek-btn"
                 aria-label={props.strings.forward10}
                 onClick={() => remote.seek(currentTime + 10)}
               >
@@ -425,6 +449,7 @@ export function Skin(props: SkinProps): JSX.Element {
           manualQualities={props.manualQualities}
           currentQualityIndex={props.currentQualityIndex}
           onSelectQuality={props.onSelectQuality}
+          qualityValidate={props.qualityValidate}
         />
       )}
       {speedOpen && <SpeedModal strings={props.strings} onClose={() => setSpeedOpen(false)} />}

@@ -5,6 +5,27 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-15
+
+### Added
+
+- VOD provider source resolution: `vodType` (`standard` | `abr_hamrahi` | `poyan`) + `vodCustomUrl` exchange an opaque play token for the real stream URL (and scrub-thumbnail VTTs) via the provider's API.
+- `onWatchInterval` + `watchIntervalMs`: generic periodic "user watch" heartbeat for an external (non-Logplex) back-end, alongside or instead of the built-in analytics.
+- `resolveResume`: feed the built-in resume banner from a host back-end (no Logplex analytics required).
+- `qualityValidate`: hide auto (HLS) qualities whose height fails a predicate.
+- `onPlayerReady`: exposes the underlying Vidstack `MediaPlayerInstance` for imperative host control.
+- `loading`: force the loading overlay (also shown automatically while a provider source resolves).
+- Controlled `liked` prop for the Like button.
+- Season-grouped playlist via `Episode.group` (accent marker, per-season episode count, sticky headers).
+
+### Fixed / Changed
+
+- Native fullscreen on touch now locks screen orientation to the video's aspect (landscape/portrait); WebViews without a native Fullscreen API keep the CSS simulated rotation.
+- Mobile: fixed controls flashing then hiding on tap (touch tap no longer pings on pointer-down); idle timeout 3s → 4s; fixed brightness/volume gesture indicator flicker.
+- Hide the ±10s seek buttons on touch devices (the double-tap gesture covers them); speed button sits next to lock.
+- Playlist closes on click outside (backdrop); badge sits below the top bar and wraps for longer text.
+- Square outer player frame (inner panels/menus stay rounded).
+
 ## [0.1.1] - 2026-06-03
 
 ### Fixed / Changed

@@ -97,7 +97,8 @@
   background: #000;
   color: var(--lpx-text);
   overflow: hidden;
-  border-radius: var(--lpx-radius);
+  /* Square outer frame (full-bleed players); inner panels/menus stay rounded. */
+  border-radius: 0;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
   /* iOS: stop long-press callout + text selection from hijacking gestures. */
@@ -164,6 +165,7 @@
 .lpx-bottom,
 .lpx-resume-card,
 .lpx-panel,
+.lpx-panel-scrim,
 .lpx-lock-toggle {
   pointer-events: auto;
 }
@@ -562,12 +564,18 @@
   letter-spacing: 0.02em;
   color: var(--lpx-text);
 }
+/* Host/provider loading overlay — above the cover + skin, with a scrim. */
+.lpx-spinner--overlay {
+  z-index: 40;
+  background: var(--lpx-scrim);
+}
 
 /* Transient info pill: LTR sits top-left and slides in/out to the left; RTL
    sits top-right and slides in/out to the right. */
 .lpx-badge {
   position: absolute;
-  top: 16px;
+  /* Sits below the top control bar so it doesn't overlap its buttons. */
+  top: 64px;
   left: 16px;
   right: auto;
   display: flex;
@@ -602,7 +610,10 @@
   fill: currentColor;
 }
 .lpx-badge-text {
-  white-space: nowrap;
+  /* Short badges stay on one line; longer notices (e.g. full-rate traffic)
+     wrap instead of overflowing the pill. */
+  white-space: normal;
+  line-height: 1.5;
 }
 .lpx-badge--in {
   animation: lpx-badge-in-l 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -803,6 +814,18 @@
 
 /* ── Playlist / episodes panel ──
    Always opens from the LEFT; in RTL only the content flows right-to-left. */
+/* Click-outside backdrop for the playlist (below the panel, above controls). */
+.lpx-panel-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+}
+/* Touch devices use the double-tap gesture for ±10s, so hide the buttons. */
+@media (pointer: coarse) {
+  .lpx-seek-btn {
+    display: none;
+  }
+}
 .lpx-panel {
   position: absolute;
   inset-block: 0;
@@ -838,6 +861,57 @@
   padding: 8px;
   overflow-y: auto;
   flex: 1;
+}
+/* Season-grouped variant: the groups wrapper scrolls; sticky season headers. */
+.lpx-panel-groups {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 4px;
+}
+.lpx-panel-group {
+  padding-bottom: 4px;
+}
+.lpx-panel-group + .lpx-panel-group {
+  border-top: 1px solid var(--lpx-border);
+}
+.lpx-panel-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 14px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lpx-text);
+  position: sticky;
+  top: 0;
+  background: var(--lpx-panel);
+  z-index: 1;
+}
+/* Accent marker before the season name. */
+.lpx-panel-group-title::before {
+  content: '';
+  flex: none;
+  width: 3px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--lpx-accent);
+}
+.lpx-panel-group-count {
+  margin-inline-start: auto;
+  min-width: 20px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--lpx-text-muted);
+  background: var(--lpx-hover);
+  border-radius: 999px;
+}
+.lpx-panel-groups .lpx-panel-list {
+  overflow: visible;
+  flex: none;
+  padding-block: 0 4px;
 }
 .lpx-ep {
   display: flex;

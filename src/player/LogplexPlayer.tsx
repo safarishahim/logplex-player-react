@@ -10,6 +10,8 @@ import type { LogplexAnalyticsConfig, LogplexPlayerProps } from '../types';
 import { dirFor, getStrings } from '../i18n';
 import { useLogplexAnalytics } from '../analytics/useLogplexAnalytics';
 import { useResume } from './useResume';
+import { useVodSource } from './vod';
+import { useWatchInterval } from './useWatchInterval';
 import { usePersistentMediaSettings } from './prefs';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
 import { Skin } from '../skin/Skin';
@@ -42,6 +44,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     dir,
     analytics,
     resume = true,
+    resolveResume,
+    loading,
     persistSettings = false,
     settingsKey,
     onBack,
@@ -55,6 +59,12 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     badge,
     fullscreenOnPlay,
     fullscreenMode = 'auto',
+    vodType = 'standard',
+    vodCustomUrl,
+    qualityValidate,
+    onWatchInterval,
+    watchIntervalMs,
+    onPlayerReady,
     children,
   } = props;
 
@@ -146,6 +156,12 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const activeSource = sourceList ? sourceList[Math.min(qualityIdx, sourceList.length - 1)] : null;
   const src = activeSource ? activeSource.src : (rawSrc as string | undefined);
 
+  // Provider resolution: non-`standard` sources exchange the play token for the
+  // real URL (+ scrub thumbnails). `standard` and manual MP4 lists pass through.
+  const vod = useVodSource(sourceList ? undefined : src, vodType, vodCustomUrl);
+  const resolvedSrc = vodType !== 'standard' && !sourceList ? vod.src ?? '' : src;
+  const resolvedThumbnails = (vodType !== 'standard' ? vod.thumbnails : undefined) ?? thumbnails;
+
   // Episode navigation.
   const idx = episodes && episode ? episodes.indexOf(episode) : -1;
   const hasPrev = idx > 0;
@@ -185,10 +201,54 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // Content analytics is suspended while an ad plays (player passed as null),
   // so ad playback doesn't register as content play/heartbeat.
   const tracker = useLogplexAnalytics(showingAd ? null : player, analyticsCfg);
-  const { resume: resumePoint, dismiss } = useResume(tracker, resume && !!analyticsCfg && !hasPreRoll);
+  const { resume: resumePoint, dismiss } = useResume(
+    tracker,
+    resume && !hasPreRoll && (!!resolveResume || !!analyticsCfg),
+    resolveResume,
+  );
 
   // Opt-in: remember volume / mute / playback rate across sessions.
   usePersistentMediaSettings(showingAd ? null : player, persistSettings, settingsKey);
+
+  // External (pre-Logplex) watch heartbeat — suspended during ads, like analytics.
+  useWatchInterval(showingAd ? null : player, onWatchInterval, watchIntervalMs);
+
+  // Expose the underlying Vidstack instance for imperative host control.
+  useEffect(() => {
+    if (!onPlayerReady) return;
+    onPlayerReady(player);
+    return () => onPlayerReady(null);
+  }, [player, onPlayerReady]);
+
+  // Native fullscreen on touch devices: lock the screen to the video's
+  // orientation (landscape for landscape videos). WebViews without a native
+  // Fullscreen API use the CSS simulated-rotation path instead (see above).
+  useEffect(() => {
+    if (!player || simulated) return;
+    const coarse = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)')?.matches;
+    const orientation =
+      typeof screen !== 'undefined'
+        ? (screen.orientation as (ScreenOrientation & { lock?: (o: string) => Promise<void> }) | undefined)
+        : undefined;
+    if (!coarse || !orientation?.lock) return;
+
+    const onFsChange = (e: Event) => {
+      const isFs = (e as CustomEvent<boolean>).detail;
+      if (!isFs) {
+        orientation.unlock?.();
+        return;
+      }
+      const { mediaWidth: w, mediaHeight: h } = player.state;
+      const portraitVideo = !!w && !!h && h > w;
+      orientation.lock?.(portraitVideo ? 'portrait' : 'landscape').catch(() => undefined);
+    };
+
+    player.addEventListener('fullscreen-change', onFsChange);
+    return () => {
+      player.removeEventListener('fullscreen-change', onFsChange);
+      orientation.unlock?.();
+    };
+  }, [player, simulated]);
 
   // Pre-roll: start the first unplayed 'pre' break once a player exists.
   useEffect(() => {
@@ -315,7 +375,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       <MediaPlayer
         ref={setPlayer}
         className={`lpx-player${className ? ` ${className}` : ''}`}
-        src={showingAd ? activeAd!.src : src ?? ''}
+        src={showingAd ? activeAd!.src : resolvedSrc ?? ''}
         title={title}
         playsInline
         crossOrigin
@@ -354,7 +414,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           dir={resolvedDir}
           title={title}
           episodeLabel={episodeLabel}
-          thumbnails={thumbnails}
+          thumbnails={resolvedThumbnails}
+          qualityValidate={qualityValidate}
           hasPrev={hasPrev}
           hasNext={hasNext}
           onPrev={goPrev}
@@ -365,6 +426,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           onSelectEpisode={onEpisodeChange}
           fullscreenOnPlay={fullscreenOnPlay}
           onLike={onLike}
+          liked={props.liked}
           simulatedFullscreen={simulated}
           simIsFullscreen={fs.active}
           onToggleSimFullscreen={fs.toggle}
@@ -383,6 +445,15 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         )}
 
         {restriction && <RestrictionOverlay restriction={restriction} strings={strings} />}
+
+        {/* Host- or provider-driven loading (resolving the source, fetching ads,
+            etc.) — sits above the cover/skin so it's visible before playback. */}
+        {(loading || vod.isLoading) && !showingAd && (
+          <div className="lpx-spinner lpx-spinner--overlay" role="status" aria-live="polite">
+            <span className="lpx-spinner-ring" />
+            <span className="lpx-spinner-text">{strings.loading}</span>
+          </div>
+        )}
       </MediaPlayer>
     </div>
   );

@@ -59,6 +59,7 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
     prevRate: 1,
     lastTapAt: 0,
     lastTapSide: 'c' as Side,
+    indicatorTimer: null as ReturnType<typeof setTimeout> | null,
   });
 
   const clearTimers = () => {
@@ -72,16 +73,21 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
     setTimeout(() => setSkip(null), 500);
   };
 
-  const flashIndicator = (ind: Indicator) => {
-    setIndicator(ind);
-    setTimeout(() => setIndicator(null), 700);
+  // Hide the brightness/volume indicator shortly after a swipe ends. Kept as a
+  // single (cleared) timer so overlapping per-move timeouts can't flicker it.
+  const hideIndicatorSoon = () => {
+    if (g.current.indicatorTimer) clearTimeout(g.current.indicatorTimer);
+    g.current.indicatorTimer = setTimeout(() => setIndicator(null), 500);
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    onActivity?.();
+    // On touch, a tap is a toggle (handled on pointer-up) — don't reveal here or
+    // it fights the toggle and the controls flash then hide. Mouse/pen reveal.
+    if (e.pointerType !== 'touch') onActivity?.();
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const s = g.current;
+    if (s.indicatorTimer) clearTimeout(s.indicatorTimer); // keep indicator up if re-grabbed
     s.active = true;
     s.touch = e.pointerType === 'touch';
     s.x0 = x;
@@ -125,11 +131,11 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
         setBrightness(b);
         s.curBright = b;
         s.brightTouched = true;
-        flashIndicator({ kind: 'brightness', value: b });
+        setIndicator({ kind: 'brightness', value: b });
       } else {
         const v = clamp(s.startVolume + frac, 0, 1);
         remote.changeVolume(v);
-        flashIndicator({ kind: 'volume', value: v });
+        setIndicator({ kind: 'volume', value: v });
       }
     }
   };
@@ -150,7 +156,10 @@ export function GestureLayer({ strings, onTapToggle, onActivity, persist, storag
       setRate2x(false);
       return;
     }
-    if (s.moved) return; // swipe handled live
+    if (s.moved) {
+      if (s.axis === 'v') hideIndicatorSoon(); // fade brightness/volume indicator once
+      return;
+    }
 
     const now = Date.now();
     if (s.touch) {
