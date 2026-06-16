@@ -87,6 +87,16 @@
   border-radius: 0;
 }
 
+/* Custom scrubber used while the player is CSS-rotated (Vidstack's slider can't
+   map pointer coords through the rotation). Its fill/thumb are positioned by
+   inline width/left, and the thumb is always visible (no [data-active] hook). */
+.lpx-slider--rotated {
+  touch-action: none;
+}
+.lpx-slider--rotated .lpx-thumb {
+  opacity: 1;
+}
+
 /* RTL: text-only. Layout, controls order, seek direction, and gestures stay
    physical (the player root is always dir=ltr); we just right-align text. */
 .lpx-rtl .lpx-title,

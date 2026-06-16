@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-06-16
+
+### Fixed
+
+- The seek bar now works in simulated (CSS-rotated) fullscreen. Vidstack's slider derives the seek position from `(clientX - left) / width`, but once the player is rotated 90° the slider's bounding-box width collapses to the track's thickness, so every drag jumped to a near-random time. In rotated mode the scrubber is now a custom slider that remaps pointer coordinates through the rotation (the same mapping the gesture surface uses), so dragging tracks the finger along the length the user actually sees. Thumbnails/preview remain on the native slider in non-rotated mode.
+
 ### Docs
 
 - Brought the README and the docs/landing site up to date with the 0.2.x features: VOD providers (`vodType`/`vodCustomUrl`), external tracker (`onWatchInterval`/`watchIntervalMs`), `resolveResume`, `qualityValidate`, `loading`, controlled `liked`, `onPlayerReady`, season-grouped playlist + up-next card, and the pixel-based simulated-rotation fullscreen with remapped gestures. Added a full props table and a "VOD providers & your own back-end" section; corrected the `WatchIntervalInfo.quality` doc to `"W*H"`.

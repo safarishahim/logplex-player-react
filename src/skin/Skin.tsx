@@ -32,6 +32,7 @@ import { SettingsModal } from './controls/SettingsModal';
 import { SpeedModal } from './controls/SpeedModal';
 import { CaptionsModal } from './controls/CaptionsModal';
 import { AudioModal } from './controls/AudioModal';
+import { RotatedTimeSlider } from './controls/RotatedTimeSlider';
 import { GestureLayer } from './GestureLayer';
 
 export interface SkinProps {
@@ -358,21 +359,25 @@ export function Skin(props: SkinProps): JSX.Element {
             )}
           </div>
 
-          <TimeSlider.Root className="lpx-slider">
-            <TimeSlider.Track className="lpx-track">
-              <TimeSlider.Progress className="lpx-track-progress" />
-              <TimeSlider.TrackFill className="lpx-track-fill" />
-            </TimeSlider.Track>
-            <TimeSlider.Thumb className="lpx-thumb" />
-            <TimeSlider.Preview className="lpx-preview">
-              {props.thumbnails && (
-                <TimeSlider.Thumbnail.Root className="lpx-thumbnail" src={props.thumbnails}>
-                  <TimeSlider.Thumbnail.Img />
-                </TimeSlider.Thumbnail.Root>
-              )}
-              <TimeSlider.Value className="lpx-preview-time" />
-            </TimeSlider.Preview>
-          </TimeSlider.Root>
+          {props.simRotated ? (
+            <RotatedTimeSlider />
+          ) : (
+            <TimeSlider.Root className="lpx-slider">
+              <TimeSlider.Track className="lpx-track">
+                <TimeSlider.Progress className="lpx-track-progress" />
+                <TimeSlider.TrackFill className="lpx-track-fill" />
+              </TimeSlider.Track>
+              <TimeSlider.Thumb className="lpx-thumb" />
+              <TimeSlider.Preview className="lpx-preview">
+                {props.thumbnails && (
+                  <TimeSlider.Thumbnail.Root className="lpx-thumbnail" src={props.thumbnails}>
+                    <TimeSlider.Thumbnail.Img />
+                  </TimeSlider.Thumbnail.Root>
+                )}
+                <TimeSlider.Value className="lpx-preview-time" />
+              </TimeSlider.Preview>
+            </TimeSlider.Root>
+          )}
 
           <div className="lpx-buttons">
             {/* Left: lock + speed */}
