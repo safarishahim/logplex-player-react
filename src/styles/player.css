@@ -999,12 +999,6 @@
   inset: 0;
   z-index: 24;
 }
-/* Touch devices use the double-tap gesture for ±10s, so hide the buttons. */
-@media (pointer: coarse) {
-  .lpx-seek-btn {
-    display: none;
-  }
-}
 .lpx-panel {
   position: absolute;
   inset-block: 0;
@@ -1533,5 +1527,39 @@
   }
   .lpx-topbar {
     gap: 8px;
+  }
+}
+
+/* Very narrow (small phones, portrait): the transport row can hold up to
+   7 buttons (lock/speed | prev/−10/play/+10/next | fs/volume), so shrink
+   everything one more step to keep it on a single row. */
+@container (max-width: 400px) {
+  .lpx-player {
+    --lpx-control: 34px;
+  }
+  .lpx-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .lpx-bigplay {
+    width: 46px;
+    height: 46px;
+  }
+  .lpx-btn.lpx-bigplay svg {
+    width: 26px;
+    height: 26px;
+  }
+  .lpx-buttons {
+    gap: 4px;
+  }
+  .lpx-group {
+    gap: 0;
+  }
+  .lpx-speed-btn {
+    min-width: 34px;
+    padding: 0 6px;
+  }
+  .lpx-speed-label {
+    font-size: 12px;
   }
 }
