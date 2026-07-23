@@ -5,7 +5,15 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
-## [0.2.9] - 2026-06-16
+## [0.2.10] - 2026-07-23
+
+### Changed
+
+- The ±10s seek buttons are now shown on touch devices too (previously hidden there in favor of the double-tap gesture — the gesture still works). A new `@container (max-width: 400px)` breakpoint shrinks the controls one more step (34px buttons, 46px play, tighter gaps) so the full 7-button transport row still fits on small phones in portrait.
+
+### Docs
+
+- Docs site: GitHub and npm icon links in the header and footer, plus a shields.io badge row in the hero (npm version, monthly downloads, minzip bundle size, types, CI status, license, GitHub stars). README got the same extra badges.
 
 ### Fixed
 
