@@ -1,8 +1,12 @@
 # logplex-player-react
 
 [![npm](https://img.shields.io/npm/v/logplex-player-react.svg)](https://www.npmjs.com/package/logplex-player-react)
+[![downloads](https://img.shields.io/npm/dm/logplex-player-react.svg)](https://www.npmjs.com/package/logplex-player-react)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/logplex-player-react.svg)](https://bundlephobia.com/package/logplex-player-react)
+[![types](https://img.shields.io/npm/types/logplex-player-react.svg)](https://www.npmjs.com/package/logplex-player-react)
 [![CI](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml/badge.svg)](https://github.com/safarishahim/logplex-player-react/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/logplex-player-react.svg)](./LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/safarishahim/logplex-player-react?style=flat)](https://github.com/safarishahim/logplex-player-react)
 
 A production-ready **React video player** built on [Vidstack](https://vidstack.io) + [hls.js](https://github.com/video-dev/hls.js). HLS/MP4, a fully custom skin (dark, gold accent, **RTL/Persian + LTR/English**), responsive via container queries, with quality / audio / subtitle menus, pre/mid/post-roll ads, touch gestures, WebView-safe fullscreen, and **optional** built-in analytics + resume.
 
@@ -100,6 +104,27 @@ You don't need the Logplex analytics integration to keep an existing back-end wo
 ```
 
 `onWatchInterval` reports the quality as `"W*H"` (e.g. `"1920*1080"`), the accumulated `playDuration`, the current `duration` (position), and chains the returned watch id into the next call.
+
+### Shad VOD (resolved-src)
+
+For a [Shad transcoder](https://github.com/safarishahim) asset you don't need a `vodType` provider — Shad resolution must happen **server-side** (the play token is project-scoped and must never be exposed to the browser). Your own backend calls Shad's `POST /v1/project/assets/{id}/play`, which mints a **fresh, short-lived, IP-bound** player token and returns the ready-to-play `player_endpoint` (an HLS master URL carrying the token) plus a `sprites` VTT. Hand those straight to the player:
+
+```tsx
+// your backend (server-side): mint a FRESH token per view — never cache/reuse it
+// POST https://shad.example.com/v1/project/assets/{assetId}/play
+// → { status: 'OK', player_endpoint: '.../index.m3u8?...', sprites: '.../sb/...' }
+
+// your component: feed the resolved URLs to the player
+<LogplexPlayer
+  src={playback.player_endpoint}     // HLS master (token embedded by Shad)
+  thumbnails={playback.sprites}      // seek-bar sprite sheet (VTT)
+  appearance="dark"
+  theme={{ accent: '#3b82f6' }}
+  locale="fa"
+/>
+```
+
+Mint a new token on every open and keep it only in transient state — don't persist, reuse, embed it in a shareable URL, or put it in client storage. Encrypted (AES-128) HLS works transparently: the player's hls.js fetches the AES key through the same tokened endpoint. This is exactly how the Shad back-office panel drives playback.
 
 ## Playlist, seasons & up-next
 

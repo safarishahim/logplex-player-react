@@ -311,12 +311,56 @@ code {
 }
 
 .dx-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   text-align: center;
   color: var(--muted);
   font-size: 13px;
   padding: 40px 0 0;
   border-top: 1px solid var(--border);
   margin-top: 64px;
+}
+.dx-footer-links a {
+  color: var(--muted);
+}
+.dx-footer-links a:hover {
+  color: var(--text);
+}
+
+/* ── Header GitHub / npm icon links ── */
+.dx-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dx-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+.dx-links a:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+/* ── Shield badges (hero) ── */
+.dx-shields {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.dx-shields img {
+  height: 20px;
+  display: block;
+  border-radius: 3px;
 }
 
 /* ── Docs language toggle ── */
@@ -432,6 +476,7 @@ body::after {
 }
 .dx-hero p { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both; }
 .dx-hero .dx-badges { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+.dx-hero .dx-shields { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both; }
 .dx-hero .dx-install { animation: dx-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
 .dx-hero .dx-player { animation: dx-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both; }
 
@@ -555,5 +600,5 @@ body::after {
   }
   .dx-section { opacity: 1; transform: none; transition: none; }
   .dx-section.dx-in .dx-feature { animation: none; }
-  .dx-hero h1, .dx-hero p, .dx-badges, .dx-install, .dx-hero .dx-player { animation: none !important; }
+  .dx-hero h1, .dx-hero p, .dx-badges, .dx-shields, .dx-install, .dx-hero .dx-player { animation: none !important; }
 }
