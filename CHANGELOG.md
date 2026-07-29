@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-07-29
+
+### Fixed
+
+- The pre-play cover no longer paints its play button over running video. Switching source resets Vidstack's `started`, which happens whenever the player resumes on its own (an ad break ending, a manual quality switch, auto-advance to the next episode); the cover sits above the controls, so it reappeared over a playing video and stayed until tapped. It is now latched off once the player has played at all.
+
 ## [0.2.10] - 2026-07-23
 
 ### Changed
