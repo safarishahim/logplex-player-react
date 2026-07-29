@@ -111,6 +111,11 @@ export function Skin(props: SkinProps): JSX.Element {
   const [captionsOpen, setCaptionsOpen] = useState(false);
   const [audioOpen, setAudioOpen] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
+  // Latches once playback has run at all. Switching source (ad ends, quality
+  // change, next episode) resets Vidstack's `started`, and the player resumes
+  // on its own — without this the pre-play cover would come back over a
+  // playing video and sit there until tapped.
+  const [everPlayed, setEverPlayed] = useState(false);
   const [doneBadge, setDoneBadge] = useState<string | null>(null);
   // Bumped on every pointer activity so the idle effect re-arms its hide timer.
   const [activityTick, setActivityTick] = useState(0);
@@ -154,6 +159,10 @@ export function Skin(props: SkinProps): JSX.Element {
     return () => clearTimeout(t);
   }, [active, paused, anyPanelOpen, activityTick]);
 
+  useEffect(() => {
+    if (started || !paused) setEverPlayed(true);
+  }, [started, paused]);
+
   // Auto-dismiss the resume card if no choice is made (keep playing from start).
   const { resume: resumePoint, onDismissResume } = props;
   useEffect(() => {
@@ -187,8 +196,9 @@ export function Skin(props: SkinProps): JSX.Element {
   // Cover (pre-play): just the poster + a single play button. Tapping play
   // starts playback and enters fullscreen. We dismiss the cover on tap rather
   // than waiting for the media 'started' event, so it can't get stuck if the
-  // source stalls or the event lags.
-  if (!started && !playRequested) {
+  // source stalls or the event lags — and never show it again once this player
+  // has played, so a source swap doesn't paint it over running video.
+  if (!started && !playRequested && !everPlayed) {
     return (
       <button
         className="lpx-cover"
