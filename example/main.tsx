@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LogplexPlayer, type Episode, type LogplexPlayerProps } from '../src';
+import { LogplexPlayer, type Episode, type LogplexPlayerProps, type PlayerControl } from '../src';
 // Player styles (Vidstack base + our skin). Imported explicitly so the docs
 // build includes them — tree-shaking drops the barrel's bare CSS side-effects.
 import '@vidstack/react/player/styles/base.css';
@@ -107,7 +107,7 @@ const T: Record<Lang, {
         intro: 'With analytics set, the player emits these event_type values to your ingest endpoint:',
       },
     },
-    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', ad: 'Ads (pre/mid/post)', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
+    pg: { language: 'Language', appearance: 'Theme', dark: 'Dark', light: 'Light', accent: 'Accent', playlist: 'Playlist', badge: 'Badge', notice: 'Notice', live: 'Live channel', ad: 'Ads (pre/mid/post)', back: 'Back button', restrict: 'Restriction', persist: 'Remember settings' },
     features: [
       ['HLS + MP4', 'Adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4.'],
       ['Custom skin', 'Dark, gold-accented, RTL/LTR, fully responsive via container queries.'],
@@ -122,6 +122,7 @@ const T: Record<Lang, {
       ['Gestures', 'Mobile: double-tap ±10s, long-press 2×, brightness/volume swipe (remapped in simulated fullscreen).'],
       ['WebView fullscreen', 'Native when available, else a CSS simulated rotation that keeps the skin.'],
       ['Like + badge + notice', 'Controlled Like button, premium info badge, operator notice banner.'],
+      ['Live-friendly skin', 'Drop controls that make no sense for a live channel (speed, clock, scrub bar, ±10s, like) with disabledControls.'],
       ['IP restriction', 'Block playback on a disallowed network; retry / exit actions.'],
       ['Subtitles & audio', 'Auto CC + multi-language audio menus from HLS; add external subtitle files too.'],
       ['Standalone mode', 'Analytics is optional — works as a standalone player with zero backend.'],
@@ -155,10 +156,17 @@ const T: Record<Lang, {
       ['notice', 'PlayerNotice', 'Operator/network notice ({ message, ctaLabel, onCta }).'],
       ['restriction', 'PlayerRestriction', 'Blocking overlay when the network/IP is not allowed.'],
       ['badge', 'string', 'Transient info pill shown at the start.'],
+      ['disabledControls', 'PlayerControl[]', "Controls to leave out: 'like' | 'speed' | 'time' | 'progress' | 'seek'. A live channel typically drops all five — it has no duration to show and nothing to scrub."],
       ['onLike / liked', '(liked) => void / boolean', 'Show a Like button (emits a like event); liked makes it controlled.'],
       ['fullscreenMode', "'auto'|'native'|'simulated'", 'Fullscreen strategy. simulated forces a CSS rotation for locked WebViews.'],
       ['fullscreenOnPlay', 'boolean', 'Enter fullscreen when playback starts from the cover.'],
       ['onBack', '() => void', 'Show a back button in the top bar.'],
+      ['autoPlay', 'boolean', 'Start playing as soon as the source is ready (browsers usually require muted for this to be allowed).'],
+      ['muted', 'boolean', 'Start muted. A mute badge stays visible while the controls are hidden.'],
+      ['type', 'string', "MIME type of src when it can't be inferred from the extension (e.g. 'video/mp4')."],
+      ['dir', "'rtl' | 'ltr'", 'Force text direction; by default it follows locale.'],
+      ['className', 'string', 'Extra class on the player element.'],
+      ['children', 'ReactNode', 'Rendered inside the controls layer, so it fades with them.'],
     ],
     eventsIntro: 'With analytics set, the player emits these event_type values to your ingest endpoint:',
     footer: 'logplex-player-react · built on Vidstack + hls.js · Developed by Morteza Safarishahi',
@@ -217,7 +225,7 @@ const T: Record<Lang, {
         intro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به نقطهٔ ورودی شما ارسال می‌کند:',
       },
     },
-    pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', ad: 'تبلیغات (ابتدا/میان/پایان)', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
+    pg: { language: 'زبان', appearance: 'حالت رنگ', dark: 'تیره', light: 'روشن', accent: 'رنگ تأکید', playlist: 'لیست پخش', badge: 'نشان', notice: 'اعلان', live: 'پخش زنده', ad: 'تبلیغات (ابتدا/میان/پایان)', back: 'دکمهٔ بازگشت', restrict: 'محدودیت شبکه' },
     features: [
       ['HLS + MP4', 'پخش تطبیقی HLS با hls.js (کیفیت خودکار از منیفست) یا MP4 تدریجی.'],
       ['پوستهٔ اختصاصی', 'تیره، با تأکید طلایی، RTL/LTR و کاملاً واکنش‌گرا با container query.'],
@@ -232,6 +240,7 @@ const T: Record<Lang, {
       ['حرکات لمسی', 'موبایل: دوبار-ضربه ±۱۰ ثانیه، فشار طولانی ۲×، کشیدن برای روشنایی/صدا (در تمام‌صفحهٔ شبیه‌سازی‌شده هم درست کار می‌کند).'],
       ['تمام‌صفحهٔ WebView', 'بومی در صورت پشتیبانی، در غیر این صورت چرخش شبیه‌سازی‌شدهٔ CSS که پوسته را حفظ می‌کند.'],
       ['لایک + نشان + اعلان', 'دکمهٔ لایک کنترل‌شده، نشان اطلاعات ویژه و بنر اعلان اپراتور.'],
+      ['مناسب پخش زنده', 'حذف کنترل‌هایی که برای پخش زنده معنا ندارند (سرعت، زمان، نوار پیشروی، ±۱۰ ثانیه، لایک) با disabledControls.'],
       ['محدودیت آی‌پی', 'مسدودسازی پخش روی شبکهٔ غیرمجاز؛ دکمه‌های تلاش مجدد/خروج.'],
       ['زیرنویس و صدا', 'منوی زیرنویس و صدای چندزبانه از HLS؛ افزودن فایل زیرنویس خارجی هم ممکن است.'],
       ['حالت مستقل', 'آنالیتیکس اختیاری است — به‌صورت پلیر مستقل و بدون هیچ بک‌اندی کار می‌کند.'],
@@ -265,10 +274,17 @@ const T: Record<Lang, {
       ['notice', 'PlayerNotice', 'اعلان اپراتور/شبکه: { message, ctaLabel, onCta }.'],
       ['restriction', 'PlayerRestriction', 'اورلی مسدودکننده وقتی شبکه/آی‌پی مجاز نیست (پخش را متوقف می‌کند).'],
       ['badge', 'string', 'نشان اطلاع‌رسانی گذرا که در ابتدا نمایش داده می‌شود.'],
+      ['disabledControls', 'PlayerControl[]', "کنترل‌هایی که نمایش داده نشوند: 'like' | 'speed' | 'time' | 'progress' | 'seek'. پخش زنده معمولاً هر پنج مورد را حذف می‌کند — نه مدت‌زمانی برای نمایش دارد و نه چیزی برای جابه‌جا شدن."],
       ['onLike / liked', '(liked) => void / boolean', 'نمایش دکمهٔ لایک (رویداد like)؛ liked آن را کنترل‌شده می‌کند.'],
       ['fullscreenMode', "'auto'|'native'|'simulated'", 'راهبرد تمام‌صفحه. simulated برای WebViewهای قفل‌شده چرخش CSS را اجبار می‌کند.'],
       ['fullscreenOnPlay', 'boolean', 'ورود به تمام‌صفحه هنگام شروع پخش از کاور.'],
       ['onBack', '() => void', 'نمایش دکمهٔ بازگشت در نوار بالا.'],
+      ['autoPlay', 'boolean', 'شروع خودکار پخش به‌محض آماده‌شدن منبع (مرورگرها معمولاً برای این کار muted لازم دارند).'],
+      ['muted', 'boolean', 'شروع بی‌صدا. تا وقتی کنترل‌ها پنهان‌اند، نشان بی‌صدا روی تصویر می‌ماند.'],
+      ['type', 'string', "نوع MIME منبع، وقتی از پسوند قابل تشخیص نیست (مثلاً 'video/mp4')."],
+      ['dir', "'rtl' | 'ltr'", 'تعیین اجباری جهت متن؛ به‌طور پیش‌فرض از locale پیروی می‌کند.'],
+      ['className', 'string', 'کلاس اضافه روی المان پخش‌کننده.'],
+      ['children', 'ReactNode', 'داخل لایهٔ کنترل‌ها رندر می‌شود، پس همراه آن‌ها محو می‌شود.'],
     ],
     eventsIntro: 'با تنظیم analytics، پخش‌کننده این مقادیر event_type را به نقطهٔ ورودی شما ارسال می‌کند:',
     footer: 'logplex-player-react · ساخته‌شده با Vidstack و hls.js · توسعه‌یافته توسط مرتضی صفری شاهی',
@@ -305,6 +321,7 @@ function Playground({ lang }: { lang: Lang }) {
   const [back, setBack] = useState(false);
   const [restrict, setRestrict] = useState(false);
   const [persist, setPersist] = useState(false);
+  const [live, setLive] = useState(false);
   const [current, setCurrent] = useState('e1');
   const pg = T[lang].pg;
   const fa = locale === 'fa';
@@ -321,6 +338,8 @@ function Playground({ lang }: { lang: Lang }) {
     subtitles: SUBTITLES,
     persistSettings: persist,
     onLike: () => undefined,
+    // A live channel has no duration, nothing to scrub, and no useful speed.
+    ...(live ? { disabledControls: ['like', 'speed', 'time', 'progress', 'seek'] as PlayerControl[] } : {}),
     ...(episodes ? { episodes: episodesFor(locale), currentEpisodeId: current, onEpisodeChange: setCurrent } : {}),
     ...(back ? { onBack: () => undefined } : {}),
     ...(badge
@@ -373,13 +392,14 @@ function Playground({ lang }: { lang: Lang }) {
       ad ? `  ads={[{ src, offset: 'pre' }, { src, offset: 8 }, { src, offset: 'post' }]}` : '',
       `  thumbnails="thumbnails.vtt"`,
       persist ? `  persistSettings` : '',
+      live ? `  disabledControls={['like', 'speed', 'time', 'progress', 'seek']}` : '',
       `  onLike={(liked) => track(liked)}`,
       `  analytics={{ baseUrl, apiKey, userId, contentId }}`,
       `/>`,
     ]
       .filter(Boolean)
       .join('\n');
-  }, [locale, appear, accent, episodes, back, badge, notice, restrict, ad, persist, props.badge]);
+  }, [locale, appear, accent, episodes, back, badge, notice, restrict, ad, persist, live, props.badge]);
 
   return (
     <>
@@ -419,6 +439,9 @@ function Playground({ lang }: { lang: Lang }) {
         </label>
         <label>
           <input type="checkbox" checked={restrict} onChange={(e) => setRestrict(e.target.checked)} /> {pg.restrict}
+        </label>
+        <label>
+          <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} /> {pg.live}
         </label>
         <label>
           <input type="checkbox" checked={persist} onChange={(e) => setPersist(e.target.checked)} /> {pg.persist}

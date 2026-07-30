@@ -51,6 +51,7 @@ export default function Watch() {
 - **Gestures** — mobile double-tap ±10s, long-press 2×, brightness/volume swipe (correctly remapped in simulated-rotation fullscreen); YouTube-style on desktop.
 - **WebView-safe fullscreen** — native when available, CSS-simulated rotation fallback (keeps the skin) for locked WebViews.
 - **Like / badge / operator notice / IP-restriction** overlays (Like can be controlled).
+- **Live-friendly skin** — `disabledControls` drops the controls a live channel has no use for (speed, clock, scrub bar, ±10s, like), so viewers aren't offered actions that do the wrong thing.
 - **Optional analytics + resume** — emits canonical events to your ingest endpoint and offers a "continue watching" banner. Or drive resume from your own back-end with `resolveResume`, and report a watch heartbeat to a non-Logplex tracker with `onWatchInterval`.
 - **TypeScript**, tree-shakeable ESM + CJS, a single `styles.css`.
 
@@ -139,6 +140,33 @@ const episodes = [
 
 `Episode.group` renders sticky season headers in the playlist panel. Near the end of an episode that has a next one, an **up-next card** (cover + filling progress bar) appears; ignoring it auto-advances on end, clicking it jumps straight to the next episode.
 
+## Live channels
+
+A live stream has no duration to display, nothing to scrub through, and no
+meaningful playback speed. Drop those controls rather than leaving them to
+misbehave:
+
+```tsx
+<LogplexPlayer
+  src="https://example.com/channel.m3u8"
+  title="Channel one"
+  disabledControls={['like', 'speed', 'time', 'progress', 'seek']}
+/>
+```
+
+The bottom bar adapts to what's left: with the clock gone the title keeps its
+position, and a row emptied of everything collapses instead of leaving a strip
+above the buttons.
+
+Two things worth knowing when you build a live page around it:
+
+- **Rejoining beats resuming.** Content that has rolled out of the live window
+  can't be resumed, so after a drop or a long stall, re-mount the player (a
+  changing `key`) — it re-reads the playlist and rejoins at the live edge.
+- **Don't chase the live edge.** Seeking to within a second or two of the edge
+  lands inside the segment still being published and starves the buffer. If you
+  correct drift yourself via `onPlayerReady`, land well behind the edge.
+
 ## Props reference
 
 | Prop | Type | Description |
@@ -164,11 +192,16 @@ const episodes = [
 | `loading` | `boolean` | Force the loading overlay (also shown while a provider source resolves). |
 | `ad` / `ads` | `AdConfig` / `AdBreak[]` | Pre-roll shorthand, or breaks at `'pre' \| 'post' \| seconds`. |
 | `notice` / `restriction` / `badge` | `PlayerNotice` / `PlayerRestriction` / `string` | Operator notice, blocking network overlay, transient info pill. |
+| `disabledControls` | `PlayerControl[]` | Controls to leave out: `'like'`, `'speed'`, `'time'`, `'progress'`, `'seek'`. See [Live channels](#live-channels). |
 | `onLike` / `liked` | `(liked) => void` / `boolean` | Like button; `liked` makes it controlled. |
 | `fullscreenMode` | `'auto' \| 'native' \| 'simulated'` | Fullscreen strategy. `simulated` forces a CSS rotation for locked WebViews. |
 | `fullscreenOnPlay` | `boolean` | Enter fullscreen when playback starts from the cover. |
 | `persistSettings` / `settingsKey` | `boolean` / `string` | Remember volume/mute/speed/brightness in `localStorage`. |
 | `onBack` | `() => void` | Show a back button in the top bar. |
+| `autoPlay` / `muted` | `boolean` | Start playing / start muted. Browsers generally only allow autoplay when muted. |
+| `type` | `string` | MIME type of `src` when it can't be inferred from the extension. |
+| `className` | `string` | Extra class on the player element. |
+| `children` | `ReactNode` | Rendered inside the controls layer, so it fades with them. |
 
 See the **[documentation site](https://safarishahim.github.io/logplex-player-react/)** for the live playground and the full events reference.
 
