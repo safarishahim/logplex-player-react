@@ -356,9 +356,11 @@ export function Skin(props: SkinProps): JSX.Element {
         <div className="lpx-bottom">
           {/* Above the scrubber: time (left) + title/episode (right). */}
           <div className="lpx-aboverow">
-            <span className="lpx-time">
-              <Time type="current" /> / <Time type="duration" />
-            </span>
+            {!disabled.includes('time') && (
+              <span className="lpx-time">
+                <Time type="current" /> / <Time type="duration" />
+              </span>
+            )}
             {(props.title || props.episodeLabel) && (
               <div className="lpx-title">
                 {props.title && <b>{props.title}</b>}
@@ -367,7 +369,7 @@ export function Skin(props: SkinProps): JSX.Element {
             )}
           </div>
 
-          {props.simRotated ? (
+          {disabled.includes('progress') ? null : props.simRotated ? (
             <RotatedTimeSlider />
           ) : (
             <TimeSlider.Root className="lpx-slider">
@@ -417,13 +419,15 @@ export function Skin(props: SkinProps): JSX.Element {
                   <PrevIcon />
                 </button>
               )}
-              <button
-                className="lpx-btn lpx-seek-btn"
-                aria-label={props.strings.rewind10}
-                onClick={() => remote.seek(Math.max(0, (player?.currentTime ?? 0) - 10))}
-              >
-                <Replay10Icon />
-              </button>
+              {!disabled.includes('seek') && (
+                <button
+                  className="lpx-btn lpx-seek-btn"
+                  aria-label={props.strings.rewind10}
+                  onClick={() => remote.seek(Math.max(0, (player?.currentTime ?? 0) - 10))}
+                >
+                  <Replay10Icon />
+                </button>
+              )}
               <button
                 className="lpx-btn lpx-bigplay"
                 aria-label={paused ? props.strings.play : props.strings.pause}
@@ -431,13 +435,15 @@ export function Skin(props: SkinProps): JSX.Element {
               >
                 {paused ? <PlayIcon /> : <PauseIcon />}
               </button>
-              <button
-                className="lpx-btn lpx-seek-btn"
-                aria-label={props.strings.forward10}
-                onClick={() => remote.seek((player?.currentTime ?? 0) + 10)}
-              >
-                <Forward10Icon />
-              </button>
+              {!disabled.includes('seek') && (
+                <button
+                  className="lpx-btn lpx-seek-btn"
+                  aria-label={props.strings.forward10}
+                  onClick={() => remote.seek((player?.currentTime ?? 0) + 10)}
+                >
+                  <Forward10Icon />
+                </button>
+              )}
               {hasPlaylist && (
                 <button
                   className="lpx-btn"

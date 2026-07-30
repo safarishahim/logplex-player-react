@@ -7,7 +7,7 @@ export type Locale = 'fa' | 'en';
 export type Direction = 'rtl' | 'ltr';
 
 /** Skin controls a host can switch off (see `disabledControls`). */
-export type PlayerControl = 'like' | 'speed';
+export type PlayerControl = 'like' | 'speed' | 'time' | 'progress' | 'seek';
 
 /** Canonical event_type strings accepted by the Logplex ingest API. */
 export type LogplexEventType =

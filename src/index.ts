@@ -20,6 +20,7 @@ export type {
   AdConfig,
   AdBreak,
   SubtitleTrack,
+  PlayerControl,
   PlayerNotice,
   PlayerRestriction,
   Episode,

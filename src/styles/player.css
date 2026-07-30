@@ -271,6 +271,15 @@
   gap: 6px;
   white-space: nowrap;
 }
+/* With controls switched off (a live channel drops the clock and the scrub
+   bar) the row can be left holding one child, or none — keep the title where
+   the viewer expects it, and don't leave an empty strip above the buttons. */
+.lpx-aboverow > .lpx-title:only-child {
+  margin-inline-start: auto;
+}
+.lpx-aboverow:empty {
+  display: none;
+}
 .lpx-time time {
   font-variant-numeric: tabular-nums;
 }

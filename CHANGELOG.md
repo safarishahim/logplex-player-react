@@ -9,7 +9,7 @@ All notable changes to this project are documented here. This project adheres to
 
 ### Added
 
-- `disabledControls` — a list of skin controls to leave out (`'like'`, `'speed'`). Playback speed means nothing on a live channel, and a channel usually isn't likeable, so a host can now drop those buttons instead of showing controls that do the wrong thing.
+- `disabledControls` — a list of skin controls to leave out: `'like'`, `'speed'`, `'time'`, `'progress'`, `'seek'`. A live channel has no meaningful playback speed, duration, scrub bar or ±10s skip, and usually isn't likeable, so a host can drop those instead of showing controls that do the wrong thing.
 
 ### Fixed
 
