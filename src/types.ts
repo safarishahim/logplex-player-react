@@ -6,6 +6,9 @@ import type { ResumePoint } from './analytics/client';
 export type Locale = 'fa' | 'en';
 export type Direction = 'rtl' | 'ltr';
 
+/** Skin controls a host can switch off (see `disabledControls`). */
+export type PlayerControl = 'like' | 'speed';
+
 /** Canonical event_type strings accepted by the Logplex ingest API. */
 export type LogplexEventType =
   | 'play'
@@ -266,6 +269,10 @@ export interface LogplexPlayerProps {
   /** Short badge (e.g. "تمام‌بها" / premium) that animates in at the start and
    * out after a few seconds. */
   badge?: string;
+
+  /** Controls to leave out of the skin. Playback speed means nothing on a live
+   * channel, for instance, and a channel usually isn't likeable. */
+  disabledControls?: PlayerControl[];
 
   /** Force the loading spinner overlay (on top of the cover/skin) — e.g. while
    * the host is still fetching ads or other prerequisites. The player also

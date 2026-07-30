@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaPlayer, useMediaRemote, useMediaState } from '@vidstack/react';
-import type { Direction, Episode, PlayerNotice } from '../types';
+import type { Direction, Episode, PlayerControl, PlayerNotice } from '../types';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
@@ -71,6 +71,10 @@ export interface SkinProps {
   onSelectQuality?: (index: number) => void;
   /** Hide auto (HLS) qualities whose height fails this predicate. */
   qualityValidate?: (height: number) => boolean;
+  /** Playback has already run in this player — never show the cover again. */
+  hasPlayed?: boolean;
+  /** Controls the host has switched off (e.g. speed/like on a live channel). */
+  disabledControls?: PlayerControl[];
   /** Shown only after playback starts (not over the cover). */
   notice?: PlayerNotice;
   badge?: string;
@@ -111,15 +115,11 @@ export function Skin(props: SkinProps): JSX.Element {
   const [captionsOpen, setCaptionsOpen] = useState(false);
   const [audioOpen, setAudioOpen] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
-  // Latches once playback has run at all. Switching source (ad ends, quality
-  // change, next episode) resets Vidstack's `started`, and the player resumes
-  // on its own — without this the pre-play cover would come back over a
-  // playing video and sit there until tapped.
-  const [everPlayed, setEverPlayed] = useState(false);
   const [doneBadge, setDoneBadge] = useState<string | null>(null);
   // Bumped on every pointer activity so the idle effect re-arms its hide timer.
   const [activityTick, setActivityTick] = useState(0);
 
+  const disabled = props.disabledControls ?? [];
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
   // Any open overlay/menu pins the controls open (the playlist lives inside the
   // fading controls layer, so idle-hiding would otherwise close it under you).
@@ -159,10 +159,6 @@ export function Skin(props: SkinProps): JSX.Element {
     return () => clearTimeout(t);
   }, [active, paused, anyPanelOpen, activityTick]);
 
-  useEffect(() => {
-    if (started || !paused) setEverPlayed(true);
-  }, [started, paused]);
-
   // Auto-dismiss the resume card if no choice is made (keep playing from start).
   const { resume: resumePoint, onDismissResume } = props;
   useEffect(() => {
@@ -196,9 +192,11 @@ export function Skin(props: SkinProps): JSX.Element {
   // Cover (pre-play): just the poster + a single play button. Tapping play
   // starts playback and enters fullscreen. We dismiss the cover on tap rather
   // than waiting for the media 'started' event, so it can't get stuck if the
-  // source stalls or the event lags — and never show it again once this player
-  // has played, so a source swap doesn't paint it over running video.
-  if (!started && !playRequested && !everPlayed) {
+  // source stalls or the event lags — and never once this player has already
+  // played (`hasPlayed`), so a source swap doesn't paint it over running
+  // video. That flag is owned by LogplexPlayer because this component is
+  // re-mounted when an ad break ends.
+  if (!started && !playRequested && !props.hasPlayed) {
     return (
       <button
         className="lpx-cover"
@@ -292,7 +290,7 @@ export function Skin(props: SkinProps): JSX.Element {
           >
             <span className="lpx-quality-label">{qualityLabel}</span>
           </button>
-          {props.onLike && (
+          {props.onLike && !disabled.includes('like') && (
             <button
               className="lpx-btn lpx-like"
               aria-label="like"
@@ -395,14 +393,16 @@ export function Skin(props: SkinProps): JSX.Element {
               <button className="lpx-btn" aria-label={props.strings.lock} onClick={() => setLocked(true)}>
                 <LockIcon />
               </button>
-              <button
-                className="lpx-btn lpx-speed-btn"
-                aria-label={props.strings.speed}
-                aria-expanded={speedOpen}
-                onClick={() => setSpeedOpen(true)}
-              >
-                <span className="lpx-speed-label">{rateLabel}</span>
-              </button>
+              {!disabled.includes('speed') && (
+                <button
+                  className="lpx-btn lpx-speed-btn"
+                  aria-label={props.strings.speed}
+                  aria-expanded={speedOpen}
+                  onClick={() => setSpeedOpen(true)}
+                >
+                  <span className="lpx-speed-label">{rateLabel}</span>
+                </button>
+              )}
             </div>
 
             {/* Center: transport */}

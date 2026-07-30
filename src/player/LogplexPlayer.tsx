@@ -59,6 +59,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     badge,
     fullscreenOnPlay,
     fullscreenMode = 'auto',
+    disabledControls,
     vodType = 'standard',
     vodCustomUrl,
     qualityValidate,
@@ -74,6 +75,11 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const fs = useSimulatedFullscreen(simulated);
 
   const [player, setPlayer] = useState<MediaPlayerInstance | null>(null);
+  // Latches once playback has run. Switching source (ad break ending, quality
+  // switch, next episode) resets Vidstack's `started` while the player resumes
+  // on its own, and an ad break re-mounts the skin — so the flag has to live
+  // here, above both, or the pre-play cover comes back over playing video.
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   // Ad breaks — normalize `ad` (legacy pre-roll) + `ads` into a positioned list.
   const adBreaks = useMemo(() => {
@@ -319,6 +325,13 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     });
   }, [player]);
 
+  useEffect(() => {
+    if (!player || hasPlayed) return;
+    return player.subscribe(({ started, paused }) => {
+      if (started || !paused) setHasPlayed(true);
+    });
+  }, [player, hasPlayed]);
+
   // Fire ad analytics when a break becomes active.
   useEffect(() => {
     if (activeAdId && tracker) {
@@ -464,6 +477,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           manualQualities={manualQualities}
           currentQualityIndex={qualityIdx}
           onSelectQuality={selectQuality}
+          hasPlayed={hasPlayed}
+          disabledControls={disabledControls}
           notice={restriction ? undefined : notice}
           badge={restriction ? undefined : badge}
         >

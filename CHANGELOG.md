@@ -5,6 +5,16 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-07-30
+
+### Added
+
+- `disabledControls` — a list of skin controls to leave out (`'like'`, `'speed'`). Playback speed means nothing on a live channel, and a channel usually isn't likeable, so a host can now drop those buttons instead of showing controls that do the wrong thing.
+
+### Fixed
+
+- The pre-play cover could still paint its play button over running video after an ad break. 0.2.11 latched "has played" inside the skin, but the skin is re-mounted when a break ends (it swaps with the ad overlay), so the flag was lost exactly when it was needed. The latch now lives in `LogplexPlayer`, above both the skin and the source switch.
+
 ## [0.2.11] - 2026-07-29
 
 ### Fixed
