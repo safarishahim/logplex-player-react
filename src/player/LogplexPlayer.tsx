@@ -30,6 +30,21 @@ function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
   return v as CSSProperties;
 }
 
+/** Which Vidstack provider loader a source needs.
+ *
+ * Vidstack keeps the same <video> element across a source change, and it only
+ * runs the provider loader from that element's React ref callback — so when the
+ * loader has to change (an HLS movie interrupted by an MP4 ad, say) it tears the
+ * old provider down and never builds the new one: playback stalls on an empty
+ * media element. Keying the provider on this remounts the element, which re-runs
+ * the loader. Same-kind switches keep the element (and the hls.js instance). */
+function srcKind(url: string): 'hls' | 'dash' | 'file' {
+  const path = url.split(/[?#]/)[0].toLowerCase();
+  if (path.endsWith('.m3u8')) return 'hls';
+  if (path.endsWith('.mpd')) return 'dash';
+  return 'file';
+}
+
 /**
  * Logplex video player. Wraps Vidstack with a custom RTL-aware skin, built-in
  * Logplex analytics, and a resume ("continue watching") banner. Accepts an
@@ -395,6 +410,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     }
   }, [simulated, fs.active]);
 
+  const playbackSrc = showingAd ? activeAd!.src : resolvedSrc ?? '';
+
   const resolvedDir = dirFor(locale, dir);
   const strings = getStrings(locale);
 
@@ -414,7 +431,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
       <MediaPlayer
         ref={setPlayer}
         className={`lpx-player${className ? ` ${className}` : ''}`}
-        src={showingAd ? activeAd!.src : resolvedSrc ?? ''}
+        src={playbackSrc}
         title={title}
         playsInline
         crossOrigin
@@ -424,7 +441,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         viewType="video"
         onCanPlay={handleCanPlay}
       >
-        <MediaProvider>
+        <MediaProvider key={srcKind(playbackSrc)}>
           {poster && !showingAd && <Poster className="lpx-poster" src={poster} alt={title ?? ''} />}
           {!showingAd &&
             props.subtitles?.map((s) => (
