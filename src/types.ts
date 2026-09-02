@@ -168,6 +168,10 @@ export interface AdConfig {
   src: string;
   /** Seconds before the skip button activates (default 5; 0 = always skippable). */
   skipAfterSec?: number;
+  /** Whether the viewer may skip at all (default `true`). `false` hides the skip
+   * button outright — don't emulate a non-skippable ad with a huge
+   * `skipAfterSec`, that just renders a nonsense countdown. */
+  skippable?: boolean;
   /** Opened in a new tab when the ad surface is clicked. */
   clickThrough?: string;
 }

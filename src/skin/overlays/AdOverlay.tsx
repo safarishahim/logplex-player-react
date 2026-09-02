@@ -6,13 +6,15 @@ import { VolumeHighIcon, VolumeMutedIcon } from '../controls/icons';
 export interface AdOverlayProps {
   strings: Strings;
   skipAfterSec: number;
+  /** When false the ad can't be skipped and no skip button is shown. */
+  skippable?: boolean;
   clickThrough?: string;
   /** Fired on skip or natural ad end. */
   onEnd: () => void;
 }
 
-/** Pre-roll ad UI: ADS label, mute, skip-after-countdown, progress, click-through. */
-export function AdOverlay({ strings, skipAfterSec, clickThrough, onEnd }: AdOverlayProps): JSX.Element {
+/** Ad UI: ADS label, mute, skip-after-countdown, progress, click-through. */
+export function AdOverlay({ strings, skipAfterSec, skippable = true, clickThrough, onEnd }: AdOverlayProps): JSX.Element {
   const remote = useMediaRemote();
   const currentTime = useMediaState('currentTime');
   const duration = useMediaState('duration');
@@ -51,9 +53,11 @@ export function AdOverlay({ strings, skipAfterSec, clickThrough, onEnd }: AdOver
         </button>
       </div>
       <div className="lpx-ad-bottom">
-        <button className="lpx-ad-skip" disabled={!canSkip} onClick={() => onEnd()}>
-          {canSkip ? strings.skipAd : `${strings.skipAd} · ${remaining}`}
-        </button>
+        {skippable && (
+          <button className="lpx-ad-skip" disabled={!canSkip} onClick={() => onEnd()}>
+            {canSkip ? strings.skipAd : `${strings.skipAd} · ${remaining}`}
+          </button>
+        )}
         <div className="lpx-ad-progress">
           <span style={{ width: `${pct}%` }} />
         </div>

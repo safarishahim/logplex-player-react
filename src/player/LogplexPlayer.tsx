@@ -98,10 +98,32 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
 
   // Ad breaks — normalize `ad` (legacy pre-roll) + `ads` into a positioned list.
   const adBreaks = useMemo(() => {
-    const list: { id: string; offset: 'pre' | 'post' | number; src: string; skipAfterSec?: number; clickThrough?: string }[] = [];
-    if (ad) list.push({ id: 'pre', offset: 'pre', src: ad.src, skipAfterSec: ad.skipAfterSec, clickThrough: ad.clickThrough });
+    const list: {
+      id: string;
+      offset: 'pre' | 'post' | number;
+      src: string;
+      skipAfterSec?: number;
+      skippable?: boolean;
+      clickThrough?: string;
+    }[] = [];
+    if (ad)
+      list.push({
+        id: 'pre',
+        offset: 'pre',
+        src: ad.src,
+        skipAfterSec: ad.skipAfterSec,
+        skippable: ad.skippable,
+        clickThrough: ad.clickThrough,
+      });
     (ads ?? []).forEach((b, i) =>
-      list.push({ id: `ads-${i}`, offset: b.offset ?? 'pre', src: b.src, skipAfterSec: b.skipAfterSec, clickThrough: b.clickThrough }),
+      list.push({
+        id: `ads-${i}`,
+        offset: b.offset ?? 'pre',
+        src: b.src,
+        skipAfterSec: b.skipAfterSec,
+        skippable: b.skippable,
+        clickThrough: b.clickThrough,
+      }),
     );
     return list;
   }, [ad, ads]);
@@ -461,6 +483,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
             key={activeAd!.id}
             strings={strings}
             skipAfterSec={activeAd!.skipAfterSec ?? 5}
+            skippable={activeAd!.skippable ?? true}
             clickThrough={activeAd!.clickThrough}
             onEnd={onAdEnd}
           />
