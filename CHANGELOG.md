@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-09-02
+
+### Fixed
+
+- An MP4 ad break inside an HLS movie left the player dead behind the ad overlay. Vidstack keeps the same `<video>` element across a source change and only runs its provider loader from that element's React ref callback; HLS and progressive files both report a `video` media type, so React reused the node, the ref never fired again, and the source change tore the old provider down without building the new one — no request was ever made for the ad. The provider is now keyed on the source kind, so the element remounts exactly when the loader family changes. An HLS ad on HLS content, and MP4 quality switches, keep the element (and the hls.js instance) as before.
+
 ## [0.2.12] - 2026-07-30
 
 ### Added
