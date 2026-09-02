@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.14] - 2026-09-02
+
+### Added
+
+- `AdConfig.skippable` (default `true`). A non-skippable ad had no representation, so hosts emulated one with a very large `skipAfterSec` — and the skip button then counted down from that number, showing things like "skip ad · 3600". Setting `skippable: false` leaves the skip button out entirely; the ad label, mute control and progress bar are unchanged.
+
 ## [0.2.13] - 2026-09-02
 
 ### Fixed
