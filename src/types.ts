@@ -296,8 +296,9 @@ export interface LogplexPlayerProps {
   disabledControls?: PlayerControl[];
 
   /** Force the loading spinner overlay (on top of the cover/skin) — e.g. while
-   * the host is still fetching ads or other prerequisites. The player also
-   * shows it automatically while resolving a provider source. */
+   * the host is still fetching ads or other prerequisites. Autoplay waits for
+   * it to clear. The player also shows it automatically while resolving a
+   * provider source. */
   loading?: boolean;
 
   /** Enter fullscreen (per `fullscreenMode`) when playback starts from the

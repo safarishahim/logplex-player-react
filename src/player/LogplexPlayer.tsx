@@ -448,6 +448,19 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     }
   }, [simulated, fs.active]);
 
+  // `loading` holds autoplay too, not just the spinner: the host is still
+  // fetching something playback depends on (the ad list, say), so starting the
+  // content now would only have a late pre-roll cut in and restart it. Vidstack
+  // reads autoPlay once, when the media can play — if that moment passed while
+  // loading, start playback ourselves once it clears.
+  const wantsAutoPlay = !!props.autoPlay || hasPreRoll;
+  const autoPlay = wantsAutoPlay && !loading;
+  useEffect(() => {
+    if (!player || !autoPlay) return;
+    const { canPlay, started, paused } = player.state;
+    if (canPlay && !started && paused) player.play().catch(() => undefined);
+  }, [player, autoPlay]);
+
   const playbackSrc = showingAd ? activeAd!.src : resolvedSrc ?? '';
 
   const resolvedDir = dirFor(locale, dir);
@@ -474,7 +487,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         playsInline
         crossOrigin
         muted={props.muted}
-        autoPlay={props.autoPlay || hasPreRoll}
+        autoPlay={autoPlay}
         dir="ltr"
         viewType="video"
         onCanPlay={handleCanPlay}
