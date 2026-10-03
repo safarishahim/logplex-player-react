@@ -1,5 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
+import type { QualityPolicy } from '../../types';
+import { applyQualityPolicy } from '../../player/qualityPolicy';
 import { CloseIcon, SettingsIcon } from './icons';
 import { RadioOption } from './RadioOption';
 
@@ -12,6 +14,8 @@ export interface SettingsModalProps {
   onSelectQuality?: (index: number) => void;
   /** Hide auto (HLS) qualities whose height fails this predicate. */
   qualityValidate?: (height: number) => boolean;
+  /** Hide auto (HLS) qualities the policy rules out. */
+  qualityPolicy?: QualityPolicy;
 }
 
 /**
@@ -26,14 +30,21 @@ export function SettingsModal({
   currentQualityIndex,
   onSelectQuality,
   qualityValidate,
+  qualityPolicy,
 }: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
   const qualities = useMediaState('qualities');
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   // Keep each quality's real list index for changeQuality() while filtering.
-  const list = Array.from(qualities ?? [])
+  const all = Array.from(qualities ?? []);
+  const { allowed } = applyQualityPolicy(
+    all.map((q) => q.height),
+    qualityPolicy,
+  );
+  const list = all
     .map((q, i) => ({ q, i }))
+    .filter(({ i }) => allowed[i])
     .filter(({ q }) => !qualityValidate || typeof q.height !== 'number' || qualityValidate(q.height));
   const manual = manualQualities && manualQualities.length > 0;
 

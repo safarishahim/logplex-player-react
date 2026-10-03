@@ -10,6 +10,7 @@ export { useResume } from './player/useResume';
 export { useWatchInterval } from './player/useWatchInterval';
 export { useVodSource } from './player/vod';
 export type { ResolvedVodSource } from './player/vod';
+export { applyQualityPolicy } from './player/qualityPolicy';
 export { getStrings, dirFor } from './i18n';
 export type { Strings } from './i18n';
 export type { MediaPlayerInstance } from '@vidstack/react';
@@ -26,6 +27,7 @@ export type {
   Episode,
   VideoSource,
   Quality,
+  QualityPolicy,
   ThemeOverrides,
   Locale,
   Direction,

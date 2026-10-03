@@ -13,6 +13,7 @@ import { useResume } from './useResume';
 import { useVodSource } from './vod';
 import { useWatchInterval } from './useWatchInterval';
 import { usePersistentMediaSettings } from './prefs';
+import { applyQualityPolicy, useHlsQualityPolicy } from './qualityPolicy';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
 import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
@@ -78,6 +79,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     vodType = 'standard',
     vodCustomUrl,
     qualityValidate,
+    qualityPolicy,
     onWatchInterval,
     watchIntervalMs,
     onPlayerReady,
@@ -158,16 +160,26 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // Manual quality: when `src` is a list of MP4 renditions, the quality menu
   // switches the file (HLS exposes its own renditions automatically).
   const sourceList = Array.isArray(rawSrc) ? rawSrc : null;
+  const minHeight = qualityPolicy?.minHeight;
+  const startHeight = qualityPolicy?.startHeight;
+  const sourcePolicy = useMemo(
+    () => (sourceList ? applyQualityPolicy(sourceList.map((s) => s.height), { minHeight, startHeight }) : null),
+    [sourceList, minHeight, startHeight],
+  );
   const defaultQualityIdx = useMemo(() => {
     if (!sourceList) return 0;
+    if (sourcePolicy && sourcePolicy.start >= 0) return sourcePolicy.start;
     return sourceList.reduce((best, s, i) => ((s.height ?? 0) > (sourceList[best].height ?? 0) ? i : best), 0);
-  }, [sourceList]);
+  }, [sourceList, sourcePolicy]);
   const [qualityIdx, setQualityIdx] = useState(defaultQualityIdx);
   useEffect(() => setQualityIdx(defaultQualityIdx), [defaultQualityIdx]);
 
   const manualQualities = sourceList
-    ? sourceList.map((s, i) => ({ label: s.label ?? (s.height ? `${s.height}p` : `${i + 1}`), index: i }))
+    ? sourceList
+        .map((s, i) => ({ label: s.label ?? (s.height ? `${s.height}p` : `${i + 1}`), index: i }))
+        .filter((q) => sourcePolicy!.allowed[q.index])
     : undefined;
+  const onHlsInstance = useHlsQualityPolicy(qualityPolicy);
 
   // Switch source but keep position + play state.
   const restore = useRef<{ time: number; play: boolean } | null>(null);
@@ -462,6 +474,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         dir="ltr"
         viewType="video"
         onCanPlay={handleCanPlay}
+        onHlsInstance={onHlsInstance}
       >
         <MediaProvider key={srcKind(playbackSrc)}>
           {poster && !showingAd && <Poster className="lpx-poster" src={poster} alt={title ?? ''} />}
@@ -495,6 +508,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           episodeLabel={episodeLabel}
           thumbnails={resolvedThumbnails}
           qualityValidate={qualityValidate}
+          qualityPolicy={qualityPolicy}
           hasPrev={hasPrev}
           hasNext={hasNext}
           onPrev={goPrev}

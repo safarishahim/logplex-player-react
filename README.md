@@ -45,7 +45,7 @@ export default function Watch() {
 - **HLS + MP4** — adaptive HLS via hls.js (auto quality from the manifest) or progressive MP4. Pass an array of MP4 renditions for a manual quality menu.
 - **Custom skin** — dark, gold-accented, light mode, RTL/LTR, fully responsive (container queries).
 - **VOD providers** — `vodType` exchanges an opaque play token for the real stream URL via a provider API (ABR Hamrahi, Poyan), so existing back-ends keep working.
-- **Quality / speed / subtitles / audio** menus — HLS-embedded subtitle and multi-language audio tracks are detected automatically; add external WebVTT subtitles too. `qualityValidate` filters out unwanted renditions.
+- **Quality / speed / subtitles / audio** menus — HLS-embedded subtitle and multi-language audio tracks are detected automatically; add external WebVTT subtitles too. `qualityValidate` filters out unwanted renditions; `qualityPolicy` trades data for picture (start on 1080p, never let Auto drop under 720p).
 - **Ads** — pre-roll, mid-rolls (at content seconds) and post-roll, with skip countdown and click-through. Ad playback is never counted in content analytics.
 - **Playlist & seasons** — episode list + prev/next, auto-advance, season headers (`Episode.group`), and an **up-next card** near the end of an episode.
 - **Gestures** — mobile double-tap ±10s, long-press 2×, brightness/volume swipe (correctly remapped in simulated-rotation fullscreen); YouTube-style on desktop.
@@ -89,6 +89,7 @@ You don't need the Logplex analytics integration to keep an existing back-end wo
   vodType="abr_hamrahi"              // 'standard' | 'abr_hamrahi' | 'poyan'
   vodCustomUrl={{ abr_hamrahi: '/vod/abrehamrahi/{token}' }}
   qualityValidate={h => h > 400}     // hide tiny renditions from the Auto menu
+  qualityPolicy={{ minHeight: 720, startHeight: 1080 }} // quality over data
 
   // periodic "user watch" report to your current (non-Logplex) tracker
   onWatchInterval={async ({ playDuration, duration, quality, userWatchId }) =>
@@ -175,6 +176,7 @@ Two things worth knowing when you build a live page around it:
 | `vodType` | `'standard' \| 'abr_hamrahi' \| 'poyan'` | VOD provider. Non-standard exchanges `src` (a token) for the real stream via the provider API. Default `standard`. |
 | `vodCustomUrl` | `Partial<Record<VodProvider, string>>` | Override the provider API endpoint(s); `{token}` is substituted. |
 | `qualityValidate` | `(height: number) => boolean` | Hide auto (HLS) renditions whose height fails the predicate. Auto stays available. |
+| `qualityPolicy` | `{ minHeight?: number; startHeight?: number }` | Rendition policy. `minHeight` is the floor for both Auto and the quality menu (a source with nothing that tall plays only its tallest rendition); `startHeight` is where playback starts (tallest rendition at or below it). Applies to hls.js and `VideoSource[]` lists, not to native HLS on iOS Safari. |
 | `poster` | `string` | Cover image (before play). |
 | `title` / `episodeLabel` | `string` | Shown above the scrubber. |
 | `thumbnails` | `string` | WebVTT thumbnails track for scrub previews. |

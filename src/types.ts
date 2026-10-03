@@ -71,6 +71,19 @@ export type WatchIntervalHandler = (
   info: WatchIntervalInfo,
 ) => Promise<string | void> | string | void;
 
+/** How the player picks a rendition. Leave it out for the default
+ * bandwidth-first behaviour; set it to trade data for picture quality. */
+export interface QualityPolicy {
+  /** Lowest rendition height Auto may drop to and the quality menu may offer
+   * (e.g. 720). A source with nothing that tall plays only its tallest
+   * rendition. Applies to hls.js playback and to `VideoSource[]` lists. */
+  minHeight?: number;
+  /** Height to start on (e.g. 1080): the tallest rendition at or below it, or
+   * the shortest above it if there is none. Auto adapts from there. Default:
+   * hls.js picks the start from its bandwidth estimate. */
+  startHeight?: number;
+}
+
 /** A single progressive source. Pass an array as `src` to offer manual quality
  * switching for MP4s (HLS exposes its renditions automatically). */
 export interface VideoSource {
@@ -226,6 +239,10 @@ export interface LogplexPlayerProps {
   /** Hide auto (HLS) qualities whose height fails this predicate (e.g. drop
    * sub-400p renditions). Auto stays available. */
   qualityValidate?: (height: number) => boolean;
+  /** Rendition policy — e.g. `{ minHeight: 720, startHeight: 1080 }` starts
+   * on 1080p and never lets Auto drop under 720p. Not applied where the
+   * browser plays HLS natively (iOS Safari), which keeps its own ABR. */
+  qualityPolicy?: QualityPolicy;
   title?: string;
   /** e.g. "قسمت سوم". */
   episodeLabel?: string;
