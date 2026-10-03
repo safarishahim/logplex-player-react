@@ -5,6 +5,20 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.15] - 2026-10-03
+
+### Added
+
+- `qualityPolicy` prop — a picture-first rendition strategy for hosts that would rather spend data than show a soft picture. `minHeight` is a floor: Auto (hls.js ABR) never switches below it, even on a slow connection, and the quality menu stops offering anything under it; a source with nothing that tall plays only its tallest rendition. `startHeight` is where playback starts — the tallest rendition at or below it — instead of hls.js's bandwidth guess. `VideoSource[]` lists follow the same rules. Native HLS (iOS Safari) keeps the browser's own ABR.
+
+### Fixed
+
+- HLS playback sometimes showed a black frame with a pause button: playing as far as the player was concerned, stopped at 0:00 in fact. Vidstack fetched hls.js from cdn.jsdelivr.net at runtime and attached the stream before it arrived, so a browser with native HLS (current Chrome) began playing — autoplay included — and hls.js attaching afterwards reset the element to paused without a `pause` event. The player now hands Vidstack the bundled hls.js.
+- Nothing is fetched from a CDN any more. Vidstack loaded hls.js and dash.js from cdn.jsdelivr.net at runtime, which is slow or blocked for some audiences; both now come from the host's own bundle (dash.js as a lazy chunk, only for `.mpd` sources). `dashjs` is a new dependency.
+- A viewer could be stuck on an ad that never started. When the browser refused to start an ad break on its own (autoplay policy — likely on Safari, where the break swaps in a fresh `<video>`), the ad sat paused with no play control, and its skip countdown, which runs on ad time, never moved. A paused ad now shows a play button.
+- `loading` now holds autoplay as well as showing the spinner. Content could start underneath it and then be cut off and restarted by a pre-roll that arrived late.
+- Rejected `play()` calls (starting an ad, resuming content after one) no longer surface as unhandled promise rejections; the paused player shows its play control instead.
+
 ## [0.2.14] - 2026-09-02
 
 ### Added
