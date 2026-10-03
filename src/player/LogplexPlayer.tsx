@@ -193,15 +193,19 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const handleCanPlay = useCallback(() => {
     if (!player) return;
     // An ad just loaded → start it.
+    // play() can be refused by the browser's autoplay policy (no recent tap,
+    // or a freshly mounted <video>). Nothing to retry: the ad overlay offers a
+    // play button while the ad sits paused, and the content skin keeps its
+    // controls (with play) up while paused.
     if (pendingAdPlay.current) {
       pendingAdPlay.current = false;
-      player.play();
+      player.play().catch(() => undefined);
       return;
     }
     // Content (re)loaded after a quality switch or an ad → restore position.
     if (restore.current) {
       player.currentTime = restore.current.time;
-      if (restore.current.play) player.play();
+      if (restore.current.play) player.play().catch(() => undefined);
       restore.current = null;
     }
   }, [player]);

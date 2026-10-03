@@ -1442,8 +1442,13 @@
   inset: 0;
   cursor: pointer;
 }
+.lpx-ad-play {
+  /* Above the click-through layer, below the top/bottom ad chrome. */
+  z-index: 1;
+}
 .lpx-ad-top {
   position: absolute;
+  z-index: 2;
   top: 0;
   inset-inline: 0;
   display: flex;
@@ -1462,6 +1467,7 @@
 }
 .lpx-ad-bottom {
   position: absolute;
+  z-index: 2;
   bottom: 0;
   inset-inline: 0;
   display: flex;
