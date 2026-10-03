@@ -14,9 +14,10 @@ export default defineConfig({
       fileName: (format) => (format === 'es' ? 'index.js' : 'index.cjs'),
     },
     rollupOptions: {
-      // Keep React, Vidstack (+ its /icons subpath), media-icons, and hls.js
-      // external so the host app dedupes them.
-      external: (id) => /^(react($|\/)|react-dom($|\/)|@vidstack\/react($|\/)|media-icons($|\/)|hls\.js$)/.test(id),
+      // Keep React, Vidstack (+ its /icons subpath), media-icons, hls.js and
+      // dashjs external so the host app dedupes them.
+      external: (id) =>
+        /^(react($|\/)|react-dom($|\/)|@vidstack\/react($|\/)|media-icons($|\/)|hls\.js$|dashjs$)/.test(id),
       output: {
         assetFileNames: (asset) => (asset.name === 'style.css' ? 'styles.css' : asset.name!),
         globals: { react: 'React', 'react-dom': 'ReactDOM' },

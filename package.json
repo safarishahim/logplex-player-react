@@ -67,6 +67,7 @@
   },
   "dependencies": {
     "@vidstack/react": "^1.12.13",
+    "dashjs": "^4.7.4",
     "hls.js": "^1.5.18",
     "media-icons": "^1.1.5"
   },

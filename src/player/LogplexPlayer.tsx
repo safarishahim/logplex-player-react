@@ -4,8 +4,12 @@ import {
   MediaProvider,
   Poster,
   Track,
+  isDASHProvider,
+  isHLSProvider,
   type MediaPlayerInstance,
+  type MediaProviderAdapter,
 } from '@vidstack/react';
+import Hls from 'hls.js';
 import type { LogplexAnalyticsConfig, LogplexPlayerProps } from '../types';
 import { dirFor, getStrings } from '../i18n';
 import { useLogplexAnalytics } from '../analytics/useLogplexAnalytics';
@@ -29,6 +33,24 @@ function themeStyle(theme: LogplexPlayerProps['theme']): CSSProperties {
   if (theme.textMuted) v['--lpx-text-muted'] = theme.textMuted;
   if (theme.radius) v['--lpx-radius'] = theme.radius;
   return v as CSSProperties;
+}
+
+/** Hand Vidstack the streaming libraries this package ships instead of letting
+ * it fetch them from cdn.jsdelivr.net, which is slow or unreachable for some
+ * audiences.
+ *
+ * hls.js goes in as a constructor, ready at once. Fetching it opens a race:
+ * Vidstack attaches the stream as a <source> before hls.js arrives, so a
+ * browser that plays HLS natively (current Chrome) starts on its own, autoplay
+ * included — and when hls.js then attaches, the element is reset to paused
+ * without a `pause` event. Vidstack never hears of it and keeps showing
+ * playback: a black frame with a pause button.
+ *
+ * dash.js is only needed for .mpd sources and no browser plays DASH natively,
+ * so it stays a lazy chunk from the host's own origin. */
+function attachBundledLibraries(provider: MediaProviderAdapter | null): void {
+  if (isHLSProvider(provider)) provider.library = Hls;
+  else if (isDASHProvider(provider)) provider.library = () => import('dashjs');
 }
 
 /** Which Vidstack provider loader a source needs.
@@ -492,6 +514,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         viewType="video"
         onCanPlay={handleCanPlay}
         onHlsInstance={onHlsInstance}
+        onProviderChange={attachBundledLibraries}
       >
         <MediaProvider key={srcKind(playbackSrc)}>
           {poster && !showingAd && <Poster className="lpx-poster" src={poster} alt={title ?? ''} />}

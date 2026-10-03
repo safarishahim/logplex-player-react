@@ -209,7 +209,7 @@ See the **[documentation site](https://safarishahim.github.io/logplex-player-rea
 
 ## Browser support
 
-Modern evergreen browsers (Chrome, Edge, Firefox, Safari) and WebViews. HLS plays via hls.js where MSE is available, and via native HLS on Safari/iOS.
+Modern evergreen browsers (Chrome, Edge, Firefox, Safari) and WebViews. HLS plays via hls.js where MSE is available, and via native HLS on Safari/iOS. hls.js and dash.js ship with the package and are served from your own bundle — nothing is fetched from a CDN at runtime (dash.js is a lazy chunk, loaded only for `.mpd` sources).
 
 ## Mobile & iOS notes
 
