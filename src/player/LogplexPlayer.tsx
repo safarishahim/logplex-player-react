@@ -201,7 +201,22 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         .map((s, i) => ({ label: s.label ?? (s.height ? `${s.height}p` : `${i + 1}`), index: i }))
         .filter((q) => sourcePolicy!.allowed[q.index])
     : undefined;
-  const onHlsInstance = useHlsQualityPolicy(qualityPolicy);
+  const applyHlsPolicy = useHlsQualityPolicy(qualityPolicy);
+  // The live hls.js instance, so the watch heartbeat can read which rendition
+  // is being downloaded (that, not what's on screen yet, is the traffic).
+  const hlsRef = useRef<Hls | null>(null);
+  const onHlsInstance = useCallback(
+    (hls: Hls) => {
+      hlsRef.current = hls;
+      applyHlsPolicy(hls);
+    },
+    [applyHlsPolicy],
+  );
+  const probeRendition = useCallback(() => {
+    const hls = hlsRef.current;
+    const level = hls && hls.loadLevel >= 0 ? hls.levels?.[hls.loadLevel] : undefined;
+    return level?.width && level.height ? { width: level.width, height: level.height } : null;
+  }, []);
 
   // Switch source but keep position + play state.
   const restore = useRef<{ time: number; play: boolean } | null>(null);
@@ -292,7 +307,11 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   usePersistentMediaSettings(showingAd ? null : player, persistSettings, settingsKey);
 
   // External (pre-Logplex) watch heartbeat — suspended during ads, like analytics.
-  useWatchInterval(showingAd ? null : player, onWatchInterval, watchIntervalMs);
+  // One watch record per video: a new content source (the host moving on to
+  // the next film or episode in this same player) starts a new session.
+  // Keyed on what the host passed, so a manual MP4 quality switch isn't one.
+  const watchSessionKey = typeof rawSrc === 'string' ? rawSrc : rawSrc?.[0]?.src;
+  useWatchInterval(showingAd ? null : player, onWatchInterval, watchIntervalMs, watchSessionKey, probeRendition);
 
   // Expose the underlying Vidstack instance for imperative host control.
   useEffect(() => {
