@@ -316,7 +316,44 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // the next film or episode in this same player) starts a new session; an ad
   // break only pauses it, so a mid-roll doesn't split one watch into two.
   // Keyed on what the host passed, so a manual MP4 quality switch isn't one.
-  const watchSessionKey = typeof rawSrc === 'string' ? rawSrc : rawSrc?.[0]?.src;
+  const contentKey = typeof rawSrc === 'string' ? rawSrc : rawSrc?.[0]?.src;
+  // Playing the video again after it ended is a new watch, so it gets its
+  // own record (and its own play time and traffic).
+  const [replays, setReplays] = useState(0);
+  const showingAdRef = useRef(showingAd);
+  showingAdRef.current = showingAd;
+  useEffect(() => {
+    if (!player) return undefined;
+    // The previous video's ended state lingers until the new one loads.
+    let ended = false;
+    let started = false;
+    // An ad's ended state can outlast the ad; ignore it until content plays.
+    let afterAd = false;
+    return player.subscribe(({ ended: isEnded, playing }) => {
+      // During an ad the state is the ad's; a post-roll's end isn't the video's.
+      if (showingAdRef.current) {
+        afterAd = true;
+        return;
+      }
+      // What the content was doing before the break (ended, for a post-roll)
+      // still stands; the first content play after it is judged on that.
+      if (afterAd) {
+        if (!playing) return;
+        afterAd = false;
+      }
+      if (playing && !started) {
+        started = true;
+        ended = false;
+        return;
+      }
+      if (isEnded) ended = true;
+      else if (playing && ended) {
+        ended = false;
+        setReplays((n) => n + 1);
+      }
+    });
+  }, [player, contentKey]);
+  const watchSessionKey = contentKey === undefined ? undefined : `${contentKey}#${replays}`;
   // Ads' downloads aren't the content's traffic.
   const contentUrl = showingAd ? undefined : typeof resolvedSrc === 'string' ? resolvedSrc : undefined;
   useEffect(() => {

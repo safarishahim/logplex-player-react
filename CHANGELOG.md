@@ -15,6 +15,7 @@ All notable changes to this project are documented here. This project adheres to
 
 ### Fixed
 
+- Playing a video again after it ended kept reporting into the first watch's record, so a replay added play time but never counted as a play. A replay (from the end, including after a post-roll) now starts a new session — a new record with its own play time and traffic.
 - A mid-roll split one watch into two. `onWatchInterval` ended its session when an ad started and began a new one after it, so the host recorded two watches (two plays) of the same video, each with part of the play time. An ad break now only pauses the session: nothing is counted during the ad, and reports resume into the same record.
 
 ## [0.2.17] - 2026-10-08
