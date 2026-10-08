@@ -5,6 +5,8 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.16] - 2026-10-08
+
 ### Fixed
 
 - A slow start looked like a dead player. Once play was asked for, nothing showed until the first frames arrived — on a slow network or server that can be half a minute of a still poster, since Vidstack reports neither `waiting` nor `!canPlay` then. The spinner now shows whenever play is pending (start-up and rebuffering), and after 6 seconds says the connection is slow (`strings.slowLoading`).
