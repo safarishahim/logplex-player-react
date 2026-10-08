@@ -63,6 +63,15 @@ export interface WatchIntervalInfo {
   /** The id returned by the previous handler call, chained back so the
    * back-end can update the same watch record. */
   userWatchId?: string;
+  /** Bytes downloaded for this session's content so far (cumulative; ads
+   * excluded). Measured from hls.js; for playback hls.js doesn't drive (plain
+   * MP4, native HLS on older iOS) derived from the downloaded part of the
+   * timeline, and counted in `estimatedBytes`. */
+  downloadedBytes?: number;
+  /** `downloadedBytes` split by serving host (`URL.host`, no path or query). */
+  bytesByHost?: Record<string, number>;
+  /** The part of `downloadedBytes` that was derived rather than measured. */
+  estimatedBytes?: number;
 }
 
 /** Periodic "user watch" reporter for an external (pre-Logplex) tracker.

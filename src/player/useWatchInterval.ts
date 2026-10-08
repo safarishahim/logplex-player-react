@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
-import type { MediaPlayerInstance } from '@vidstack/react';
+import { isHLSProvider, isVideoProvider, type MediaPlayerInstance } from '@vidstack/react';
 import type { WatchIntervalHandler } from '../types';
+import { addBytes, type BytesByHost, type TrafficMeter } from './trafficMeter';
 
 /** Width × height of the rendition currently being downloaded, when known. */
 export type RenditionProbe = () => { width: number; height: number } | null;
@@ -20,7 +21,9 @@ export type RenditionProbe = () => { width: number; height: number } | null;
  *
  * The host back-end derives traffic as playDuration × width × height, so
  * `quality` is the time-weighted average resolution of the session (see
- * below), not just whatever was playing first.
+ * below), not just whatever was playing first. With a `meter`, each report
+ * also carries the bytes actually downloaded for the session, per host — a
+ * traffic figure that doesn't depend on that formula at all.
  *
  * This is independent of the built-in Logplex analytics, so the host can keep
  * using its current tracker while Logplex is not yet launched.
@@ -31,6 +34,7 @@ export function useWatchInterval(
   intervalMs = 5000,
   sessionKey?: string,
   probeRendition?: RenditionProbe,
+  meter?: TrafficMeter,
 ): void {
   // Keep the latest handler/interval/probe in refs so the wiring effect stays stable.
   const handlerRef = useRef(handler);
@@ -39,6 +43,8 @@ export function useWatchInterval(
   intervalRef.current = intervalMs;
   const probeRef = useRef(probeRendition);
   probeRef.current = probeRendition;
+  const meterRef = useRef(meter);
+  meterRef.current = meter;
 
   const hasHandler = !!handler;
   useEffect(() => {
@@ -54,6 +60,21 @@ export function useWatchInterval(
     // Last position seen while this session's video played: the final report
     // must not send a position that already belongs to the next video.
     let lastPosition = 0;
+    // Bytes downloaded for this session, per host, and how much of that is an
+    // estimate (playback the meter can't observe). Cumulative, like
+    // playDuration, so a lost or repeated report can't skew the total.
+    const bytesByHost: BytesByHost = {};
+    let estimatedBytes = 0;
+    // Bytes that arrived before this session belong to whatever played then
+    // (its own session took them in its final report), or to nothing.
+    meterRef.current?.drain();
+    // Once this session ends, whatever the meter collects is the next one's.
+    let closed = false;
+    const collect = () => {
+      if (closed) return;
+      const taken = meterRef.current?.drain();
+      if (taken) Object.entries(taken).forEach(([host, bytes]) => addBytes(bytesByHost, host, bytes));
+    };
     let watchId: string | undefined;
     // A report in flight; the first one creates the record, so concurrent
     // reports must wait for its id instead of creating a second record.
@@ -74,7 +95,20 @@ export function useWatchInterval(
 
     // Count a second only while frames are really playing.
     const secondTimer = setInterval(() => {
-      const { playing, waiting, seeking, currentTime } = player.state;
+      // Downloads count whether or not frames are playing (buffering ahead
+      // while paused is traffic too).
+      collect();
+      const { playing, waiting, seeking, currentTime, duration, mediaHeight, buffered } = player.state;
+      // Only the browser's own player (plain <video>: MP4, native HLS) needs
+      // estimating; hls.js playback is measured by the meter directly.
+      const native = isVideoProvider(player.provider) && !isHLSProvider(player.provider);
+      const ranges: Array<[number, number]> = [];
+      for (let i = 0; native && i < (buffered?.length ?? 0); i += 1) ranges.push([buffered.start(i), buffered.end(i)]);
+      const estimate = native ? meterRef.current?.estimate(ranges, rendition()?.height || mediaHeight, duration) : null;
+      if (estimate) {
+        addBytes(bytesByHost, estimate.host, estimate.bytes);
+        estimatedBytes += estimate.bytes;
+      }
       if (!playing || waiting || seeking) return;
       playDuration += 1;
       lastPosition = currentTime || lastPosition;
@@ -104,13 +138,21 @@ export function useWatchInterval(
     const send = async () => {
       const fn = handlerRef.current;
       if (!fn) return;
+      collect();
       if (lastPosition <= 1 || playDuration <= 0) return;
+      const hosts = Object.fromEntries(Object.entries(bytesByHost).map(([host, bytes]) => [host, Math.round(bytes)]));
+      const downloadedBytes = Object.values(hosts).reduce((sum, bytes) => sum + bytes, 0);
       try {
         const result = await fn({
           playDuration,
           duration: lastPosition,
           quality: averageQuality(),
           userWatchId: watchId,
+          ...(meterRef.current && {
+            downloadedBytes,
+            bytesByHost: hosts,
+            estimatedBytes: Math.min(downloadedBytes, Math.round(estimatedBytes)),
+          }),
         });
         if (typeof result === 'string') watchId = result;
       } catch (err) {
@@ -145,6 +187,10 @@ export function useWatchInterval(
       clearInterval(secondTimer);
       if (reportTimer) clearTimeout(reportTimer);
       if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
+      // Take this session's last bytes now: the final report may run after the
+      // next session has started on the same meter.
+      collect();
+      closed = true;
       void report();
     };
   }, [player, hasHandler, sessionKey]);

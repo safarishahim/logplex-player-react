@@ -5,6 +5,14 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.18] - 2026-10-08
+
+### Added
+
+- `onWatchInterval` reports the bytes downloaded for the content, so a host can bill traffic on bytes instead of `playDuration × width × height`. Each report carries, for the session so far: `downloadedBytes`, `bytesByHost` (the same total split by serving host — `URL.host` only, never a path or token) and `estimatedBytes`. Ads are excluded; values are cumulative, like `playDuration`.
+  - hls.js playback (desktop, Android, iOS 17.1+) is measured: every loaded media, audio and init segment adds its received bytes.
+  - Playback the browser does itself (plain MP4, native HLS on older iOS) doesn't expose its byte count to the page, so it is derived from what the browser has downloaded: newly buffered seconds × the file's bytes per second (an MP4's `Content-Length` over its duration, or the playing variant's bandwidth from the master playlist). Buffer fetched ahead of the playhead counts. This part is also reported in `estimatedBytes`.
+
 ## [0.2.17] - 2026-10-08
 
 ### Fixed

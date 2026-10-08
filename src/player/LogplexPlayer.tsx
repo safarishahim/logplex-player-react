@@ -16,6 +16,7 @@ import { useLogplexAnalytics } from '../analytics/useLogplexAnalytics';
 import { useResume } from './useResume';
 import { useVodSource } from './vod';
 import { useWatchInterval } from './useWatchInterval';
+import { createTrafficMeter, type TrafficMeter } from './trafficMeter';
 import { usePersistentMediaSettings } from './prefs';
 import { applyQualityPolicy, useHlsQualityPolicy } from './qualityPolicy';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
@@ -205,9 +206,13 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // The live hls.js instance, so the watch heartbeat can read which rendition
   // is being downloaded (that, not what's on screen yet, is the traffic).
   const hlsRef = useRef<Hls | null>(null);
+  // Bytes the browser downloads for the content, reported with the heartbeat.
+  const meterRef = useRef<TrafficMeter | null>(null);
+  if (!meterRef.current && onWatchInterval) meterRef.current = createTrafficMeter();
   const onHlsInstance = useCallback(
     (hls: Hls) => {
       hlsRef.current = hls;
+      meterRef.current?.attachHls(hls);
       applyHlsPolicy(hls);
     },
     [applyHlsPolicy],
@@ -311,7 +316,20 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // the next film or episode in this same player) starts a new session.
   // Keyed on what the host passed, so a manual MP4 quality switch isn't one.
   const watchSessionKey = typeof rawSrc === 'string' ? rawSrc : rawSrc?.[0]?.src;
-  useWatchInterval(showingAd ? null : player, onWatchInterval, watchIntervalMs, watchSessionKey, probeRendition);
+  // Ads' downloads aren't the content's traffic.
+  const contentUrl = showingAd ? undefined : typeof resolvedSrc === 'string' ? resolvedSrc : undefined;
+  useEffect(() => {
+    meterRef.current?.setEnabled(!showingAd);
+    meterRef.current?.setSource(contentUrl);
+  }, [showingAd, contentUrl]);
+  useWatchInterval(
+    showingAd ? null : player,
+    onWatchInterval,
+    watchIntervalMs,
+    watchSessionKey,
+    probeRendition,
+    meterRef.current ?? undefined,
+  );
 
   // Expose the underlying Vidstack instance for imperative host control.
   useEffect(() => {
