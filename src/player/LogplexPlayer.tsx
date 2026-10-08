@@ -313,7 +313,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
 
   // External (pre-Logplex) watch heartbeat — suspended during ads, like analytics.
   // One watch record per video: a new content source (the host moving on to
-  // the next film or episode in this same player) starts a new session.
+  // the next film or episode in this same player) starts a new session; an ad
+  // break only pauses it, so a mid-roll doesn't split one watch into two.
   // Keyed on what the host passed, so a manual MP4 quality switch isn't one.
   const watchSessionKey = typeof rawSrc === 'string' ? rawSrc : rawSrc?.[0]?.src;
   // Ads' downloads aren't the content's traffic.
@@ -323,12 +324,13 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     meterRef.current?.setSource(contentUrl);
   }, [showingAd, contentUrl]);
   useWatchInterval(
-    showingAd ? null : player,
+    player,
     onWatchInterval,
     watchIntervalMs,
     watchSessionKey,
     probeRendition,
     meterRef.current ?? undefined,
+    showingAd,
   );
 
   // Expose the underlying Vidstack instance for imperative host control.

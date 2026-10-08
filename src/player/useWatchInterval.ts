@@ -17,7 +17,9 @@ export type RenditionProbe = () => { width: number; height: number } | null;
  * - fires a final report on page hide / unmount;
  * - skips ticks before the first second of playback;
  * - starts a fresh session (a new record) when `sessionKey` changes — the
- *   host switching to another video in the same player.
+ *   host switching to another video in the same player;
+ * - holds while `suspended` (an ad is playing): nothing is counted, and the
+ *   session — so the watch record — carries on after the break.
  *
  * The host back-end derives traffic as playDuration × width × height, so
  * `quality` is the time-weighted average resolution of the session (see
@@ -35,6 +37,7 @@ export function useWatchInterval(
   sessionKey?: string,
   probeRendition?: RenditionProbe,
   meter?: TrafficMeter,
+  suspended = false,
 ): void {
   // Keep the latest handler/interval/probe in refs so the wiring effect stays stable.
   const handlerRef = useRef(handler);
@@ -45,6 +48,8 @@ export function useWatchInterval(
   probeRef.current = probeRendition;
   const meterRef = useRef(meter);
   meterRef.current = meter;
+  const suspendedRef = useRef(suspended);
+  suspendedRef.current = suspended;
 
   const hasHandler = !!handler;
   useEffect(() => {
@@ -95,6 +100,9 @@ export function useWatchInterval(
 
     // Count a second only while frames are really playing.
     const secondTimer = setInterval(() => {
+      // The player's state is the ad's during a break: none of it is the
+      // content's time, position or traffic.
+      if (suspendedRef.current) return;
       // Downloads count whether or not frames are playing (buffering ahead
       // while paused is traffic too).
       collect();
@@ -172,7 +180,7 @@ export function useWatchInterval(
     const scheduleNext = () => {
       if (cancelled) return;
       reportTimer = setTimeout(async () => {
-        await report();
+        if (!suspendedRef.current) await report();
         scheduleNext();
       }, intervalRef.current);
     };
