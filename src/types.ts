@@ -252,6 +252,13 @@ export interface LogplexPlayerProps {
    * on 1080p and never lets Auto drop under 720p. Not applied where the
    * browser plays HLS natively (iOS Safari), which keeps its own ABR. */
   qualityPolicy?: QualityPolicy;
+  /** At least this many seconds of video are kept downloaded ahead of the
+   * playhead (hls.js). By default hls.js buffers 30 s or 60 MB, whichever is
+   * longer — minutes at low bitrates, ~90 s at 5 Mbit/s — so this mostly
+   * lengthens the buffer of high renditions. More rides out a shaky
+   * connection without stalling, at the cost of data the viewer may leave
+   * without watching. Native HLS and MP4 keep the browser's own buffering. */
+  bufferAheadSec?: number;
   title?: string;
   /** e.g. "قسمت سوم". */
   episodeLabel?: string;

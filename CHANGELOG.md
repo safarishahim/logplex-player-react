@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.19] - 2026-10-08
+
+### Added
+
+- `bufferAheadSec` prop — a floor on how much video hls.js keeps downloaded ahead of the playhead. hls.js already buffers 30 s or 60 MB, whichever is longer (minutes at low bitrates, about 90 s at 5 Mbit/s), so this lengthens the buffer of high renditions, to ride out a shaky connection without stalling. The back buffer is trimmed to 30 s to leave the longer forward buffer room in the browser's quota; hls.js still backs off if the quota fills.
+
 ## [0.2.18] - 2026-10-08
 
 ### Added

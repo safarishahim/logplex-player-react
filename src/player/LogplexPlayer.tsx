@@ -54,6 +54,26 @@ function attachBundledLibraries(provider: MediaProviderAdapter | null): void {
   else if (isDASHProvider(provider)) provider.library = () => import('dashjs');
 }
 
+/** Back buffer kept behind the playhead when buffering further ahead, so the
+ * longer forward buffer has room in the browser's per-video quota. */
+const BACK_BUFFER_SEC = 30;
+
+/**
+ * hls.js buffers ahead the larger of maxBufferLength (30 s) and what
+ * maxBufferSize (60 MB) holds at the current bitrate — already minutes for
+ * lower renditions, about a minute and a half at 5 Mbit/s. Raising
+ * maxBufferLength makes `seconds` a floor: high bitrates buffer that much,
+ * lower ones keep their longer byte-based buffer. hls.js reads these from its
+ * config as it buffers, so they apply to a live instance, and it still backs
+ * off if the browser's buffer quota fills.
+ */
+function applyBufferAhead(hls: Hls, seconds: number | undefined): void {
+  if (!seconds || seconds <= hls.config.maxBufferLength) return;
+  hls.config.maxBufferLength = seconds;
+  hls.config.maxMaxBufferLength = Math.max(hls.config.maxMaxBufferLength, seconds);
+  hls.config.backBufferLength = Math.min(hls.config.backBufferLength, BACK_BUFFER_SEC);
+}
+
 /** Which Vidstack provider loader a source needs.
  *
  * Vidstack keeps the same <video> element across a source change, and it only
@@ -103,6 +123,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     vodCustomUrl,
     qualityValidate,
     qualityPolicy,
+    bufferAheadSec,
     onWatchInterval,
     watchIntervalMs,
     onPlayerReady,
@@ -209,11 +230,14 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   // Bytes the browser downloads for the content, reported with the heartbeat.
   const meterRef = useRef<TrafficMeter | null>(null);
   if (!meterRef.current && onWatchInterval) meterRef.current = createTrafficMeter();
+  const bufferAheadRef = useRef(bufferAheadSec);
+  bufferAheadRef.current = bufferAheadSec;
   const onHlsInstance = useCallback(
     (hls: Hls) => {
       hlsRef.current = hls;
       meterRef.current?.attachHls(hls);
       applyHlsPolicy(hls);
+      applyBufferAhead(hls, bufferAheadRef.current);
     },
     [applyHlsPolicy],
   );
