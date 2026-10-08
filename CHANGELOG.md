@@ -5,6 +5,15 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.17] - 2026-10-08
+
+### Fixed
+
+- `onWatchInterval` counted time that wasn't watching. `playDuration` started on the `play` event, so start-up and every rebuffer and seek were counted as play time — half a minute and more on a slow network. It now counts only seconds in which frames are actually playing.
+- `onWatchInterval` reported the first resolution for the whole session. A back-end that bills `playDuration × width × height` charged a watch that dropped from 1080p to 720p as 1080p throughout. `quality` is now the session's time-weighted average resolution (still `"W*H"`), taken from the rendition hls.js is downloading.
+- Moving on to another video in the same player (the host changing `src`, or the next episode) kept reporting into the previous video's watch record. A new source now starts a new session, after a final report for the previous one; that report sends the previous video's last position, not the new one's.
+- Two reports racing at the start of a session (a page hide during the first request) could create two watch records. Reports are now serialised, so the record id is known before the next one is sent.
+
 ## [0.2.16] - 2026-10-08
 
 ### Fixed
