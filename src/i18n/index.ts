@@ -31,6 +31,8 @@ export interface Strings {
   adLabel: string;
   back: string;
   loading: string;
+  /** Shown under the spinner once playback has been pending for a while. */
+  slowLoading: string;
   retry: string;
   exit: string;
   captions: string;
@@ -69,6 +71,7 @@ const fa: Strings = {
   adLabel: 'آگهی',
   back: 'بازگشت',
   loading: 'لطفاً صبر کنید …',
+  slowLoading: 'اتصال کند است، در حال بارگذاری …',
   retry: 'تلاش مجدد',
   exit: 'خروج',
   captions: 'زیرنویس',
@@ -107,6 +110,7 @@ const en: Strings = {
   adLabel: 'Ad',
   back: 'Back',
   loading: 'Please wait …',
+  slowLoading: 'Slow connection, still loading …',
   retry: 'Retry',
   exit: 'Exit',
   captions: 'Subtitles',

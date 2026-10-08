@@ -35,6 +35,9 @@ import { AudioModal } from './controls/AudioModal';
 import { RotatedTimeSlider } from './controls/RotatedTimeSlider';
 import { GestureLayer } from './GestureLayer';
 
+/** Pending play this long → the spinner says the connection is slow. */
+const SLOW_PENDING_MS = 6000;
+
 export interface SkinProps {
   strings: Strings;
   dir: Direction;
@@ -100,6 +103,8 @@ export function Skin(props: SkinProps): JSX.Element {
   const autoQuality = useMediaState('autoQuality');
   const playbackRate = useMediaState('playbackRate');
   const started = useMediaState('started');
+  const playing = useMediaState('playing');
+  const ended = useMediaState('ended');
   const textTracks = useMediaState('textTracks');
   const textTrack = useMediaState('textTrack');
   const audioTracks = useMediaState('audioTracks');
@@ -120,6 +125,19 @@ export function Skin(props: SkinProps): JSX.Element {
   const [doneBadge, setDoneBadge] = useState<string | null>(null);
   // Bumped on every pointer activity so the idle effect re-arms its hide timer.
   const [activityTick, setActivityTick] = useState(0);
+
+  // Play was asked for but no frame has arrived yet (start-up or a rebuffer).
+  const pendingPlay = !paused && !playing && !ended;
+  // Say so once it drags on, so a slow network doesn't feel like a dead player.
+  const [slowPending, setSlowPending] = useState(false);
+  useEffect(() => {
+    if (!pendingPlay) {
+      setSlowPending(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setSlowPending(true), SLOW_PENDING_MS);
+    return () => clearTimeout(timer);
+  }, [pendingPlay]);
 
   const disabled = props.disabledControls ?? [];
   const hasPlaylist = (props.episodes?.length ?? 0) > 1;
@@ -231,11 +249,14 @@ export function Skin(props: SkinProps): JSX.Element {
           subtitles off removes the cue), lifted above the bar when controls show. */}
       {textTrack && <Captions className={`lpx-captions${visible ? ' lpx-captions--lifted' : ''}`} />}
 
-      {/* Buffering / loading — outside the fading controls so it always shows. */}
-      {(waiting || !canPlay) && (
+      {/* Buffering / loading — outside the fading controls so it always shows.
+          Also while play is pending: on a slow network or server the first
+          frames can take many seconds, and Vidstack reports neither waiting
+          nor !canPlay then — without this the viewer sees a frozen poster. */}
+      {(waiting || !canPlay || pendingPlay) && (
         <div className="lpx-spinner" role="status" aria-live="polite">
           <span className="lpx-spinner-ring" />
-          <span className="lpx-spinner-text">{props.strings.loading}</span>
+          <span className="lpx-spinner-text">{slowPending ? props.strings.slowLoading : props.strings.loading}</span>
         </div>
       )}
 
@@ -433,7 +454,8 @@ export function Skin(props: SkinProps): JSX.Element {
               <button
                 className="lpx-btn lpx-bigplay"
                 aria-label={paused ? props.strings.play : props.strings.pause}
-                onClick={() => remote.togglePaused()}
+                // While play is pending a tap would only cancel it.
+                onClick={() => !pendingPlay && remote.togglePaused()}
               >
                 {paused ? <PlayIcon /> : <PauseIcon />}
               </button>

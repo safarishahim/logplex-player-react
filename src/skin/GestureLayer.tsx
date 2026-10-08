@@ -226,7 +226,13 @@ export function GestureLayer({
         return;
       }
       s.lastTapAt = now;
-      s.singleTap = setTimeout(() => remote.togglePaused(), DOUBLE_TAP_MS);
+      s.singleTap = setTimeout(() => {
+        // A click while play is pending (slow start, rebuffer) would only
+        // cancel it — the viewer is waiting for the video, not asking to pause.
+        const state = player?.state;
+        if (state && !state.paused && !state.playing && !state.ended) return;
+        remote.togglePaused();
+      }, DOUBLE_TAP_MS);
     }
   };
 
