@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.20] - 2026-10-08
+
+### Fixed
+
+- Playback could freeze after a seek with no spinner, until the viewer paused and played again. Seen on iOS Safari after dragging the scrubber: the video reported playing, wasn't waiting, and had the new position buffered, but neither the time nor the picture moved. The player now watches for playback that sits still while it should be playing with media buffered ahead; after 2.5 s it pauses and plays, and if that doesn't help, nudges the position forward 0.1 s. A real rebuffer, a pause, or a hidden tab (where browsers stop drawing frames) doesn't trigger it.
+
 ## [0.2.19] - 2026-10-08
 
 ### Added

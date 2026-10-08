@@ -16,6 +16,7 @@ import { useLogplexAnalytics } from '../analytics/useLogplexAnalytics';
 import { useResume } from './useResume';
 import { useVodSource } from './vod';
 import { useWatchInterval } from './useWatchInterval';
+import { useStallRecovery } from './useStallRecovery';
 import { createTrafficMeter, type TrafficMeter } from './trafficMeter';
 import { usePersistentMediaSettings } from './prefs';
 import { applyQualityPolicy, useHlsQualityPolicy } from './qualityPolicy';
@@ -393,6 +394,9 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
     meterRef.current ?? undefined,
     showingAd,
   );
+
+  // Unfreeze playback that stops moving with data to play (iOS Safari after a seek).
+  useStallRecovery(player);
 
   // Expose the underlying Vidstack instance for imperative host control.
   useEffect(() => {
