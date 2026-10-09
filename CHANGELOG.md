@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.21] - 2026-10-09
+
+### Added
+
+- A master playlist can now name the quality a rendition is shown as, with an `X-DISPLAY-HEIGHT` attribute on its `#EXT-X-STREAM-INF` line (for example `RESOLUTION=1920x800,X-DISPLAY-HEIGHT=1080`). Letterboxed widescreen films are encoded at a height well under their quality class, so a 1920x800 rendition read as 800p and `qualityPolicy.minHeight` hid the lower ones. The quality menu, the toolbar label and the quality policy use the named height; the traffic meter and analytics keep the real size. Playlists without the attribute, and native (Safari) playback, behave exactly as before.
+
 ## [0.2.20] - 2026-10-08
 
 ### Fixed
