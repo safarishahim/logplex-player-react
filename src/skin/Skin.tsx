@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaPlayer, useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Direction, Episode, PlayerControl, PlayerNotice, QualityPolicy } from '../types';
+import { displayHeight, type RenditionTiers } from '../player/qualityPolicy';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
 import { PlaylistPanel } from './overlays/PlaylistPanel';
@@ -76,6 +77,8 @@ export interface SkinProps {
   qualityValidate?: (height: number) => boolean;
   /** Hide auto (HLS) qualities the policy rules out. */
   qualityPolicy?: QualityPolicy;
+  /** Display heights the playlist names for its renditions. */
+  renditionTiers?: RenditionTiers;
   /** Playback has already run in this player — never show the cover again. */
   hasPlayed?: boolean;
   /** Controls the host has switched off (e.g. speed/like on a live channel). */
@@ -159,7 +162,11 @@ export function Skin(props: SkinProps): JSX.Element {
   const visible = paused || active || !canPlay || anyPanelOpen;
   const isMuted = muted || volume === 0;
   const manualQuality = props.manualQualities?.find((q) => q.index === props.currentQualityIndex);
-  const qualityLabel = manualQuality ? manualQuality.label : autoQuality || !quality ? 'AUTO' : `${quality.height}p`;
+  const qualityLabel = manualQuality
+    ? manualQuality.label
+    : autoQuality || !quality
+      ? 'AUTO'
+      : `${displayHeight(quality, props.renditionTiers)}p`;
   const rateLabel = `${playbackRate || 1}X`;
 
   // Reveal controls and re-arm the idle timer (via the activity tick).
@@ -542,6 +549,7 @@ export function Skin(props: SkinProps): JSX.Element {
           onSelectQuality={props.onSelectQuality}
           qualityValidate={props.qualityValidate}
           qualityPolicy={props.qualityPolicy}
+          renditionTiers={props.renditionTiers}
         />
       )}
       {speedOpen && <SpeedModal strings={props.strings} onClose={() => setSpeedOpen(false)} />}

@@ -19,7 +19,7 @@ import { useWatchInterval } from './useWatchInterval';
 import { useStallRecovery } from './useStallRecovery';
 import { createTrafficMeter, type TrafficMeter } from './trafficMeter';
 import { usePersistentMediaSettings } from './prefs';
-import { applyQualityPolicy, useHlsQualityPolicy } from './qualityPolicy';
+import { applyQualityPolicy, renditionTiers, useHlsQualityPolicy, type RenditionTiers } from './qualityPolicy';
 import { nativeFullscreenSupported, useSimulatedFullscreen } from './useSimulatedFullscreen';
 import { Skin } from '../skin/Skin';
 import { AdOverlay } from '../skin/overlays/AdOverlay';
@@ -225,6 +225,8 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
         .filter((q) => sourcePolicy!.allowed[q.index])
     : undefined;
   const applyHlsPolicy = useHlsQualityPolicy(qualityPolicy);
+  // Display heights a playlist names for its renditions (see RenditionTiers).
+  const [tiers, setTiers] = useState<RenditionTiers | undefined>(undefined);
   // The live hls.js instance, so the watch heartbeat can read which rendition
   // is being downloaded (that, not what's on screen yet, is the traffic).
   const hlsRef = useRef<Hls | null>(null);
@@ -236,6 +238,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const onHlsInstance = useCallback(
     (hls: Hls) => {
       hlsRef.current = hls;
+      hls.on((hls.constructor as typeof Hls).Events.MANIFEST_PARSED, (_e, data) => setTiers(renditionTiers(data.levels)));
       meterRef.current?.attachHls(hls);
       applyHlsPolicy(hls);
       applyBufferAhead(hls, bufferAheadRef.current);
@@ -653,6 +656,7 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           thumbnails={resolvedThumbnails}
           qualityValidate={qualityValidate}
           qualityPolicy={qualityPolicy}
+          renditionTiers={tiers}
           hasPrev={hasPrev}
           hasNext={hasNext}
           onPrev={goPrev}

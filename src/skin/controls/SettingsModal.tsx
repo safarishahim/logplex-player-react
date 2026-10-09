@@ -1,7 +1,7 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
 import type { QualityPolicy } from '../../types';
-import { applyQualityPolicy } from '../../player/qualityPolicy';
+import { applyQualityPolicy, displayHeight, type RenditionTiers } from '../../player/qualityPolicy';
 import { CloseIcon, SettingsIcon } from './icons';
 import { RadioOption } from './RadioOption';
 
@@ -16,6 +16,8 @@ export interface SettingsModalProps {
   qualityValidate?: (height: number) => boolean;
   /** Hide auto (HLS) qualities the policy rules out. */
   qualityPolicy?: QualityPolicy;
+  /** Display heights the playlist names for its renditions. */
+  renditionTiers?: RenditionTiers;
 }
 
 /**
@@ -31,6 +33,7 @@ export function SettingsModal({
   onSelectQuality,
   qualityValidate,
   qualityPolicy,
+  renditionTiers,
 }: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
   const qualities = useMediaState('qualities');
@@ -39,13 +42,16 @@ export function SettingsModal({
   // Keep each quality's real list index for changeQuality() while filtering.
   const all = Array.from(qualities ?? []);
   const { allowed } = applyQualityPolicy(
-    all.map((q) => q.height),
+    all.map((q) => displayHeight(q, renditionTiers)),
     qualityPolicy,
   );
   const list = all
     .map((q, i) => ({ q, i }))
     .filter(({ i }) => allowed[i])
-    .filter(({ q }) => !qualityValidate || typeof q.height !== 'number' || qualityValidate(q.height));
+    .filter(({ q }) => {
+      const height = displayHeight(q, renditionTiers);
+      return !qualityValidate || typeof height !== 'number' || qualityValidate(height);
+    });
   const manual = manualQualities && manualQualities.length > 0;
 
   return (
@@ -77,7 +83,7 @@ export function SettingsModal({
             : list.map(({ q, i }) => (
                 <RadioOption
                   key={`${q.height}-${i}`}
-                  label={`${q.height}p`}
+                  label={`${displayHeight(q, renditionTiers)}p`}
                   on={!autoQuality && quality === q}
                   onSelect={() => {
                     remote.changeQuality(i);
@@ -90,7 +96,7 @@ export function SettingsModal({
             <RadioOption
               label={`${strings.qualityAuto} (AUTO)`}
               // While on Auto, show the resolution ABR is currently playing.
-              hint={autoQuality && quality?.height ? `${quality.height}p` : undefined}
+              hint={autoQuality && quality?.height ? `${displayHeight(quality, renditionTiers)}p` : undefined}
               on={autoQuality}
               onSelect={() => {
                 remote.requestAutoQuality();
