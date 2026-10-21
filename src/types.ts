@@ -83,9 +83,11 @@ export type WatchIntervalHandler = (
 /** How the player picks a rendition. Leave it out for the default
  * bandwidth-first behaviour; set it to trade data for picture quality. */
 export interface QualityPolicy {
-  /** Lowest rendition height Auto may drop to and the quality menu may offer
-   * (e.g. 720). A source with nothing that tall plays only its tallest
-   * rendition. Applies to hls.js playback and to `VideoSource[]` lists. */
+  /** Lowest rendition height Auto may drop to (e.g. 720), however slow the
+   * connection. A source with nothing that tall plays only its tallest
+   * rendition on Auto. The quality menu still offers every rendition, so a
+   * viewer can pick a lower one by hand. Applies to hls.js playback; on a
+   * `VideoSource[]` list (no Auto) it only bounds where playback starts. */
   minHeight?: number;
   /** Height to start on (e.g. 1080): the tallest rendition at or below it, or
    * the shortest above it if there is none. Auto adapts from there. Default:

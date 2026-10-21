@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Captions, Time, TimeSlider, VolumeSlider, useMediaPlayer, useMediaRemote, useMediaState } from '@vidstack/react';
-import type { Direction, Episode, PlayerControl, PlayerNotice, QualityPolicy } from '../types';
+import type { Direction, Episode, PlayerControl, PlayerNotice } from '../types';
 import { displayHeight, type RenditionTiers } from '../player/qualityPolicy';
 import type { Strings } from '../i18n';
 import type { ResumePoint } from '../analytics/client';
@@ -75,8 +75,6 @@ export interface SkinProps {
   onSelectQuality?: (index: number) => void;
   /** Hide auto (HLS) qualities whose height fails this predicate. */
   qualityValidate?: (height: number) => boolean;
-  /** Hide auto (HLS) qualities the policy rules out. */
-  qualityPolicy?: QualityPolicy;
   /** Display heights the playlist names for its renditions. */
   renditionTiers?: RenditionTiers;
   /** Playback has already run in this player — never show the cover again. */
@@ -548,7 +546,6 @@ export function Skin(props: SkinProps): JSX.Element {
           currentQualityIndex={props.currentQualityIndex}
           onSelectQuality={props.onSelectQuality}
           qualityValidate={props.qualityValidate}
-          qualityPolicy={props.qualityPolicy}
           renditionTiers={props.renditionTiers}
         />
       )}

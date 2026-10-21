@@ -40,7 +40,8 @@ export function displayHeight(
 }
 
 export interface PolicyResult {
-  /** Per rendition: whether ABR may play it and the quality menu may offer it. */
+  /** Per rendition: whether Auto (ABR) may pick it. The quality menu offers
+   * every rendition regardless, so a viewer can still choose a lower one. */
   allowed: boolean[];
   /** Rendition to start on, or -1 to leave it to the bandwidth estimate. */
   start: number;

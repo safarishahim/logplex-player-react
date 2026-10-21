@@ -222,7 +222,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
   const manualQualities = sourceList
     ? sourceList
         .map((s, i) => ({ label: s.label ?? (s.height ? `${s.height}p` : `${i + 1}`), index: i }))
-        .filter((q) => sourcePolicy!.allowed[q.index])
     : undefined;
   const applyHlsPolicy = useHlsQualityPolicy(qualityPolicy);
   // Display heights a playlist names for its renditions (see RenditionTiers).
@@ -655,7 +654,6 @@ export function LogplexPlayer(props: LogplexPlayerProps): JSX.Element {
           episodeLabel={episodeLabel}
           thumbnails={resolvedThumbnails}
           qualityValidate={qualityValidate}
-          qualityPolicy={qualityPolicy}
           renditionTiers={tiers}
           hasPrev={hasPrev}
           hasNext={hasNext}

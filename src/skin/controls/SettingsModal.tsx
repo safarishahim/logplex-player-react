@@ -1,7 +1,6 @@
 import { useMediaRemote, useMediaState } from '@vidstack/react';
 import type { Strings } from '../../i18n';
-import type { QualityPolicy } from '../../types';
-import { applyQualityPolicy, displayHeight, type RenditionTiers } from '../../player/qualityPolicy';
+import { displayHeight, type RenditionTiers } from '../../player/qualityPolicy';
 import { CloseIcon, SettingsIcon } from './icons';
 import { RadioOption } from './RadioOption';
 
@@ -14,8 +13,6 @@ export interface SettingsModalProps {
   onSelectQuality?: (index: number) => void;
   /** Hide auto (HLS) qualities whose height fails this predicate. */
   qualityValidate?: (height: number) => boolean;
-  /** Hide auto (HLS) qualities the policy rules out. */
-  qualityPolicy?: QualityPolicy;
   /** Display heights the playlist names for its renditions. */
   renditionTiers?: RenditionTiers;
 }
@@ -32,7 +29,6 @@ export function SettingsModal({
   currentQualityIndex,
   onSelectQuality,
   qualityValidate,
-  qualityPolicy,
   renditionTiers,
 }: SettingsModalProps): JSX.Element {
   const remote = useMediaRemote();
@@ -40,14 +36,8 @@ export function SettingsModal({
   const quality = useMediaState('quality');
   const autoQuality = useMediaState('autoQuality');
   // Keep each quality's real list index for changeQuality() while filtering.
-  const all = Array.from(qualities ?? []);
-  const { allowed } = applyQualityPolicy(
-    all.map((q) => displayHeight(q, renditionTiers)),
-    qualityPolicy,
-  );
-  const list = all
+  const list = Array.from(qualities ?? [])
     .map((q, i) => ({ q, i }))
-    .filter(({ i }) => allowed[i])
     .filter(({ q }) => {
       const height = displayHeight(q, renditionTiers);
       return !qualityValidate || typeof height !== 'number' || qualityValidate(height);

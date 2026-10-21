@@ -176,7 +176,7 @@ Two things worth knowing when you build a live page around it:
 | `vodType` | `'standard' \| 'abr_hamrahi' \| 'poyan'` | VOD provider. Non-standard exchanges `src` (a token) for the real stream via the provider API. Default `standard`. |
 | `vodCustomUrl` | `Partial<Record<VodProvider, string>>` | Override the provider API endpoint(s); `{token}` is substituted. |
 | `qualityValidate` | `(height: number) => boolean` | Hide auto (HLS) renditions whose height fails the predicate. Auto stays available. |
-| `qualityPolicy` | `{ minHeight?: number; startHeight?: number }` | Rendition policy. `minHeight` is the floor for both Auto and the quality menu (a source with nothing that tall plays only its tallest rendition); `startHeight` is where playback starts (tallest rendition at or below it). Applies to hls.js and `VideoSource[]` lists, not to native HLS on iOS Safari. |
+| `qualityPolicy` | `{ minHeight?: number; startHeight?: number }` | Rendition policy. `minHeight` is the floor for Auto (a source with nothing that tall plays only its tallest rendition on Auto); the quality menu still offers every rendition, so a viewer can pick a lower one by hand; `startHeight` is where playback starts (tallest rendition at or below it). Applies to hls.js and `VideoSource[]` lists, not to native HLS on iOS Safari. |
 | `poster` | `string` | Cover image (before play). |
 | `title` / `episodeLabel` | `string` | Shown above the scrubber. |
 | `thumbnails` | `string` | WebVTT thumbnails track for scrub previews. |
