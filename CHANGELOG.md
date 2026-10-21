@@ -5,6 +5,12 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+## [0.2.22] - 2026-10-21
+
+### Changed
+
+- `qualityPolicy.minHeight` now bounds Auto only. The quality menu offers every rendition again (still filtered by `qualityValidate`), so a viewer on a slow connection can pick 480p by hand and it plays; switching back to Auto returns to the floor. Before, renditions under the floor were hidden from the menu too. On a `VideoSource[]` list, which has no Auto, `minHeight` now only bounds where playback starts.
+
 ## [0.2.21] - 2026-10-09
 
 ### Added
